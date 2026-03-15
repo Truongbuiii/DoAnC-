@@ -1,0 +1,35 @@
+﻿@model List<AdminWeb.Models.POI>
+
+<h2>POI Management</h2>
+
+<a class="btn btn-primary" href="/POI/Create">Add POI</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var poi in Model)
+        {
+            <tr>
+                <td>@poi.PoiId</td>
+                <td>@poi.Name</td>
+                <td>@poi.Latitude</td>
+                <td>@poi.Longitude</td>
+                <td>
+                    <a href="/POI/Edit/@poi.PoiId">Edit</a> |
+                    <a href="/POI/Delete/@poi.PoiId">Delete</a>
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>

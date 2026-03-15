@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Tour Admin</title>
+    <link rel="stylesheet" href="~/css/admin.css">
+    </head>
+
+    <body>
+
+        <div class="sidebar">
+
+            <h2>Admin</h2>
+
+            <a href="/POI">POI</a>
+            <a href="/Audio">Audio</a>
+            <a href="/Tour">Tour</a>
+            <a href="/Analytics">Analytics</a>
+
+        </div>
+
+        <div class="main">
+
+            <div class="topbar">
+                Smart Tour Guide Admin
+            </div>
+
+            <div class="content">
+                @RenderBody()
+            </div>
+
+        </div>
+
+    </body>
+</html>

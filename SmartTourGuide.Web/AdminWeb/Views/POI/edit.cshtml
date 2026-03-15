@@ -1,0 +1,35 @@
+﻿@model AdminWeb.Models.POI
+
+<h2>Edit POI</h2>
+
+<form method="post">
+
+    <input type="hidden" asp-for="PoiId" />
+
+    <div>
+        <label>Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div>
+        <label>Latitude</label>
+        <input asp-for="Latitude" class="form-control" />
+    </div>
+
+    <div>
+        <label>Longitude</label>
+        <input asp-for="Longitude" class="form-control" />
+    </div>
+
+    <div>
+        <label>Description</label>
+        <input asp-for="Description" class="form-control" />
+    </div>
+
+    <br>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+
+</form>
+
+<a href="/POI">Back</a>
