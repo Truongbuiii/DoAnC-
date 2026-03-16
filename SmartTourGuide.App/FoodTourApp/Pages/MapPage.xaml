@@ -1,11 +1,78 @@
-﻿<ContentPage 
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
-    x:Class="FoodTourApp.Pages.MapPage">
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodTourApp.Pages.MapPage"
+             Title="Virtual Tour Guide">
 
-    <maps:Map
-        x:Name="FoodMap"
-        MapType="Street" />
+    <ScrollView>
+        <VerticalStackLayout Spacing="15" Padding="20">
 
+            <Label Text="HỆ THỐNG THUYẾT MINH TỰ ĐỘNG" 
+                   FontSize="20" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center" 
+                   TextColor="Orange"/>
+
+            <Border StrokeThickness="2" Stroke="Orange" HorizontalOptions="Fill" HeightRequest="300">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="15" />
+                </Border.StrokeShape>
+                <Grid>
+                    <WebView x:Name="MapWebView" />
+                    <ActivityIndicator x:Name="MapLoading" IsRunning="True" VerticalOptions="Center" HorizontalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <Border StrokeThickness="0" HeightRequest="200" HorizontalOptions="Fill" BackgroundColor="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="15" />
+                </Border.StrokeShape>
+                <Grid>
+                    <Image x:Name="PoiImage" 
+                           Source="cong_chao.jpg" 
+                           Aspect="AspectFill" />
+
+                    <Border BackgroundColor="#CCFF8C00" HorizontalOptions="End" VerticalOptions="Start" Margin="10" Padding="10,5">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="5"/>
+                        </Border.StrokeShape>
+                        <Label x:Name="CategoryLabel" Text="Ăn vặt" TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                    </Border>
+
+                    <BoxView VerticalOptions="End" HeightRequest="40" Color="#99000000"/>
+                    <Label x:Name="CurrentPoiName" Text="Phố ẩm thực Vĩnh Khánh" 
+                           TextColor="White" FontAttributes="Bold" 
+                           VerticalOptions="End" Margin="10,10"/>
+                </Grid>
+            </Border>
+
+            <Label x:Name="StatusLabel" 
+                   Text="Đang xác định vị trí GPS..." 
+                   HorizontalOptions="Center" FontSize="14" TextColor="Gray"/>
+
+            <Border StrokeThickness="0" BackgroundColor="#F0F0F0" Padding="15">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="GIẢ LẬP DI CHUYỂN (VĨNH KHÁNH)" FontAttributes="Bold" HorizontalOptions="Center"/>
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="5" RowSpacing="5">
+                        <Button Grid.Row="0" Grid.Column="0" Text="Cổng chào" Clicked="SimulateCongChao" FontSize="11"/>
+                        <Button Grid.Row="0" Grid.Column="1" Text="Ốc Oanh" Clicked="SimulateOcOanh" FontSize="11" BackgroundColor="DarkOrange"/>
+
+                        <Button Grid.Row="1" Grid.Column="0" Text="Ốc Vũ" Clicked="SimulateOcVu" FontSize="11" BackgroundColor="DarkOrange"/>
+                        <Button Grid.Row="1" Grid.Column="1" Text="Lẩu Bò" Clicked="SimulateLauBo" FontSize="11" BackgroundColor="Green"/>
+
+                        <Button Grid.Row="2" Grid.Column="0" Text="Phá Lấu" Clicked="SimulatePhaLau" FontSize="11"/>
+                        <Button Grid.Row="2" Grid.Column="1" Text="Sushi KO" Clicked="SimulateSushi" FontSize="11" BackgroundColor="Red"/>
+
+                        <Button Grid.Row="3" Grid.ColumnSpan="2" Text="Reset / Dừng" Clicked="SimulateReset" BackgroundColor="Gray" Margin="0,5,0,0"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

@@ -1,35 +1,108 @@
 ﻿@model List<AdminWeb.Models.POI>
 
-<h2>POI Management</h2>
+@* Thêm thư viện Icon của Bootstrap *@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<a class="btn btn-primary" href="/POI/Create">Add POI</a>
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0">
+        @* Header Section *@
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="bi bi-geo-alt-fill me-2"></i>DANH SÁCH ĐIỂM THUYẾT MINH (POI)
+            </h5>
+            <a class="btn btn-primary btn-sm px-3 shadow-sm" href="/POI/Create">
+                <i class="bi bi-plus-lg me-1"></i> Thêm quán mới
+            </a>
+        </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+        @* Table Section *@
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-uppercase" style="font-size: 0.85rem;">
+                        <tr>
+                            <th class="ps-4">Ảnh</th>
+                            <th>Tên địa điểm</th>
+                            <th>Phân loại</th>
+                            <th>Địa chỉ & Tọa độ</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var poi in Model)
+                        {
+                            <tr>
+                                @* Cột Ảnh: Lấy từ folder wwwroot/images *@
+                                <td class="ps-4">
+                                    <div class="rounded-3 shadow-sm border"
+                                         style="width: 60px; height: 60px; background: url('/images/@(poi.ImageSource ?? "default.jpg")') center/cover no-repeat;">
+                                    </div>
+                                </td>
 
-    <tbody>
+                                @* Cột Tên *@
+                                <td>
+                                    <div class="fw-bold text-dark">@poi.Name</div>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 250px;">
+                                        @poi.Description
+                                    </small>
+                                </td>
 
-        @foreach (var poi in Model)
+                                @* Cột Phân loại *@
+                                <td>
+                                    <span class="badge rounded-pill @GetBadgeColor(poi.Category?.CategoryName)">
+                                        @poi.Category?.CategoryName
+                                    </span>
+                                </td>
+
+                                @* Cột Địa chỉ *@
+                                <td>
+                                    <div class="small">
+                                        <i class="bi bi-house-door me-1 text-secondary"></i>
+                                        @(poi.Location?.Address ?? "N/A")
+                                    </div>
+                                    <div class="small text-primary mt-1" style="font-size: 0.75rem;">
+                                        <i class="bi bi-pin-map me-1"></i>
+                                        @poi.Location?.Latitude, @poi.Location?.Longitude
+                                    </div>
+                                </td>
+
+                                @* Cột Thao tác *@
+                                <td class="text-center pe-4">
+                                    <div class="btn-group shadow-sm">
+                                        <a class="btn btn-sm btn-white border" href="/POI/Edit/@poi.PoiId" title="Sửa">
+                                            <i class="bi bi-pencil-square text-primary"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-white border" href="/POI/Delete/@poi.PoiId"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa quán @poi.Name?')" title="Xóa">
+                                            <i class="bi bi-trash3 text-danger"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        @* Footer Section *@
+        <div class="card-footer bg-white text-muted py-3 small">
+            Hiển thị <strong>@Model.Count</strong> địa điểm trên phố Vĩnh Khánh.
+        </div>
+    </div>
+</div>
+
+@* Hàm helper để đổi màu Badge theo phân loại *@
+@functions {
+    public string GetBadgeColor(string category)
+    {
+        return category switch
         {
-            <tr>
-                <td>@poi.PoiId</td>
-                <td>@poi.Name</td>
-                <td>@poi.Latitude</td>
-                <td>@poi.Longitude</td>
-                <td>
-                    <a href="/POI/Edit/@poi.PoiId">Edit</a> |
-                    <a href="/POI/Delete/@poi.PoiId">Delete</a>
-                </td>
-            </tr>
-        }
-
-    </tbody>
-</table>
+            "Hải sản & Ốc" => "bg-danger-subtle text-danger",
+            "Món Lẩu" => "bg-warning-subtle text-warning-emphasis",
+            "Giải khát" => "bg-info-subtle text-info-emphasis",
+            "Ăn vặt & Đường phố" => "bg-success-subtle text-success",
+            _ => "bg-light text-dark border"
+        };
+    }
+}

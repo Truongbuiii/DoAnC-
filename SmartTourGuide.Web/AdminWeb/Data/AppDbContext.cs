@@ -10,6 +10,11 @@ namespace AdminWeb.Data
         {
         }
 
+        // Bảng cũ đã có
         public DbSet<POI> POIs { get; set; }
+
+        // BỔ SUNG 2 DÒNG NÀY ĐỂ HẾT LỖI
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Location> Locations { get; set; }
     }
 }
