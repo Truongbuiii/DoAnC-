@@ -21,22 +21,20 @@ namespace AdminWeb.Controllers
             return View(pois);
         }
 
+        // mở form
         public IActionResult Create()
         {
             return View();
         }
 
+        // lưu POI
         [HttpPost]
-        public IActionResult Create()
+        public IActionResult Create(POI poi)
         {
-            ViewBag.Categories = _context.Categories
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CategoryId.ToString(),
-                    Text = c.CategoryName
-                }).ToList();
+            _context.POIs.Add(poi);
+            _context.SaveChanges();
 
-            return View();
+            return RedirectToAction("Index");
         }
         public IActionResult Edit(int id)
         {
