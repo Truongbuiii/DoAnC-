@@ -35,4 +35,28 @@
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="Pages\ItineraryPage.xaml.cs">
+	    <DependentUpon>ItineraryPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\FavoritesPage.xaml.cs">
+	    <DependentUpon>FavoritesPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Pages\PoiDetailPage.xaml.cs">
+	    <DependentUpon>PoiDetailPage.xaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="Pages\ItineraryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\FavoritesPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\PoiDetailPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

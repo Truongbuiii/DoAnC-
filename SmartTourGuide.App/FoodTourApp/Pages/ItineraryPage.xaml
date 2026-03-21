@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodTourApp.Pages.ItineraryPage"
+             BackgroundColor="#F9FAFB">
+
+    <Grid RowDefinitions="Auto, Auto, *" Padding="20">
+        <Label Grid.Row="0" Text="HÀNH TRÌNH CỦA TÔI" FontSize="22" FontAttributes="Bold" Margin="0,0,0,15"/>
+
+        <Border Grid.Row="1" StrokeShape="RoundRectangle 25" Padding="15,0" Margin="0,0,0,20" BackgroundColor="White">
+            <Entry Placeholder="Tìm kiếm hành trình..." FontSize="14"/>
+        </Border>
+
+        <CollectionView Grid.Row="2" x:Name="ItineraryList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,10" StrokeShape="RoundRectangle 20" StrokeThickness="0" BackgroundColor="White">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.1"/>
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="*, 100" Padding="20">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold"/>
+                                <Label Text="{Binding Description}" FontSize="12" TextColor="Gray"/>
+                                <HorizontalStackLayout Spacing="10" Margin="0,5">
+                                    <Label Text="📍 5 địa điểm" FontSize="11" TextColor="Orange"/>
+                                    <Label Text="⏱️ 2 giờ" FontSize="11" TextColor="Orange"/>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                            <Image Grid.Column="1" Source="itinerary_thumb.png" Aspect="AspectFill" HeightRequest="80" WidthRequest="80"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

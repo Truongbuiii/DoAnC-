@@ -1,11 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
+    x:Class="FoodTourApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pages="clr-namespace:FoodTourApp.Pages"
-    x:Class="FoodTourApp.AppShell">
+    xmlns:local="clr-namespace:FoodTourApp"
+    Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Food Tour Map"
-        ContentTemplate="{DataTemplate pages:MapPage}" />
+    <TabBar>
+        <Tab Title="Trang chủ">
+            <ShellContent ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
+        </Tab>
 
+        <Tab Title="Bản đồ">
+            <ShellContent ContentTemplate="{DataTemplate pages:MapPage}" Route="MapPage" />
+        </Tab>
+
+        <Tab Title="Yêu thích">
+            <ShellContent ContentTemplate="{DataTemplate pages:FavoritesPage}" Route="FavoritesPage" />
+        </Tab>
+    </TabBar>
+
+    <Shell.Resources>
+        <Style TargetType="TabBar">
+            <Setter Property="Shell.TabBarBackgroundColor" Value="White" />
+            <Setter Property="Shell.TabBarForegroundColor" Value="Orange" />
+            <Setter Property="Shell.TabBarTitleColor" Value="Orange" />
+            <Setter Property="Shell.TabBarUnselectedColor" Value="Gray" />
+        </Style>
+    </Shell.Resources>
 </Shell>

@@ -2,77 +2,105 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.Pages.MapPage"
-             Title="Virtual Tour Guide">
+             BackgroundColor="#F9FAFB">
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="15" Padding="20">
+    <Grid ColumnDefinitions="350, *" RowDefinitions="Auto, *">
 
-            <Label Text="HỆ THỐNG THUYẾT MINH TỰ ĐỘNG" 
-                   FontSize="20" 
-                   FontAttributes="Bold" 
-                   HorizontalOptions="Center" 
-                   TextColor="Orange"/>
+        <Border Grid.Row="0" Grid.ColumnSpan="2" BackgroundColor="White" StrokeThickness="0" HeightRequest="65">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*, Auto" Padding="20,0">
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <Label Text="📍 VĨNH KHÁNH TOUR" TextColor="#1F2937" FontAttributes="Bold" FontSize="18"/>
+                </HorizontalStackLayout>
+                <Image Grid.Column="1" Source="notification_icon.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
+            </Grid>
+        </Border>
 
-            <Border StrokeThickness="2" Stroke="Orange" HorizontalOptions="Fill" HeightRequest="300">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="15" />
-                </Border.StrokeShape>
-                <Grid>
-                    <WebView x:Name="MapWebView" />
-                    <ActivityIndicator x:Name="MapLoading" IsRunning="True" VerticalOptions="Center" HorizontalOptions="Center" />
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto, Auto, *" Padding="15" BackgroundColor="White">
+            <Label Grid.Row="0" Text="Địa điểm khám phá" FontAttributes="Bold" FontSize="18" Margin="0,0,0,10"/>
+
+            <Border Grid.Row="1" StrokeShape="RoundRectangle 25" Padding="15,0" Margin="0,0,0,15" StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="#F9FAFB">
+                <Entry x:Name="SearchEntry" Placeholder="Tìm quán ăn hoặc loại món..." FontSize="14" TextChanged="OnSearchTextChanged"/>
+            </Border>
+
+            <CollectionView Grid.Row="2" x:Name="PoisListView" SelectionMode="Single" SelectionChanged="OnPoiSelected">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,5" StrokeShape="RoundRectangle 12" StrokeThickness="0" BackgroundColor="#F3F4F6">
+                            <Grid ColumnDefinitions="65, *" Padding="10">
+                                <Image Grid.Column="0" Source="{Binding ImageSource}" WidthRequest="55" HeightRequest="55" Aspect="AspectFill">
+                                    <Image.Clip>
+                                        <RoundRectangleGeometry CornerRadius="10" Rect="0,0,55,55"/>
+                                    </Image.Clip>
+                                </Image>
+                                <VerticalStackLayout Grid.Column="1" Margin="15,0" VerticalOptions="Center">
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="14" TextColor="#1F2937"/>
+                                    <Label Text="{Binding Category}" FontSize="11" TextColor="Orange"/>
+                                    <Label Text="{Binding DistanceDisplay}" FontSize="11" TextColor="Gray"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="1">
+            <WebView x:Name="MapWebView" />
+            <ActivityIndicator x:Name="MapLoading" IsRunning="True" VerticalOptions="Center" HorizontalOptions="Center" Color="Orange"/>
+
+            <Border x:Name="PoiCard" VerticalOptions="End" HorizontalOptions="Center" 
+                    Margin="0,0,0,30" Padding="15" WidthRequest="400" BackgroundColor="White"
+                    StrokeShape="RoundRectangle 20" StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,15" Radius="30" Opacity="0.3"/>
+                </Border.Shadow>
+
+                <Grid ColumnDefinitions="Auto, *" ColumnSpacing="15">
+                    <Image x:Name="PoiImage" Source="cong_chao.jpg" Aspect="AspectFill" HeightRequest="100" WidthRequest="100">
+                        <Image.Clip>
+                            <RoundRectangleGeometry CornerRadius="15" Rect="0,0,100,100"/>
+                        </Image.Clip>
+                    </Image>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                        <Label x:Name="CurrentPoiName" Text="Vinh Khanh Street" FontSize="18" FontAttributes="Bold"/>
+                        <Label x:Name="CategoryLabel" Text="KHÁM PHÁ" FontSize="11" TextColor="Orange"/>
+                        <Label x:Name="StatusLabel" Text="Đang cập nhật GPS..." FontSize="12" TextColor="Gray"/>
+
+                        <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
+                            <Button Text="Nghe lại" Clicked="OnReplayClicked" Style="{StaticResource ActionBtn}"/>
+                            <Button Text="Dẫn đường" Clicked="OnNavigateClicked" BackgroundColor="#1F2937" TextColor="White" CornerRadius="20" WidthRequest="100" HeightRequest="35"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
                 </Grid>
             </Border>
 
-            <Border StrokeThickness="0" HeightRequest="200" HorizontalOptions="Fill" BackgroundColor="Transparent">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="15" />
-                </Border.StrokeShape>
-                <Grid>
-                    <Image x:Name="PoiImage" 
-                           Source="cong_chao.jpg" 
-                           Aspect="AspectFill" />
-
-                    <Border BackgroundColor="#CCFF8C00" HorizontalOptions="End" VerticalOptions="Start" Margin="10" Padding="10,5">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="5"/>
-                        </Border.StrokeShape>
-                        <Label x:Name="CategoryLabel" Text="Ăn vặt" TextColor="White" FontSize="12" FontAttributes="Bold"/>
-                    </Border>
-
-                    <BoxView VerticalOptions="End" HeightRequest="40" Color="#99000000"/>
-                    <Label x:Name="CurrentPoiName" Text="Phố ẩm thực Vĩnh Khánh" 
-                           TextColor="White" FontAttributes="Bold" 
-                           VerticalOptions="End" Margin="10,10"/>
-                </Grid>
-            </Border>
-
-            <Label x:Name="StatusLabel" 
-                   Text="Đang xác định vị trí GPS..." 
-                   HorizontalOptions="Center" FontSize="14" TextColor="Gray"/>
-
-            <Border StrokeThickness="0" BackgroundColor="#F0F0F0" Padding="15">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10" />
-                </Border.StrokeShape>
-
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="GIẢ LẬP DI CHUYỂN (VĨNH KHÁNH)" FontAttributes="Bold" HorizontalOptions="Center"/>
-
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="5" RowSpacing="5">
-                        <Button Grid.Row="0" Grid.Column="0" Text="Cổng chào" Clicked="SimulateCongChao" FontSize="11"/>
-                        <Button Grid.Row="0" Grid.Column="1" Text="Ốc Oanh" Clicked="SimulateOcOanh" FontSize="11" BackgroundColor="DarkOrange"/>
-
-                        <Button Grid.Row="1" Grid.Column="0" Text="Ốc Vũ" Clicked="SimulateOcVu" FontSize="11" BackgroundColor="DarkOrange"/>
-                        <Button Grid.Row="1" Grid.Column="1" Text="Lẩu Bò" Clicked="SimulateLauBo" FontSize="11" BackgroundColor="Green"/>
-
-                        <Button Grid.Row="2" Grid.Column="0" Text="Phá Lấu" Clicked="SimulatePhaLau" FontSize="11"/>
-                        <Button Grid.Row="2" Grid.Column="1" Text="Sushi KO" Clicked="SimulateSushi" FontSize="11" BackgroundColor="Red"/>
-
-                        <Button Grid.Row="3" Grid.ColumnSpan="2" Text="Reset / Dừng" Clicked="SimulateReset" BackgroundColor="Gray" Margin="0,5,0,0"/>
-                    </Grid>
+            <Border VerticalOptions="Start" HorizontalOptions="End" Margin="15" Padding="8" BackgroundColor="#CCFFFFFF" StrokeShape="RoundRectangle 10">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="TEST TOOLS" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center"/>
+                    <ScrollView Orientation="Horizontal" WidthRequest="250">
+                        <HorizontalStackLayout Spacing="5">
+                            <Button Text="Ốc Oanh" Clicked="SimulateOcOanh" Scale="0.8"/>
+                            <Button Text="Ốc Vũ" Clicked="SimulateOcVu" Scale="0.8"/>
+                            <Button Text="Reset" Clicked="SimulateReset" Scale="0.8" BackgroundColor="Gray"/>
+                        </HorizontalStackLayout>
+                    </ScrollView>
                 </VerticalStackLayout>
             </Border>
+        </Grid>
+    </Grid>
 
-        </VerticalStackLayout>
-    </ScrollView>
+    <ContentPage.Resources>
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="BackgroundColor" Value="Orange"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="HeightRequest" Value="35"/>
+            <Setter Property="WidthRequest" Value="100"/>
+        </Style>
+    </ContentPage.Resources>
 </ContentPage>
