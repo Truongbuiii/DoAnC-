@@ -1,101 +1,146 @@
-﻿using AdminWeb.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using AdminWeb.Data;
+using AdminWeb.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace AdminWeb.Controllers
 {
     public class POIController : Controller
     {
-        // Tạo một danh sách tĩnh để lưu dữ liệu tạm thời thay cho Database
-        private static List<POI> _samplePois = new List<POI>();
-        private static List<Category> _categories = new List<Category>();
-        private static int _nextId = 1;
+        private readonly AppDbContext _context;
 
-        // Hàm khởi tạo dữ liệu mẫu (Chạy 1 lần duy nhất khi bạn mở Web)
-        static POIController()
+        public POIController(AppDbContext context)
         {
-            // 1. Dữ liệu mẫu cho Phân loại
-            _categories.Add(new Category { CategoryId = 1, CategoryName = "Hải sản & Ốc" });
-            _categories.Add(new Category { CategoryId = 2, CategoryName = "Món Lẩu" });
-            _categories.Add(new Category { CategoryId = 3, CategoryName = "Ăn vặt" });
-
-            // 2. Dữ liệu mẫu cho Quán ăn (Tài có thể thêm tiếp ở đây)
-            _samplePois.Add(new POI
-            {
-                PoiId = _nextId++,
-                Name = "Ốc Oanh 534",
-                Description = "Quán ốc nổi tiếng nhất phố Vĩnh Khánh với món sốt trứng muối.",
-                ImageSource = "ocoanh.jpg",
-                CategoryId = 1,
-                Category = _categories[0],
-                Location = new Location { Address = "534 Vĩnh Khánh", Latitude = 10.75883, Longitude = 106.70505 }
-            });
-
-            _samplePois.Add(new POI
-            {
-                PoiId = _nextId++,
-                Name = "Phá lấu Dì Nũi",
-                Description = "Phá lấu gia truyền cực ngon, ăn kèm bánh mì giòn.",
-                ImageSource = "phalau.jpg",
-                CategoryId = 3,
-                Category = _categories[2],
-                Location = new Location { Address = "194 Vĩnh Khánh", Latitude = 10.75940, Longitude = 106.70410 }
-            });
+            _context = context;
         }
 
-        public IActionResult Index()
+        // 1. TRANG DANH SÁCH + TÌM KIẾM (Đã cập nhật để khớp với Index.cshtml)
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(_samplePois);
+            ViewData["CurrentFilter"] = searchString;
+
+            var pois = _context.POIs
+                .Include(p => p.Category)
+                .Include(p => p.Location)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                // Tìm kiếm theo tên quán
+                pois = pois.Where(s => s.Name.Contains(searchString));
+            }
+
+            return View(await pois.ToListAsync());
         }
 
+        // 2. TRANG THÊM MỚI (GIAO DIỆN)
         public IActionResult Create()
         {
-            ViewBag.Categories = new SelectList(_categories, "CategoryId", "CategoryName");
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName");
             return View();
         }
 
+        // 3. XỬ LÝ LƯU DỮ LIỆU THÊM MỚI (POST)
         [HttpPost]
-        public IActionResult Create(POI poi, double Latitude, double Longitude, string Address)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(POI poi, IFormFile? imageFile, double Latitude, double Longitude, double TriggerRadius, string Address)
         {
-            // Tự sinh ID và gán dữ liệu liên quan
-            poi.PoiId = _nextId++;
-            poi.Location = new Location { Latitude = Latitude, Longitude = Longitude, Address = Address };
-            poi.Category = _categories.FirstOrDefault(c => c.CategoryId == poi.CategoryId);
+            if (string.IsNullOrEmpty(poi.Name))
+            {
+                ModelState.AddModelError("Name", "Tài ơi, bạn bắt buộc phải nhập Tên địa điểm nhé!");
+            }
 
-            _samplePois.Add(poi);
-            return RedirectToAction("Index");
-        }
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // A. Tạo Location mới
+                    var newLoc = new Location { Latitude = Latitude, Longitude = Longitude, TriggerRadius = TriggerRadius, Address = Address };
+                    _context.Locations.Add(newLoc);
+                    await _context.SaveChangesAsync();
 
-        public IActionResult Edit(int id)
-        {
-            var poi = _samplePois.FirstOrDefault(p => p.PoiId == id);
-            if (poi == null) return NotFound();
-            ViewBag.Categories = new SelectList(_categories, "CategoryId", "CategoryName", poi.CategoryId);
+                    // B. Xử lý ảnh
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+                        using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
+                        poi.ImageSource = fileName;
+                    }
+
+                    // C. Gán ID và lưu POI
+                    poi.LocationId = newLoc.LocationId;
+                    _context.POIs.Add(poi);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex) { ModelState.AddModelError("", "Lỗi: " + ex.Message); }
+            }
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
             return View(poi);
         }
 
-        [HttpPost]
-        public IActionResult Edit(POI poi, double Latitude, double Longitude, string Address)
+        // 4. TRANG CHỈNH SỬA (GET)
+        public async Task<IActionResult> Edit(int id)
         {
-            var existing = _samplePois.FirstOrDefault(p => p.PoiId == poi.PoiId);
-            if (existing != null)
-            {
-                existing.Name = poi.Name;
-                existing.Description = poi.Description;
-                existing.CategoryId = poi.CategoryId;
-                existing.Category = _categories.FirstOrDefault(c => c.CategoryId == poi.CategoryId);
-                existing.Location = new Location { Latitude = Latitude, Longitude = Longitude, Address = Address };
-            }
-            return RedirectToAction("Index");
+            var poi = await _context.POIs.Include(p => p.Location).FirstOrDefaultAsync(m => m.PoiId == id);
+            if (poi == null) return NotFound();
+
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
+            return View(poi);
         }
 
-        public IActionResult Delete(int id)
+        // 5. XỬ LÝ LƯU DỮ LIỆU SAU KHI SỬA (POST)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile, double Latitude, double Longitude, double TriggerRadius, string Address)
         {
-            var poi = _samplePois.FirstOrDefault(p => p.PoiId == id);
-            if (poi != null) _samplePois.Remove(poi);
-            return RedirectToAction("Index");
+            if (id != poi.PoiId) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Cập nhật tọa độ
+                    var loc = await _context.Locations.FindAsync(poi.LocationId);
+                    if (loc != null)
+                    {
+                        loc.Latitude = Latitude; loc.Longitude = Longitude;
+                        loc.TriggerRadius = TriggerRadius; loc.Address = Address;
+                        _context.Update(loc);
+                    }
+
+                    // Cập nhật ảnh mới nếu có
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+                        using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
+                        poi.ImageSource = fileName;
+                    }
+
+                    _context.Update(poi);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException) { return NotFound(); }
+                return RedirectToAction(nameof(Index));
+            }
+            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
+            return View(poi);
+        }
+
+        // 6. XỬ LÝ XÓA
+        public async Task<IActionResult> Delete(int id)
+        {
+            var poi = await _context.POIs.Include(p => p.Location).FirstOrDefaultAsync(m => m.PoiId == id);
+            if (poi != null)
+            {
+                if (poi.Location != null) _context.Locations.Remove(poi.Location);
+                _context.POIs.Remove(poi);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

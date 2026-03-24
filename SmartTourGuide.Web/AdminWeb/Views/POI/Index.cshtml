@@ -5,14 +5,30 @@
 
 <div class="container-fluid py-4">
     <div class="card shadow-sm border-0">
-        @* Header Section *@
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-primary">
-                <i class="bi bi-geo-alt-fill me-2"></i>DANH SÁCH ĐIỂM THUYẾT MINH (POI)
-            </h5>
-            <a class="btn btn-primary btn-sm px-3 shadow-sm" href="/POI/Create">
-                <i class="bi bi-plus-lg me-1"></i> Thêm quán mới
-            </a>
+        @* Header Section: Đã thêm thanh tìm kiếm *@
+        <div class="card-header bg-white py-3">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-geo-alt-fill me-2"></i>DANH SÁCH ĐIỂM THUYẾT MINH (POI)
+                    </h5>
+                </div>
+                <div class="col-md-8 d-flex justify-content-end align-items-center gap-3">
+                    @* Form tìm kiếm nhỏ gọn *@
+                    <form asp-action="Index" method="get" class="d-flex">
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" name="searchString" class="form-control" placeholder="Tìm tên quán..." value="@ViewData["CurrentFilter"]">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <a class="btn btn-primary btn-sm px-3 shadow-sm" asp-action="Create">
+                        <i class="bi bi-plus-lg me-1"></i> Thêm quán mới
+                    </a>
+                </div>
+            </div>
         </div>
 
         @* Table Section *@
@@ -21,7 +37,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary text-uppercase" style="font-size: 0.85rem;">
                         <tr>
-                            <th class="ps-4">Ảnh</th>
+                            <th class="ps-4" style="width: 100px;">Ảnh</th>
                             <th>Tên địa điểm</th>
                             <th>Phân loại</th>
                             <th>Địa chỉ & Tọa độ</th>
@@ -32,49 +48,45 @@
                         @foreach (var poi in Model)
                         {
                             <tr>
-                                @* Cột Ảnh: Lấy từ folder wwwroot/images *@
                                 <td class="ps-4">
-                                    <div class="rounded-3 shadow-sm border"
-                                         style="width: 60px; height: 60px; background: url('/images/@(poi.ImageSource ?? "default.jpg")') center/cover no-repeat;">
-                                    </div>
+                                    <img src="~/images/@(string.IsNullOrEmpty(poi.ImageSource) ? "default.jpg" : poi.ImageSource)" 
+                                         class="rounded-3 shadow-sm border" 
+                                         style="width: 60px; height: 60px; object-fit: cover;" 
+                                         onerror="this.src='/images/default.jpg';" />
                                 </td>
 
-                                @* Cột Tên *@
                                 <td>
                                     <div class="fw-bold text-dark">@poi.Name</div>
-                                    <small class="text-muted d-block text-truncate" style="max-width: 250px;">
+                                    <small class="text-muted d-block text-truncate" style="max-width: 300px;">
                                         @poi.Description
                                     </small>
                                 </td>
 
-                                @* Cột Phân loại *@
                                 <td>
                                     <span class="badge rounded-pill @GetBadgeColor(poi.Category?.CategoryName)">
-                                        @poi.Category?.CategoryName
+                                        @(poi.Category?.CategoryName ?? "Chưa phân loại")
                                     </span>
                                 </td>
 
-                                @* Cột Địa chỉ *@
                                 <td>
                                     <div class="small">
                                         <i class="bi bi-house-door me-1 text-secondary"></i>
-                                        @(poi.Location?.Address ?? "N/A")
+                                        @(poi.Location?.Address ?? "Chưa có địa chỉ")
                                     </div>
                                     <div class="small text-primary mt-1" style="font-size: 0.75rem;">
                                         <i class="bi bi-pin-map me-1"></i>
-                                        @poi.Location?.Latitude, @poi.Location?.Longitude
+                                        @(poi.Location != null ? $"{poi.Location.Latitude}, {poi.Location.Longitude}" : "0, 0")
                                     </div>
                                 </td>
 
-                                @* Cột Thao tác *@
                                 <td class="text-center pe-4">
                                     <div class="btn-group shadow-sm">
-                                        <a class="btn btn-sm btn-white border" href="/POI/Edit/@poi.PoiId" title="Sửa">
-                                            <i class="bi bi-pencil-square text-primary"></i>
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@poi.PoiId" title="Sửa">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <a class="btn btn-sm btn-white border" href="/POI/Delete/@poi.PoiId"
-                                               onclick="return confirm('Bạn có chắc chắn muốn xóa quán @poi.Name?')" title="Xóa">
-                                            <i class="bi bi-trash3 text-danger"></i>
+                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@poi.PoiId"
+                                           onclick="return confirm('Tài ơi, bạn chắc chắn muốn xóa quán @poi.Name?')" title="Xóa">
+                                            <i class="bi bi-trash3"></i>
                                         </a>
                                     </div>
                                 </td>
@@ -85,23 +97,22 @@
             </div>
         </div>
         
-        @* Footer Section *@
         <div class="card-footer bg-white text-muted py-3 small">
-            Hiển thị <strong>@Model.Count</strong> địa điểm trên phố Vĩnh Khánh.
+            Tổng cộng: <strong>@Model.Count</strong> địa điểm thuyết minh.
         </div>
     </div>
 </div>
 
-@* Hàm helper để đổi màu Badge theo phân loại *@
 @functions {
-    public string GetBadgeColor(string category)
+    public string GetBadgeColor(string? category)
     {
         return category switch
         {
-            "Hải sản & Ốc" => "bg-danger-subtle text-danger",
-            "Món Lẩu" => "bg-warning-subtle text-warning-emphasis",
-            "Giải khát" => "bg-info-subtle text-info-emphasis",
-            "Ăn vặt & Đường phố" => "bg-success-subtle text-success",
+            "Hải sản & Ốc" => "bg-danger-subtle text-danger border border-danger-subtle",
+            "Món Lẩu" => "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+            "Giải khát" => "bg-info-subtle text-info-emphasis border border-info-subtle",
+            "Ăn vặt & Đường phố" => "bg-success-subtle text-success border border-success-subtle",
+            "Đồ Nhật" => "bg-dark-subtle text-dark border border-dark-subtle",
             _ => "bg-light text-dark border"
         };
     }
