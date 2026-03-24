@@ -8,17 +8,13 @@
         <VerticalStackLayout Padding="20" Spacing="25">
 
             <VerticalStackLayout Spacing="5">
-                <Label Text="Khám phá ẩm thực" FontSize="14" TextColor="Gray"/>
-                <Label Text="PHỐ VĨNH KHÁNH" FontSize="26" FontAttributes="Bold" TextColor="#1F2937"/>
+                <Label Text="Chào bạn, hôm nay ăn gì?" FontSize="14" TextColor="Gray"/>
+                <Label Text="VĨNH KHÁNH FOOD" FontSize="26" FontAttributes="Bold" TextColor="#1F2937"/>
             </VerticalStackLayout>
-
-            <Border StrokeShape="RoundRectangle 25" Padding="15,0" StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="White">
-                <Entry Placeholder="Tìm ốc, phá lấu, đồ nướng..." FontSize="14" HeightRequest="45"/>
-            </Border>
 
             <VerticalStackLayout Spacing="15">
                 <Label Text="Gợi ý Tour hôm nay" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                <CollectionView HeightRequest="220" x:Name="ToursCollection" SelectionMode="Single" SelectionChanged="OnTourSelected">
+                <CollectionView HeightRequest="220" x:Name="ToursList" SelectionMode="Single" SelectionChanged="OnTourSelected">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
                     </CollectionView.ItemsLayout>
@@ -26,7 +22,8 @@
                         <DataTemplate>
                             <Border WidthRequest="300" StrokeShape="RoundRectangle 20" StrokeThickness="0">
                                 <Grid>
-                                    <Image Source="{Binding ImageSource}" Aspect="AspectFill"/>
+                                    <Image Source="{Binding FullImageUrl}" 
+                                           Aspect="AspectFill" />
                                     <BoxView Color="#66000000"/>
                                     <VerticalStackLayout VerticalOptions="End" Padding="20">
                                         <Label Text="{Binding Name}" TextColor="White" FontAttributes="Bold" FontSize="18"/>
@@ -41,7 +38,7 @@
 
             <VerticalStackLayout Spacing="15">
                 <Label Text="Địa điểm nổi bật" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                <CollectionView x:Name="PoisCollection" SelectionMode="Single" SelectionChanged="OnPoiSelected">
+                <CollectionView x:Name="FeaturedPoisList" SelectionMode="Single" SelectionChanged="OnPoiSelected">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Border Margin="0,0,0,15" StrokeShape="RoundRectangle 15" BackgroundColor="White" StrokeThickness="0">
@@ -49,11 +46,17 @@
                                     <Shadow Brush="Black" Offset="0,5" Radius="10" Opacity="0.1"/>
                                 </Border.Shadow>
                                 <Grid ColumnDefinitions="100, *" Padding="10">
-                                    <Image Source="{Binding ImageSource}" HeightRequest="80" WidthRequest="80" Aspect="AspectFill">
+
+                                    <Image Grid.Column="0"
+                                           Source="{Binding FullImageUrl}" 
+                                           Aspect="AspectFill" 
+                                           HeightRequest="80" 
+                                           WidthRequest="80">
                                         <Image.Clip>
                                             <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
                                         </Image.Clip>
                                     </Image>
+
                                     <VerticalStackLayout Grid.Column="1" Margin="15,0" VerticalOptions="Center">
                                         <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="15" TextColor="#1F2937"/>
                                         <Label Text="{Binding Category}" FontSize="12" TextColor="Orange"/>

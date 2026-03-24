@@ -10,7 +10,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            // .UseMauiMaps() // Hãy thêm dấu // vào đây vì chúng ta đã dùng WebView để tránh lỗi Key trên Windows
+            .UseMauiMaps() // Hãy thêm dấu // vào đây vì chúng ta đã dùng WebView để tránh lỗi Key trên Windows
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
