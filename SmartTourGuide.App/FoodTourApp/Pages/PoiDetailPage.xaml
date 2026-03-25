@@ -37,9 +37,29 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <HorizontalStackLayout Spacing="15" HorizontalOptions="Center">
-                    <Button Text="❤️ Yêu thích" Clicked="OnFavoriteClicked" BackgroundColor="#E74C3C" CornerRadius="25" WidthRequest="150" HeightRequest="45" FontAttributes="Bold"/>
-                    <Button Text="🧭 Dẫn đường" Clicked="OnDirectClicked" BackgroundColor="#1F2937" TextColor="White" CornerRadius="25" WidthRequest="150" HeightRequest="45" FontAttributes="Bold"/>
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Button x:Name="BtnFavorite"
+            Text="🤍 Yêu thích"
+            Clicked="OnFavoriteClicked"
+            BackgroundColor="#E74C3C"
+            TextColor="White"
+            CornerRadius="25"
+            WidthRequest="130" HeightRequest="45"
+            FontAttributes="Bold"/>
+                    <Button Text="🔊 Nghe"
+            Clicked="OnSpeakClicked"
+            BackgroundColor="Orange"
+            TextColor="White"
+            CornerRadius="25"
+            WidthRequest="100" HeightRequest="45"
+            FontAttributes="Bold"/>
+                    <Button Text="🧭 Dẫn đường"
+            Clicked="OnDirectClicked"
+            BackgroundColor="#1F2937"
+            TextColor="White"
+            CornerRadius="25"
+            WidthRequest="130" HeightRequest="45"
+            FontAttributes="Bold"/>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
         </VerticalStackLayout>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodTourApp.Pages.QRPage"
+             Title="Quét QR"
+             BackgroundColor="#F9FAFB">
+
+    <VerticalStackLayout Padding="20" Spacing="20" VerticalOptions="Center">
+        <Label Text="📷 QUÉT MÃ QR" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center"/>
+        <Label Text="Hướng camera vào mã QR của quán để xem thông tin và nghe thuyết minh ngay lập tức"
+               FontSize="14" TextColor="Gray" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+
+        <!-- Khung camera giả -->
+        <Border StrokeShape="RoundRectangle 20" Stroke="Orange" StrokeThickness="3"
+                HeightRequest="280" WidthRequest="280" HorizontalOptions="Center"
+                BackgroundColor="#1A000000">
+            <Grid>
+                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
+                         HorizontalOptions="Start" VerticalOptions="Start" Margin="10"/>
+                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
+                         HorizontalOptions="Start" VerticalOptions="Start" Margin="10"/>
+                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
+                         HorizontalOptions="End" VerticalOptions="Start" Margin="10"/>
+                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
+                         HorizontalOptions="End" VerticalOptions="Start" Margin="10"/>
+                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
+                         HorizontalOptions="Start" VerticalOptions="End" Margin="10"/>
+                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
+                         HorizontalOptions="Start" VerticalOptions="End" Margin="10"/>
+                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
+                         HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
+                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
+                         HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
+
+                <Label Text="📷" FontSize="60" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+
+        <Button Text="🔦 Bật đèn flash" BackgroundColor="#1F2937" TextColor="White"
+                CornerRadius="15" HeightRequest="45" Clicked="OnFlashToggle"/>
+        <Button Text="📋 Nhập mã thủ công" BackgroundColor="Orange" TextColor="White"
+                CornerRadius="15" HeightRequest="45" Clicked="OnManualEntry"/>
+    </VerticalStackLayout>
+</ContentPage>

@@ -6,24 +6,51 @@
 
     <Grid RowDefinitions="Auto, Auto, *">
 
+        <!-- HEADER với nút chọn ngôn ngữ -->
         <Border Grid.Row="0" BackgroundColor="White" StrokeThickness="0" HeightRequest="60">
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1"/>
             </Border.Shadow>
-            <Grid ColumnDefinitions="*, Auto" Padding="20,0">
+            <Grid ColumnDefinitions="*, Auto, Auto" Padding="20,0">
                 <Label Text="📍 VĨNH KHÁNH TOUR" VerticalOptions="Center" FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
-                <Image Grid.Column="1" Source="notification_icon.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
+
+                <!-- NÚT CHỌN NGÔN NGỮ -->
+                <Border Grid.Column="1" 
+                        StrokeShape="RoundRectangle 15" 
+                        BackgroundColor="#F3F4F6" 
+                        Padding="10,5" 
+                        Margin="0,0,10,0"
+                        VerticalOptions="Center">
+                    <Picker x:Name="LanguagePicker"
+                            Title="🌐"
+                            SelectedIndexChanged="OnLanguageChanged"
+                            FontSize="14"
+                            TextColor="#1F2937"
+                            HorizontalOptions="Center">
+                        <Picker.Items>
+                            <x:String>🇻🇳 Tiếng Việt</x:String>
+                            <x:String>🇺🇸 English</x:String>
+                            <x:String>🇨🇳 中文</x:String>
+                            <x:String>🇰🇷 한국어</x:String>
+                            <x:String>🇯🇵 日本語</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </Border>
+
+                <Image Grid.Column="2" Source="notification_icon.png" WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
             </Grid>
         </Border>
 
+        <!-- SEARCH BAR -->
         <Border Grid.Row="1" Margin="15,10" StrokeShape="RoundRectangle 25" Padding="15,0" StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="White">
             <Entry x:Name="SearchEntry" Placeholder="Tìm quán ăn..." FontSize="14" TextChanged="OnSearchTextChanged"/>
         </Border>
 
+        <!-- MAP + CONTROLS -->
         <Grid Grid.Row="2">
             <WebView x:Name="MapWebView" 
-                     HorizontalOptions="FillAndExpand" 
-                     VerticalOptions="FillAndExpand" />
+                     HorizontalOptions="Fill" 
+                     VerticalOptions="Fill" />
 
             <ActivityIndicator x:Name="MapLoading" 
                                IsRunning="True" 
@@ -31,9 +58,11 @@
                                HorizontalOptions="Center" 
                                Color="Orange" />
 
+            <!-- POI CARD -->
             <Border x:Name="PoiCard" VerticalOptions="End" HorizontalOptions="Center" 
                     Margin="15,20" Padding="15" BackgroundColor="White"
-                    StrokeShape="RoundRectangle 20" StrokeThickness="0">
+                    StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                    IsVisible="False">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,10" Radius="20" Opacity="0.2"/>
                 </Border.Shadow>
@@ -48,19 +77,26 @@
                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                         <Label x:Name="CurrentPoiName" Text="Phố ẩm thực Vĩnh Khánh" FontSize="16" FontAttributes="Bold"/>
                         <Label x:Name="CategoryLabel" Text="KHÁM PHÁ" FontSize="11" TextColor="Orange"/>
-
                         <Label x:Name="StatusLabel" Text="Đang cập nhật GPS..." FontSize="11" TextColor="Gray"/>
 
                         <HorizontalStackLayout Spacing="8" Margin="0,5,0,0">
-                            <Button Text="Dẫn đường" Clicked="OnNavigateClicked" BackgroundColor="#1F2937" TextColor="White" CornerRadius="15" HeightRequest="35" FontSize="11"/>
-                            <Button Text="Yêu thích" Clicked="OnReplayClicked" BackgroundColor="Orange" TextColor="White" CornerRadius="15" HeightRequest="35" FontSize="11"/>
+                            <Button Text="🧭 Dẫn đường" Clicked="OnNavigateClicked" BackgroundColor="#1F2937" TextColor="White" CornerRadius="15" HeightRequest="35" FontSize="11"/>
+                            <Button Text="🔊 Nghe lại" Clicked="OnReplayClicked" BackgroundColor="Orange" TextColor="White" CornerRadius="15" HeightRequest="35" FontSize="11"/>
+                            <Button x:Name="BtnFavorite"
+        Text="🤍 Yêu thích"
+        Clicked="OnToggleFavorite"
+        BackgroundColor="#FF6B6B"
+        TextColor="White"
+        CornerRadius="8"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Grid>
             </Border>
 
+            <!-- DANH SÁCH POI (ẩn mặc định) -->
             <CollectionView x:Name="PoisListView" IsVisible="False" SelectionMode="Single" SelectionChanged="OnPoiSelected" />
 
+            <!-- NÚT SIMULATE (để test) -->
             <HorizontalStackLayout VerticalOptions="Start" HorizontalOptions="End" Margin="10" Spacing="5">
                 <Button Text="Ốc Oanh" Clicked="SimulateOcOanh" Scale="0.8" BackgroundColor="#CCFFFFFF" TextColor="Black"/>
                 <Button Text="Ốc Vũ" Clicked="SimulateOcVu" Scale="0.8" BackgroundColor="#CCFFFFFF" TextColor="Black"/>

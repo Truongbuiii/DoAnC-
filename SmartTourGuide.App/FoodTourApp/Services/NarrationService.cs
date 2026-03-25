@@ -6,43 +6,51 @@ namespace FoodTourApp.Services
     /// NarrationService - Quản lý phát thuyết minh (TTS hoặc Audio file)
     /// - Hàng chờ (queue) để không phát chồng lên nhau
     /// - Tránh trùng lặp
+    /// - Hỗ trợ đa ngôn ngữ (5 ngôn ngữ)
     /// - Hỗ trợ hủy đang phát
     /// </summary>
     public class NarrationService
     {
         // Hàng chờ thuyết minh
         private readonly ConcurrentQueue<NarrationItem> _queue = new();
-        
+
         // Token để hủy TTS đang phát
         private CancellationTokenSource? _currentCts;
-        
+
         // Đang phát hay không
         private bool _isPlaying = false;
-        
+
         // Lock để tránh race condition
         private readonly SemaphoreSlim _playLock = new(1, 1);
-        
-        // ID của nội dung đang phát (tránh phát lại cùng 1 nội dung)
+
+        // ID của nội dung đang phát
         private string _currentPlayingId = string.Empty;
+
+        // ============================================================
+        // ĐA NGÔN NGỮ: Ngôn ngữ hiện tại
+        // ============================================================
+        private string _currentLanguage = "vi-VN";
+
+        public string CurrentLanguage
+        {
+            get => _currentLanguage;
+            set => _currentLanguage = value;
+        }
 
         // Event khi bắt đầu phát
         public event EventHandler<NarrationEventArgs>? OnNarrationStarted;
-        
+
         // Event khi kết thúc phát
         public event EventHandler<NarrationEventArgs>? OnNarrationCompleted;
-        
+
         // Event khi có lỗi
         public event EventHandler<string>? OnNarrationError;
 
         /// <summary>
         /// Thêm vào hàng chờ và phát
         /// </summary>
-        /// <param name="id">ID duy nhất (vd: POI Id)</param>
-        /// <param name="text">Nội dung cần đọc</param>
-        /// <param name="priority">Độ ưu tiên (cao hơn = phát trước)</param>
         public async Task QueueAndPlayAsync(string id, string text, int priority = 0)
         {
-            // Tránh phát lại cùng nội dung đang phát
             if (_currentPlayingId == id && _isPlaying)
                 return;
 
@@ -51,7 +59,8 @@ namespace FoodTourApp.Services
                 Id = id,
                 Text = text,
                 Priority = priority,
-                Type = NarrationType.TTS
+                Type = NarrationType.TTS,
+                LanguageCode = _currentLanguage
             };
 
             _queue.Enqueue(item);
@@ -63,26 +72,18 @@ namespace FoodTourApp.Services
         /// </summary>
         public async Task PlayImmediateAsync(string id, string text)
         {
-            // Hủy cái đang phát
             await StopAsync();
-            
-            // Xóa hàng chờ
             while (_queue.TryDequeue(out _)) { }
-            
-            // Phát ngay
-            await PlayTtsAsync(id, text);
+            await PlayTtsAsync(id, text, _currentLanguage);
         }
 
         /// <summary>
-        /// Phát lại nội dung cụ thể (dùng cho nút Replay)
+        /// Phát lại nội dung cụ thể
         /// </summary>
         public async Task ReplayAsync(string id, string text)
         {
-            // Hủy cái đang phát
             await StopAsync();
-            
-            // Phát nội dung mới
-            await PlayTtsAsync(id, text);
+            await PlayTtsAsync(id, text, _currentLanguage);
         }
 
         /// <summary>
@@ -104,7 +105,6 @@ namespace FoodTourApp.Services
         /// </summary>
         private async Task ProcessQueueAsync()
         {
-            // Nếu đang phát thì không xử lý
             if (_isPlaying) return;
 
             await _playLock.WaitAsync();
@@ -114,9 +114,8 @@ namespace FoodTourApp.Services
                 {
                     if (item.Type == NarrationType.TTS)
                     {
-                        await PlayTtsAsync(item.Id, item.Text);
+                        await PlayTtsAsync(item.Id, item.Text, item.LanguageCode);
                     }
-                    // TODO: Thêm hỗ trợ Audio file sau
                 }
             }
             finally
@@ -126,11 +125,16 @@ namespace FoodTourApp.Services
         }
 
         /// <summary>
-        /// Phát TTS
+        /// Phát TTS với ngôn ngữ cụ thể
         /// </summary>
-        private async Task PlayTtsAsync(string id, string text)
+        private async Task PlayTtsAsync(string id, string text, string languageCode)
         {
-            if (string.IsNullOrEmpty(text)) return;
+            // DEBUG: Kiểm tra text có rỗng không
+            if (string.IsNullOrEmpty(text))
+            {
+                OnNarrationError?.Invoke(this, "Text rỗng!");
+                return;
+            }
 
             _isPlaying = true;
             _currentPlayingId = id;
@@ -138,71 +142,93 @@ namespace FoodTourApp.Services
 
             try
             {
-                // Thông báo bắt đầu phát
-                OnNarrationStarted?.Invoke(this, new NarrationEventArgs { Id = id, Text = text });
-
-                // Cấu hình giọng đọc tiếng Việt
-                var options = new SpeechOptions
+                OnNarrationStarted?.Invoke(this, new NarrationEventArgs
                 {
-                    Volume = 1.0f,
-                    Pitch = 1.0f
-                };
+                    Id = id,
+                    Text = text,
+                    LanguageCode = languageCode
+                });
 
-                // Phát TTS
-                await TextToSpeech.Default.SpeakAsync(text, options, _currentCts.Token);
+                // DEBUG: Thử phát không cần locale trước
+                await TextToSpeech.Default.SpeakAsync(text, cancelToken: _currentCts.Token);
 
-                // Thông báo kết thúc
-                OnNarrationCompleted?.Invoke(this, new NarrationEventArgs { Id = id, Text = text });
-            }
-            catch (OperationCanceledException)
-            {
-                // Bị hủy - bình thường
+                OnNarrationCompleted?.Invoke(this, new NarrationEventArgs
+                {
+                    Id = id,
+                    Text = text,
+                    LanguageCode = languageCode
+                });
             }
             catch (Exception ex)
             {
-                OnNarrationError?.Invoke(this, ex.Message);
+                // DEBUG: Hiện lỗi
+                OnNarrationError?.Invoke(this, $"Lỗi TTS: {ex.Message}");
             }
             finally
             {
                 _isPlaying = false;
                 _currentPlayingId = string.Empty;
-                
-                // Xử lý item tiếp theo trong hàng chờ
                 await ProcessQueueAsync();
             }
         }
 
-        /// <summary>
-        /// Kiểm tra đang phát không
-        /// </summary>
-        public bool IsPlaying => _isPlaying;
 
         /// <summary>
-        /// Lấy số lượng trong hàng chờ
+        /// Tìm locale phù hợp nhất từ danh sách có sẵn
         /// </summary>
+        private Microsoft.Maui.Media.Locale? FindBestLocale(
+            IEnumerable<Microsoft.Maui.Media.Locale> locales,
+            string languageCode)
+        {
+            // Tách language và country từ code (vd: "vi-VN" -> "vi", "VN")
+            var parts = languageCode.Split('-');
+            var language = parts[0].ToLower();
+            var country = parts.Length > 1 ? parts[1].ToUpper() : "";
+
+            // Tìm exact match (vd: vi-VN)
+            var exactMatch = locales.FirstOrDefault(l =>
+                l.Language?.ToLower() == language &&
+                l.Country?.ToUpper() == country);
+
+            if (exactMatch != null) return exactMatch;
+
+            // Tìm language match (vd: vi)
+            var langMatch = locales.FirstOrDefault(l =>
+                l.Language?.ToLower() == language);
+
+            if (langMatch != null) return langMatch;
+
+            // Trả về null để dùng giọng mặc định
+            return null;
+        }
+
+        /// <summary>
+        /// Lấy danh sách ngôn ngữ TTS có sẵn trên thiết bị
+        /// </summary>
+        public async Task<List<string>> GetAvailableLanguagesAsync()
+        {
+            var locales = await TextToSpeech.Default.GetLocalesAsync();
+            return locales
+                .Select(l => $"{l.Language}-{l.Country}")
+                .Distinct()
+                .ToList();
+        }
+
+        public bool IsPlaying => _isPlaying;
         public int QueueCount => _queue.Count;
 
-        /// <summary>
-        /// Xóa toàn bộ hàng chờ
-        /// </summary>
         public void ClearQueue()
         {
             while (_queue.TryDequeue(out _)) { }
         }
     }
 
-    /// <summary>
-    /// Loại thuyết minh
-    /// </summary>
     public enum NarrationType
     {
-        TTS,        // Text-to-Speech
-        AudioFile   // File âm thanh có sẵn
+        TTS,
+        AudioFile
     }
 
-    /// <summary>
-    /// Item trong hàng chờ
-    /// </summary>
     public class NarrationItem
     {
         public string Id { get; set; } = string.Empty;
@@ -210,14 +236,13 @@ namespace FoodTourApp.Services
         public string? AudioPath { get; set; }
         public NarrationType Type { get; set; }
         public int Priority { get; set; }
+        public string LanguageCode { get; set; } = "vi-VN";
     }
 
-    /// <summary>
-    /// Event args cho narration
-    /// </summary>
     public class NarrationEventArgs : EventArgs
     {
         public string Id { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
+        public string LanguageCode { get; set; } = "vi-VN";
     }
 }
