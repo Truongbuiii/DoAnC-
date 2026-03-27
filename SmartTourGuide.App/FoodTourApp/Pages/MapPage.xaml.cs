@@ -4,6 +4,7 @@ using FoodTourApp.Services;
 using Microsoft.Maui.Devices.Sensors;
 
 #if ANDROID
+using Android.Content;
 using FoodTourApp.Platforms.Android;
 #endif
 
@@ -20,7 +21,6 @@ public partial class MapPage : ContentPage
     private List<POI> _allPoisFromDb = new();
     private POI? _currentDisplayedPoi = null;
 
-    // Lưu vị trí user hiện tại để vẽ lại blue dot sau khi map reload
     private double _lastUserLat = 0;
     private double _lastUserLon = 0;
     private bool _hasUserLocation = false;
@@ -106,7 +106,7 @@ public partial class MapPage : ContentPage
     // ============================================================
     // MAP HTML
     // ============================================================
-    private string GenerateMapHtml(double centerLat, double centerLon, List<POI> allPois)
+    private string GenerateMapHtml(double centerLat, double centerLon, List<POI> allPois, int highlightPoiId = -1)
     {
         var markersJs = string.Join("\n", allPois.Select(p =>
         {
@@ -114,9 +114,22 @@ public partial class MapPage : ContentPage
             string lon = p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string name = p.Name.Replace("'", "\\'");
             string cat = p.Category.Replace("'", "\\'");
-            return $@"L.marker([{lat},{lon}]).addTo(map)
-                .bindPopup('<b>{name}</b><br/>{cat}')
-                .on('click', function() {{ window.location.href = 'poi://{p.PoiId}'; }});";
+
+            bool isHighlight = p.PoiId == highlightPoiId;
+            string iconColor = isHighlight ? "orange" : "green";
+            string iconSize = isHighlight ? "40" : "30";
+
+            return $@"
+        var icon_{p.PoiId} = L.divIcon({{
+            className: '',
+            html: '<div style=""width:{iconSize}px;height:{iconSize}px;background:{iconColor};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3)""></div>',
+            iconSize: [{iconSize},{iconSize}],
+            iconAnchor: [{int.Parse(iconSize) / 2},{int.Parse(iconSize)}]
+        }});
+        var marker_{p.PoiId} = L.marker([{lat},{lon}], {{icon: icon_{p.PoiId}}}).addTo(map)
+            .bindPopup('<b>{name}</b><br/><i>{cat}</i>{(isHighlight ? "<br/>📍 Gần nhất!" : "")}')
+            .on('click', function() {{ window.location.href = 'poi://{p.PoiId}'; }});
+        {(isHighlight ? $"marker_{p.PoiId}.openPopup();" : "")}";
         }));
 
         string latStr = centerLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -143,7 +156,6 @@ public partial class MapPage : ContentPage
 
         {markersJs}
 
-        // Blue dot
         var userMarker = null;
         var userCircle = null;
 
@@ -175,15 +187,51 @@ public partial class MapPage : ContentPage
 </html>";
     }
 
-    // Gọi sau khi map load xong để vẽ lại blue dot
     private async Task DrawBlueDotAfterLoad(double lat, double lon)
     {
-        await Task.Delay(800); // chờ map render xong
+        await Task.Delay(800);
         string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
         string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
         MainThread.BeginInvokeOnMainThread(() =>
             MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)"));
     }
+
+    // ============================================================
+    // LOCATION TRACKING
+    // ============================================================
+    private void StartTrackingLocation()
+    {
+        if (_isTracking) return;
+        _isTracking = true;
+
+#if ANDROID
+        // Đăng ký nhận event từ background service
+        LocationForegroundService.LocationUpdated += OnLocationUpdated;
+
+        // Start foreground service
+        var intent = new Intent(Platform.CurrentActivity, typeof(LocationForegroundService));
+        Platform.CurrentActivity?.StartForegroundService(intent);
+#endif
+    }
+
+    private void StopTrackingLocation()
+    {
+        if (!_isTracking) return;
+        _isTracking = false;
+
+#if ANDROID
+        LocationForegroundService.LocationUpdated -= OnLocationUpdated;
+        var intent = new Intent(Platform.CurrentActivity, typeof(LocationForegroundService));
+        Platform.CurrentActivity?.StopService(intent);
+#endif
+    }
+
+#if ANDROID
+    private async void OnLocationUpdated(object? sender, Microsoft.Maui.Devices.Sensors.Location location)
+    {
+        await CheckAndNarrate(location.Latitude, location.Longitude);
+    }
+#endif
 
     // ============================================================
     // LOGIC
@@ -201,7 +249,6 @@ public partial class MapPage : ContentPage
             UpdateInterface(lat, lon, result.NearestPoi);
             RefreshListView();
 
-            // Cập nhật blue dot
             string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
             MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
@@ -233,12 +280,10 @@ public partial class MapPage : ContentPage
             StatusLabel.Text = $"📍 Cách {poi.DistanceDisplay}";
             BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId) ? "❤️ Đã lưu" : "🤍 Yêu thích";
 
-            // Reload map focus vào POI, sau đó vẽ lại blue dot
             var htmlSource = new HtmlWebViewSource();
-            htmlSource.Html = GenerateMapHtml(poi.Latitude, poi.Longitude, _allPoisFromDb);
+            htmlSource.Html = GenerateMapHtml(poi.Latitude, poi.Longitude, _allPoisFromDb, poi.PoiId);
             MapWebView.Source = htmlSource;
 
-            // Vẽ lại blue dot sau khi map load
             if (_hasUserLocation)
                 _ = DrawBlueDotAfterLoad(_lastUserLat, _lastUserLon);
         }
@@ -252,27 +297,6 @@ public partial class MapPage : ContentPage
                 MapWebView.Source = htmlSource;
             }
         }
-    }
-
-    private void StartTrackingLocation()
-    {
-        if (_isTracking) return;
-        _isTracking = true;
-
-        Task.Run(async () =>
-        {
-            try
-            {
-                while (_isTracking)
-                {
-                    var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10));
-                    var location = await Geolocation.Default.GetLocationAsync(request);
-                    if (location != null) await CheckAndNarrate(location.Latitude, location.Longitude);
-                    await Task.Delay(15000);
-                }
-            }
-            catch { }
-        });
     }
 
     // ============================================================
@@ -299,13 +323,22 @@ public partial class MapPage : ContentPage
         MapLoading.IsVisible = false;
 
         await Task.Delay(1500);
-        StartTrackingLocation();
+
+        // Xin quyền location
+        var status = await Permissions.RequestAsync<Permissions.LocationAlways>();
+        if (status != PermissionStatus.Granted)
+            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+
+        if (status == PermissionStatus.Granted)
+            StartTrackingLocation();
+        else
+            StatusLabel.Text = "⚠️ Cần quyền vị trí để hoạt động";
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _isTracking = false;
+        // Không stop service — để chạy background
         StopSpeaking();
         MapWebView.Navigating -= OnMapWebViewNavigating;
     }
@@ -333,7 +366,6 @@ public partial class MapPage : ContentPage
             StatusLabel.Text = "📍 Đã chọn trên bản đồ";
             BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId) ? "❤️ Đã lưu" : "🤍 Yêu thích";
             MapLoading.IsVisible = false;
-            // KHÔNG reload map — giữ nguyên markers và blue dot
             SpeakText(poi.GetDescription(_currentLanguage));
         });
     }
@@ -398,6 +430,12 @@ public partial class MapPage : ContentPage
         SpeakText(_currentDisplayedPoi.GetDescription(_currentLanguage));
     }
 
+    private async void OnDetailClicked(object sender, EventArgs e)
+    {
+        if (_currentDisplayedPoi == null) return;
+        await Navigation.PushAsync(new PoiDetailPage(_currentDisplayedPoi));
+    }
+
     // ============================================================
     // SIMULATE
     // ============================================================
@@ -407,15 +445,11 @@ public partial class MapPage : ContentPage
         if (poi == null) return;
         poi.DistanceDisplay = "5 m";
         _currentDisplayedPoi = poi;
-
-        // Lưu vị trí giả lập
         _lastUserLat = poi.Latitude;
         _lastUserLon = poi.Longitude;
         _hasUserLocation = true;
-
         UpdateInterface(poi.Latitude, poi.Longitude, poi);
         SpeakText(poi.GetDescription(_currentLanguage));
-        // Blue dot sẽ tự vẽ trong DrawBlueDotAfterLoad gọi từ UpdateInterface
     }
 
     private void SimulateOcVu(object sender, EventArgs e)
@@ -424,11 +458,9 @@ public partial class MapPage : ContentPage
         if (poi == null) return;
         poi.DistanceDisplay = "10 m";
         _currentDisplayedPoi = poi;
-
         _lastUserLat = poi.Latitude;
         _lastUserLon = poi.Longitude;
         _hasUserLocation = true;
-
         UpdateInterface(poi.Latitude, poi.Longitude, poi);
         SpeakText(poi.GetDescription(_currentLanguage));
     }

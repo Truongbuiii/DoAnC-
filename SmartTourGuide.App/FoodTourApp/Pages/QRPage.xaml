@@ -1,44 +1,59 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
              x:Class="FoodTourApp.Pages.QRPage"
              Title="Quét QR"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="Black">
 
-    <VerticalStackLayout Padding="20" Spacing="20" VerticalOptions="Center">
-        <Label Text="📷 QUÉT MÃ QR" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center"/>
-        <Label Text="Hướng camera vào mã QR của quán để xem thông tin và nghe thuyết minh ngay lập tức"
-               FontSize="14" TextColor="Gray" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+    <Grid RowDefinitions="*, Auto">
 
-        <!-- Khung camera giả -->
-        <Border StrokeShape="RoundRectangle 20" Stroke="Orange" StrokeThickness="3"
-                HeightRequest="280" WidthRequest="280" HorizontalOptions="Center"
-                BackgroundColor="#1A000000">
-            <Grid>
-                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
-                         HorizontalOptions="Start" VerticalOptions="Start" Margin="10"/>
-                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
-                         HorizontalOptions="Start" VerticalOptions="Start" Margin="10"/>
-                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
-                         HorizontalOptions="End" VerticalOptions="Start" Margin="10"/>
-                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
-                         HorizontalOptions="End" VerticalOptions="Start" Margin="10"/>
-                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
-                         HorizontalOptions="Start" VerticalOptions="End" Margin="10"/>
-                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
-                         HorizontalOptions="Start" VerticalOptions="End" Margin="10"/>
-                <BoxView WidthRequest="30" HeightRequest="4" BackgroundColor="Orange"
-                         HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
-                <BoxView WidthRequest="4" HeightRequest="30" BackgroundColor="Orange"
-                         HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
+        <zxing:CameraBarcodeReaderView
+    x:Name="BarcodeReader"
+    Grid.Row="0"
+    BarcodesDetected="OnBarcodeDetected"
+    HorizontalOptions="Fill"
+    VerticalOptions="Fill">
+            <zxing:CameraBarcodeReaderView.Options>
+                <zxing:BarcodeReaderOptions
+            Formats="QrCode"
+            AutoRotate="True"
+            Multiple="False"/>
+            </zxing:CameraBarcodeReaderView.Options>
+        </zxing:CameraBarcodeReaderView>
+        VerticalOptions="Fill"/>
 
-                <Label Text="📷" FontSize="60" HorizontalOptions="Center" VerticalOptions="Center"/>
+        <!-- Khung ngắm overlay -->
+        <Grid Grid.Row="0" InputTransparent="True">
+            <Border HorizontalOptions="Center" VerticalOptions="Center"
+                    WidthRequest="250" HeightRequest="250"
+                    Stroke="Orange" StrokeThickness="3"
+                    StrokeShape="RoundRectangle 12"
+                    BackgroundColor="Transparent"/>
+            <Label Text="Hướng camera vào mã QR của quán"
+                   TextColor="White" FontSize="14"
+                   HorizontalOptions="Center" VerticalOptions="End"
+                   Margin="0,0,0,30"/>
+        </Grid>
+
+        <!-- Bottom controls -->
+        <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="10"
+                             BackgroundColor="#1F2937">
+            <Label x:Name="StatusLabel"
+                   Text="📷 Đang chờ quét mã QR..."
+                   TextColor="White" FontSize="14"
+                   HorizontalOptions="Center"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Grid.Column="0" Text="🔦 Đèn flash"
+                        Clicked="OnFlashToggle"
+                        BackgroundColor="#374151" TextColor="White"
+                        CornerRadius="10" HeightRequest="45"/>
+                <Button Grid.Column="1" Text="📋 Nhập mã tay"
+                        Clicked="OnManualEntry"
+                        BackgroundColor="Orange" TextColor="White"
+                        CornerRadius="10" HeightRequest="45"/>
             </Grid>
-        </Border>
+        </VerticalStackLayout>
 
-        <Button Text="🔦 Bật đèn flash" BackgroundColor="#1F2937" TextColor="White"
-                CornerRadius="15" HeightRequest="45" Clicked="OnFlashToggle"/>
-        <Button Text="📋 Nhập mã thủ công" BackgroundColor="Orange" TextColor="White"
-                CornerRadius="15" HeightRequest="45" Clicked="OnManualEntry"/>
-    </VerticalStackLayout>
+    </Grid>
 </ContentPage>

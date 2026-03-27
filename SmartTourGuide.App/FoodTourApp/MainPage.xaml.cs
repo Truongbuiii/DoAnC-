@@ -20,7 +20,7 @@ public partial class MainPage : ContentPage
         ToursList.ItemsSource = new ObservableCollection<Itinerary>
         {
             new Itinerary { Name = "Tour Ốc Huyền Thoại", ImageSource = "ocoanh.jpg", Duration = "⏱️ 90 phút | 📍 3 điểm", PoiIds = new List<int>{1, 2, 3} },
-            new Itinerary { Name = "Ăn Vặt Xế Chiều", ImageSource = "phaslau.jpg", Duration = "⏱️ 60 phút | 📍 4 điểm", PoiIds = new List<int>{4, 5, 6} }
+            new Itinerary { Name = "Ăn Vặt Xế Chiều", ImageSource = "phalau.jpg", Duration = "⏱️ 60 phút | 📍 4 điểm", PoiIds = new List<int>{4, 5, 6} }
         };
 
         // 2. Lấy danh sách quán từ SQLite hiện có

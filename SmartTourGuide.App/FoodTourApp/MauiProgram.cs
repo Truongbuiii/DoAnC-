@@ -2,6 +2,7 @@
 using FoodTourApp.Pages;
 using FoodTourApp.Services;
 using Microsoft.Extensions.Logging;
+using ZXing.Net.Maui.Controls;
 
 public static class MauiProgram
 {
@@ -11,6 +12,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiMaps()
+            .UseBarcodeReader() // ← thêm dòng này
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -20,16 +22,9 @@ public static class MauiProgram
         // Đăng ký các dịch vụ cốt lõi
         // ============================================================
 
-        // Database - Singleton (dùng chung 1 instance)
         builder.Services.AddSingleton<DatabaseService>();
-
-        // Geofence - Singleton (giữ trạng thái cooldown xuyên suốt app)
         builder.Services.AddSingleton<GeofenceService>();
-
-        // Narration - Singleton (quản lý hàng chờ TTS)
         builder.Services.AddSingleton<NarrationService>();
-
-        // Pages - Transient (tạo mới mỗi lần navigate)
         builder.Services.AddTransient<MapPage>();
 
 #if DEBUG
