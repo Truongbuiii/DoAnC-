@@ -12,10 +12,42 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-        LoadDashboard();
     }
 
-    private async void LoadDashboard()
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        // Hỏi ngôn ngữ lần đầu mở app
+        if (!Preferences.ContainsKey("AppLanguage"))
+        {
+            await Task.Delay(300);
+
+            string action = await DisplayActionSheet(
+                "Chọn ngôn ngữ thuyết minh",
+                null, null,
+                "🇻🇳 Tiếng Việt",
+                "🇺🇸 English",
+                "🇨🇳 中文",
+                "🇰🇷 한국어",
+                "🇯🇵 日本語");
+
+            string lang = action switch
+            {
+                "🇺🇸 English" => "en-US",
+                "🇨🇳 中文" => "zh-CN",
+                "🇰🇷 한국어" => "ko-KR",
+                "🇯🇵 日本語" => "ja-JP",
+                _ => "vi-VN"
+            };
+
+            Preferences.Set("AppLanguage", lang);
+        }
+
+        await LoadDashboard();
+    }
+
+    private async Task LoadDashboard()
     {
         var allPois = await _dbService.GetPOIsAsync();
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);

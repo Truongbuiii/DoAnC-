@@ -328,22 +328,7 @@ public partial class MapPage : ContentPage
     {
         base.OnAppearing();
 
-        // Đọc lại ngôn ngữ từ Settings mỗi lần vào tab
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
-     
-        // Kiểm tra có POI cần highlight từ PoiDetailPage không
-        int highlightId = Preferences.Get("HighlightPoiId", -1);
-        if (highlightId > 0)
-        {
-            Preferences.Remove("HighlightPoiId"); // xóa sau khi đọc
-            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
-            if (poi != null)
-            {
-                _currentDisplayedPoi = poi;
-                // Map sẽ load với POI được highlight
-            }
-        }
-
 
 #if ANDROID
         _androidTts = new AndroidTtsService();
@@ -356,23 +341,68 @@ public partial class MapPage : ContentPage
         _allPoisFromDb = pois.ToList();
         RefreshListView();
 
-        var defaultHtml = new HtmlWebViewSource();
-        defaultHtml.Html = GenerateMapHtml(10.75750, 106.70700, _allPoisFromDb);
-        MapWebView.Source = defaultHtml;
-        MapLoading.IsVisible = false;
-
-        await Task.Delay(1500);
-
-        // Xin quyền location
-        var status = await Permissions.RequestAsync<Permissions.LocationAlways>();
-        if (status != PermissionStatus.Granted)
-            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-
+        // Fix 1: Lấy vị trí thật trước khi load map
+        var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
+        {
+            try
+            {
+                var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(5));
+                var location = await Geolocation.Default.GetLocationAsync(request);
+                if (location != null)
+                {
+                    _lastUserLat = location.Latitude;
+                    _lastUserLon = location.Longitude;
+                    _hasUserLocation = true;
+
+                    // Load map tại vị trí thật của user
+                    var html = new HtmlWebViewSource();
+                    html.Html = GenerateMapHtml(location.Latitude, location.Longitude, _allPoisFromDb);
+                    MapWebView.Source = html;
+                    MapLoading.IsVisible = false;
+
+                    await Task.Delay(1000);
+                    string latStr = location.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    string lonStr = location.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+                }
+                else
+                {
+                    LoadDefaultMap();
+                }
+            }
+            catch
+            {
+                LoadDefaultMap();
+            }
+
             StartTrackingLocation();
+        }
         else
+        {
+            LoadDefaultMap();
             StatusLabel.Text = "⚠️ Cần quyền vị trí để hoạt động";
+        }
+
+        // Highlight POI từ PoiDetailPage nếu có
+        int highlightId = Preferences.Get("HighlightPoiId", -1);
+        if (highlightId > 0)
+        {
+            Preferences.Remove("HighlightPoiId");
+            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
+            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
+        }
     }
+
+    private void LoadDefaultMap()
+    {
+        var html = new HtmlWebViewSource();
+        html.Html = GenerateMapHtml(10.76186, 106.70224, _allPoisFromDb); // Cổng chào Vĩnh Khánh
+        MapWebView.Source = html;
+        MapLoading.IsVisible = false;
+    }
+
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
@@ -411,7 +441,68 @@ public partial class MapPage : ContentPage
     // ============================================================
     // EVENT HANDLERS
     // ============================================================
-    private void OnSearchTextChanged(object sender, TextChangedEventArgs e) => RefreshListView();
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        var keyword = e.NewTextValue?.ToLower() ?? "";
+
+        if (string.IsNullOrEmpty(keyword))
+        {
+            // Ẩn dropdown khi xóa hết
+            SuggestionBorder.IsVisible = false;
+            SuggestionList.ItemsSource = null;
+            RefreshListView();
+            return;
+        }
+
+        // Lọc POI theo tên hoặc category
+        var suggestions = _allPoisFromDb
+            .Where(p => p.Name.ToLower().Contains(keyword) ||
+                        p.Category.ToLower().Contains(keyword))
+            .Take(5) // tối đa 5 gợi ý
+            .ToList();
+
+        if (suggestions.Any())
+        {
+            SuggestionList.ItemsSource = suggestions;
+            SuggestionBorder.IsVisible = true;
+        }
+        else
+        {
+            SuggestionBorder.IsVisible = false;
+        }
+
+        RefreshListView();
+    }
+
+    private void OnSuggestionSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not POI selected) return;
+
+        // Ẩn dropdown
+        SuggestionBorder.IsVisible = false;
+        SuggestionList.SelectedItem = null;
+        SearchEntry.Text = selected.Name;
+
+        // Hiện POI card + focus map
+        _currentDisplayedPoi = selected;
+        PoiCard.IsVisible = true;
+        CurrentPoiName.Text = selected.Name;
+        CategoryLabel.Text = selected.Category.ToUpper();
+        PoiImage.Source = selected.FullImageUrl;
+        StatusLabel.Text = "🔍 Kết quả tìm kiếm";
+        BtnFavorite.Text = FavoritesPage.IsFavorite(selected.PoiId) ? "❤️ Đã lưu" : "🤍 Yêu thích";
+
+        // Focus map vào POI
+        string latStr = selected.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string lonStr = selected.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        MapWebView.Eval($"map.setView([{latStr},{lonStr}], 18)");
+
+        // Phát TTS
+        SpeakText(selected.GetDescription(_currentLanguage));
+
+        // Ẩn bàn phím
+        SearchEntry.Unfocus();
+    }
 
     private void OnPoiSelected(object sender, SelectionChangedEventArgs e)
     {
@@ -474,46 +565,6 @@ public partial class MapPage : ContentPage
         await Navigation.PushAsync(new PoiDetailPage(_currentDisplayedPoi));
     }
 
-    // ============================================================
-    // SIMULATE
-    // ============================================================
-    private void SimulateOcOanh(object sender, EventArgs e)
-    {
-        var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == 2);
-        if (poi == null) return;
-        poi.DistanceDisplay = "5 m";
-        _currentDisplayedPoi = poi;
-        _lastUserLat = poi.Latitude;
-        _lastUserLon = poi.Longitude;
-        _hasUserLocation = true;
-        UpdateInterface(poi.Latitude, poi.Longitude, poi);
-        SpeakText(poi.GetDescription(_currentLanguage));
-    }
+ 
 
-    private void SimulateOcVu(object sender, EventArgs e)
-    {
-        var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == 3);
-        if (poi == null) return;
-        poi.DistanceDisplay = "10 m";
-        _currentDisplayedPoi = poi;
-        _lastUserLat = poi.Latitude;
-        _lastUserLon = poi.Longitude;
-        _hasUserLocation = true;
-        UpdateInterface(poi.Latitude, poi.Longitude, poi);
-        SpeakText(poi.GetDescription(_currentLanguage));
-    }
-
-    private void SimulateReset(object sender, EventArgs e)
-    {
-        _geofenceService.ResetAll();
-        _currentDisplayedPoi = null;
-        _hasUserLocation = false;
-        PoiCard.IsVisible = false;
-        StopSpeaking();
-
-        var defaultHtml = new HtmlWebViewSource();
-        defaultHtml.Html = GenerateMapHtml(10.75750, 106.70700, _allPoisFromDb);
-        MapWebView.Source = defaultHtml;
-        StatusLabel.Text = "📍 Đã reset";
-    }
 }
