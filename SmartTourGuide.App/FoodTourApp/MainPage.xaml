@@ -12,29 +12,37 @@
                 <Label Text="VĨNH KHÁNH FOOD" FontSize="26" FontAttributes="Bold" TextColor="#1F2937"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Spacing="15">
-                <Label Text="Gợi ý Tour hôm nay" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                <CollectionView HeightRequest="220" x:Name="ToursList" SelectionMode="Single" SelectionChanged="OnTourSelected">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Border WidthRequest="300" StrokeShape="RoundRectangle 20" StrokeThickness="0">
-                                <Grid>
-                                    <Image Source="{Binding FullImageUrl}" 
-                                           Aspect="AspectFill" />
-                                    <BoxView Color="#66000000"/>
-                                    <VerticalStackLayout VerticalOptions="End" Padding="20">
-                                        <Label Text="{Binding Name}" TextColor="White" FontAttributes="Bold" FontSize="18"/>
-                                        <Label Text="{Binding Duration}" TextColor="#DDD" FontSize="12"/>
-                                    </VerticalStackLayout>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </VerticalStackLayout>
+            <Border StrokeShape="RoundRectangle 20" StrokeThickness="0">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBannerTapped"/>
+                </Border.GestureRecognizers>
+
+                <Grid HeightRequest="160">
+                    <BoxView>
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#1F2937" Offset="0"/>
+                                <GradientStop Color="#374151" Offset="1"/>
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
+                    <Ellipse Fill="#22FF6B35" WidthRequest="150" HeightRequest="150"
+                 HorizontalOptions="End" VerticalOptions="Start" Margin="0,-30,-30,0"/>
+                    <VerticalStackLayout Padding="20" Spacing="8" VerticalOptions="Center">
+                        <Label Text="🏆 Top 10 thế giới 2025" TextColor="#FF6B35"
+                   FontSize="12" FontAttributes="Bold"/>
+                        <Label Text="Phố ẩm thực Vĩnh Khánh" TextColor="White"
+                   FontSize="20" FontAttributes="Bold"/>
+                        <Label Text="Thiên đường ốc &amp; hải sản Quận 4" 
+                   TextColor="#9CA3AF" FontSize="13"/>
+                        <Border BackgroundColor="#FF6B35" StrokeShape="RoundRectangle 10"
+                    Padding="12,6" HorizontalOptions="Start" Margin="0,5,0,0">
+                            <Label Text="🗺️ Khám phá ngay" TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                            
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
             <VerticalStackLayout Spacing="15">
                 <Label Text="Địa điểm nổi bật" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>

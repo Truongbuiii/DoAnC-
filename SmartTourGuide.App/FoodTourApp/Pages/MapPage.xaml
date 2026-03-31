@@ -11,26 +11,11 @@
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1"/>
             </Border.Shadow>
-            <Grid ColumnDefinitions="*, Auto, Auto" Padding="20,0">
+            <Grid ColumnDefinitions="*, Auto" Padding="20,0">
                 <Label Text="📍 VĨNH KHÁNH TOUR" VerticalOptions="Center"
-                       FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
-                <Border Grid.Column="1" StrokeShape="RoundRectangle 15"
-                        BackgroundColor="#F3F4F6" Padding="10,5"
-                        Margin="0,0,10,0" VerticalOptions="Center">
-                    <Picker x:Name="LanguagePicker" Title="🌐"
-                            SelectedIndexChanged="OnLanguageChanged"
-                            FontSize="14" TextColor="#1F2937" HorizontalOptions="Center">
-                        <Picker.Items>
-                            <x:String>🇻🇳 Tiếng Việt</x:String>
-                            <x:String>🇺🇸 English</x:String>
-                            <x:String>🇨🇳 中文</x:String>
-                            <x:String>🇰🇷 한국어</x:String>
-                            <x:String>🇯🇵 日本語</x:String>
-                        </Picker.Items>
-                    </Picker>
-                </Border>
-                <Image Grid.Column="2" Source="notification_icon.png"
-                       WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
+               FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
+                <Image Grid.Column="1" Source="notification_icon.png"
+               WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
             </Grid>
         </Border>
 

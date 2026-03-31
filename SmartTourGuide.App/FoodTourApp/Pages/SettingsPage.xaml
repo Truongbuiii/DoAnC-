@@ -7,75 +7,117 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
-            <Label Text="⚙️ CÀI ĐẶT" FontSize="22" FontAttributes="Bold"/>
 
-            <!-- Ngôn ngữ -->
-            <Border StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White" StrokeThickness="0">
+            <!-- NGÔN NGỮ -->
+            <Border StrokeShape="RoundRectangle 12" Padding="15"
+                    BackgroundColor="White" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.08"/>
                 </Border.Shadow>
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="🌐 Ngôn ngữ thuyết minh" FontAttributes="Bold" FontSize="15"/>
-                    <Picker x:Name="LangPicker" SelectedIndexChanged="OnLanguageChanged">
-                        <Picker.Items>
-                            <x:String>🇻🇳 Tiếng Việt</x:String>
-                            <x:String>🇺🇸 English</x:String>
-                            <x:String>🇨🇳 中文</x:String>
-                            <x:String>🇰🇷 한국어</x:String>
-                            <x:String>🇯🇵 日本語</x:String>
-                        </Picker.Items>
-                    </Picker>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="🌐 Ngôn ngữ thuyết minh"
+                           FontAttributes="Bold" FontSize="15"/>
+                    <Border StrokeShape="RoundRectangle 8" Padding="5,0"
+                            BackgroundColor="#F9FAFB" Stroke="#E5E7EB">
+                        <Picker x:Name="LangPicker" SelectedIndexChanged="OnLanguageChanged">
+                            <Picker.Items>
+                                <x:String>🇻🇳 Tiếng Việt</x:String>
+                                <x:String>🇺🇸 English</x:String>
+                                <x:String>🇨🇳 中文</x:String>
+                                <x:String>🇰🇷 한국어</x:String>
+                                <x:String>🇯🇵 日本語</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
                 </VerticalStackLayout>
             </Border>
 
-            <!-- TTS -->
-            <Border StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White" StrokeThickness="0">
+            <!-- THUYẾT MINH TỰ ĐỘNG -->
+            <Border StrokeShape="RoundRectangle 12" Padding="15"
+                    BackgroundColor="White" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.08"/>
                 </Border.Shadow>
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="🔊 Thuyết minh tự động" FontAttributes="Bold" FontSize="15"/>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="🔊 Thuyết minh tự động"
+                           FontAttributes="Bold" FontSize="15"/>
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="Tự động phát khi đến gần quán" VerticalOptions="Center" TextColor="Gray"/>
+                        <Label Text="Tự động phát khi đến gần quán"
+                               VerticalOptions="Center" TextColor="Gray"/>
                         <Switch x:Name="AutoNarrateSwitch" Grid.Column="1"
                                 OnColor="Orange" Toggled="OnAutoNarrateToggled"/>
                     </Grid>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="Âm thanh nền" VerticalOptions="Center" TextColor="Gray"/>
-                        <Switch x:Name="BackgroundSoundSwitch" Grid.Column="1" OnColor="Orange"/>
-                    </Grid>
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Geofence -->
-            <Border StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White" StrokeThickness="0">
+            <!-- VÙNG PHÁT HIỆN GPS -->
+            <Border StrokeShape="RoundRectangle 12" Padding="15"
+                    BackgroundColor="White" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.08"/>
                 </Border.Shadow>
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="📡 Vùng phát hiện" FontAttributes="Bold" FontSize="15"/>
-                    <Label x:Name="RadiusLabel" Text="Bán kính: 50m" TextColor="Gray"/>
-                    <Slider x:Name="RadiusSlider" Minimum="20" Maximum="100" Value="50"
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="📡 Vùng phát hiện GPS"
+                           FontAttributes="Bold" FontSize="15"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Bán kính kích hoạt"
+                               VerticalOptions="Center" TextColor="Gray"/>
+                        <Label x:Name="RadiusLabel" Grid.Column="1"
+                               Text="50m" TextColor="Orange" FontAttributes="Bold"/>
+                    </Grid>
+                    <Slider x:Name="RadiusSlider" Minimum="20" Maximum="150" Value="50"
                             ThumbColor="Orange" MinimumTrackColor="Orange"
                             ValueChanged="OnRadiusChanged"/>
-                    <Label x:Name="CooldownLabel" Text="Cooldown: 5 phút" TextColor="Gray"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Cooldown giữa 2 lần phát"
+                               VerticalOptions="Center" TextColor="Gray"/>
+                        <Label x:Name="CooldownLabel" Grid.Column="1"
+                               Text="5 phút" TextColor="Orange" FontAttributes="Bold"/>
+                    </Grid>
                     <Slider x:Name="CooldownSlider" Minimum="1" Maximum="15" Value="5"
                             ThumbColor="Orange" MinimumTrackColor="Orange"
                             ValueChanged="OnCooldownChanged"/>
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Thông tin app -->
-            <Border StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White" StrokeThickness="0">
+            <!-- DỮ LIỆU -->
+            <Border StrokeShape="RoundRectangle 12" Padding="15"
+                    BackgroundColor="White" StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.08"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🗄️ Dữ liệu" FontAttributes="Bold" FontSize="15"/>
+                    <Button Text="🗑️ Xóa danh sách yêu thích"
+                            BackgroundColor="#FEE2E2" TextColor="#EF4444"
+                            CornerRadius="10" HeightRequest="44"
+                            Clicked="OnClearFavorites"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- THÔNG TIN -->
+            <Border StrokeShape="RoundRectangle 12" Padding="15"
+                    BackgroundColor="White" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.08"/>
                 </Border.Shadow>
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="ℹ️ Thông tin ứng dụng" FontAttributes="Bold" FontSize="15"/>
-                    <Label Text="Phố ẩm thực Vĩnh Khánh Tour v1.0" TextColor="Gray"/>
-                    <Label Text="Hệ thống thuyết minh tự động đa ngôn ngữ" TextColor="Gray" FontSize="12"/>
-                    <Button Text="🗑️ Xóa dữ liệu yêu thích" BackgroundColor="#FEE2E2"
-                            TextColor="#EF4444" CornerRadius="10" Clicked="OnClearFavorites"/>
+                    <Label Text="ℹ️ Thông tin" FontAttributes="Bold" FontSize="15"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Phiên bản" TextColor="Gray" FontSize="13"/>
+                        <Label Grid.Column="1" Text="v1.0.0"
+                               TextColor="#1F2937" FontSize="13" FontAttributes="Bold"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Framework" TextColor="Gray" FontSize="13"/>
+                        <Label Grid.Column="1" Text=".NET MAUI 10"
+                               TextColor="#1F2937" FontSize="13" FontAttributes="Bold"/>
+                    </Grid>
+                    <Label Text="Hệ thống thuyết minh tự động đa ngôn ngữ · Phố ẩm thực Vĩnh Khánh"
+                           TextColor="#9CA3AF" FontSize="11"
+                           HorizontalTextAlignment="Center" Margin="0,5,0,0"/>
                 </VerticalStackLayout>
             </Border>
 
