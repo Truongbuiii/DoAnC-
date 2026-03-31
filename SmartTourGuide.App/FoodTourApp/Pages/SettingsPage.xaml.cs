@@ -30,7 +30,11 @@ public partial class SettingsPage : ContentPage
         => Preferences.Set("AutoNarrate", e.Value);
 
     private void OnRadiusChanged(object sender, ValueChangedEventArgs e)
-        => RadiusLabel.Text = $"{(int)e.NewValue}m";
+    {
+        int val = (int)e.NewValue;
+        RadiusLabel.Text = $"{val}m";
+        Preferences.Set("TriggerRadius", val); // thêm dòng này
+    }
 
     private void OnCooldownChanged(object sender, ValueChangedEventArgs e)
     {

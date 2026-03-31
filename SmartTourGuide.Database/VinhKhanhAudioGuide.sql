@@ -1,4 +1,5 @@
-﻿USE VinhKhanhAudioGuide;
+﻿
+USE VinhKhanhAudioGuide;
 GO
 
 -- ==========================================

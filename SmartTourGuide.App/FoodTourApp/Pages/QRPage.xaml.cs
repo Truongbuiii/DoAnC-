@@ -65,14 +65,19 @@ public partial class QRPage : ContentPage
         {
             StatusLabel.Text = $"✅ Đã quét: {code}";
 
+            // Parse poiId TRƯỚC
             int poiId = -1;
             if (code.StartsWith("POI_"))
                 int.TryParse(code.Replace("POI_", ""), out poiId);
             else
                 int.TryParse(code, out poiId);
 
+            // Ghi log ScanQR SAU KHI có poiId
             if (poiId > 0)
             {
+                var lang = Preferences.Get("AppLanguage", "vi-VN");
+                _ = _dbService.LogActivityAsync(poiId, "ScanQR", lang);
+
                 var poi = await _dbService.GetPOIByIdAsync(poiId);
                 if (poi != null)
                 {

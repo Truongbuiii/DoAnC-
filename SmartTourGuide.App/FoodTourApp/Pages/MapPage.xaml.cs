@@ -277,6 +277,15 @@ public partial class MapPage : ContentPage
 
             if (result.ShouldNarrate && result.PoiToNarrate != null)
                 SpeakText(result.PoiToNarrate.GetDescription(_currentLanguage));
+            if (result.ShouldNarrate && result.PoiToNarrate != null)
+            {
+                SpeakText(result.PoiToNarrate.GetDescription(_currentLanguage));
+                // Ghi log AutoTrigger
+                _ = _dbService.LogActivityAsync(
+                    result.PoiToNarrate.PoiId,
+                    "AutoTrigger",
+                    _currentLanguage);
+            }
         });
     }
 
@@ -329,6 +338,8 @@ public partial class MapPage : ContentPage
         base.OnAppearing();
 
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
+        _geofenceService.CooldownMinutes = Preferences.Get("CooldownMinutes", 5);
+        _geofenceService.DefaultRadius = Preferences.Get("TriggerRadius", 0);
 
 #if ANDROID
         _androidTts = new AndroidTtsService();
@@ -337,11 +348,45 @@ public partial class MapPage : ContentPage
 
         MapWebView.Navigating += OnMapWebViewNavigating;
 
+        // Load POI TRƯỚC
         var pois = await _dbService.GetPOIsAsync();
         _allPoisFromDb = pois.ToList();
         RefreshListView();
 
-        // Fix 1: Lấy vị trí thật trước khi load map
+        // Kiểm tra tour SAU KHI có data
+        string tourPoiIds = Preferences.Get("TourPoiIds", "");
+        if (!string.IsNullOrEmpty(tourPoiIds))
+        {
+            Preferences.Remove("TourPoiIds");
+            var ids = tourPoiIds.Split(',').Select(int.Parse).ToList();
+            var tourPois = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
+
+            if (tourPois.Any())
+            {
+                var html = new HtmlWebViewSource();
+                html.Html = GenerateMapHtml(
+                    tourPois.First().Latitude,
+                    tourPois.First().Longitude,
+                    tourPois); // chỉ truyền POI của tour
+                MapWebView.Source = html;
+                MapLoading.IsVisible = false;
+                StartTrackingLocation();
+                return;
+            }
+        }
+
+        // Highlight POI từ PoiDetailPage nếu có
+        int highlightId = Preferences.Get("HighlightPoiId", -1);
+        if (highlightId > 0)
+        {
+            Preferences.Remove("HighlightPoiId");
+            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
+            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
+            StartTrackingLocation();
+            return;
+        }
+
+        // Load map mặc định theo vị trí thật
         var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
         {
@@ -354,27 +399,18 @@ public partial class MapPage : ContentPage
                     _lastUserLat = location.Latitude;
                     _lastUserLon = location.Longitude;
                     _hasUserLocation = true;
-
-                    // Load map tại vị trí thật của user
                     var html = new HtmlWebViewSource();
                     html.Html = GenerateMapHtml(location.Latitude, location.Longitude, _allPoisFromDb);
                     MapWebView.Source = html;
                     MapLoading.IsVisible = false;
-
                     await Task.Delay(1000);
                     string latStr = location.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     string lonStr = location.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
                 }
-                else
-                {
-                    LoadDefaultMap();
-                }
+                else LoadDefaultMap();
             }
-            catch
-            {
-                LoadDefaultMap();
-            }
+            catch { LoadDefaultMap(); }
 
             StartTrackingLocation();
         }
@@ -382,15 +418,6 @@ public partial class MapPage : ContentPage
         {
             LoadDefaultMap();
             StatusLabel.Text = "⚠️ Cần quyền vị trí để hoạt động";
-        }
-
-        // Highlight POI từ PoiDetailPage nếu có
-        int highlightId = Preferences.Get("HighlightPoiId", -1);
-        if (highlightId > 0)
-        {
-            Preferences.Remove("HighlightPoiId");
-            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
-            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
         }
     }
 

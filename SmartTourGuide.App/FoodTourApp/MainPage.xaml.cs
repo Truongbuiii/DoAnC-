@@ -18,11 +18,9 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        // Hỏi ngôn ngữ lần đầu mở app
         if (!Preferences.ContainsKey("AppLanguage"))
         {
             await Task.Delay(300);
-
             string action = await DisplayActionSheet(
                 "Chọn ngôn ngữ thuyết minh",
                 null, null,
@@ -40,7 +38,6 @@ public partial class MainPage : ContentPage
                 "🇯🇵 日本語" => "ja-JP",
                 _ => "vi-VN"
             };
-
             Preferences.Set("AppLanguage", lang);
         }
 
@@ -51,10 +48,23 @@ public partial class MainPage : ContentPage
     {
         var allPois = await _dbService.GetPOIsAsync();
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
+
+        var tours = await _dbService.GetItinerariesAsync();
+        ToursList.ItemsSource = new ObservableCollection<Itinerary>(tours);
     }
 
     private async void OnBannerTapped(object sender, EventArgs e)
+        => await Shell.Current.GoToAsync("//MapPage");
+
+    private async void OnTourSelected(object sender, SelectionChangedEventArgs e)
     {
+        if (e.CurrentSelection.FirstOrDefault() is not Itinerary tour) return;
+        ((CollectionView)sender).SelectedItem = null;
+
+        // Lưu danh sách POI của tour → MapPage sẽ đọc
+        Preferences.Set("TourPoiIds", tour.PoiIdsRaw);
+        Preferences.Set("TourName", tour.Name);
+
         await Shell.Current.GoToAsync("//MapPage");
     }
 
