@@ -56,6 +56,58 @@
                 </Grid>
             </Border>
 
+            <!-- TOUR GỢI Ý -->
+            <VerticalStackLayout Padding="16,0,16,0" Spacing="12">
+                <Label Text="🗺️ Tour gợi ý" FontSize="17"
+           FontAttributes="Bold" TextColor="#111827"/>
+
+                <CollectionView x:Name="ToursList"
+                    HeightRequest="160"
+                    SelectionMode="Single"
+                    SelectionChanged="OnTourSelected">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border WidthRequest="260" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.15"/>
+                                </Border.Shadow>
+                                <Grid HeightRequest="160">
+                                    <BoxView Color="#1F2937"/>
+                                    <Image Source="{Binding ImageSource}"
+                               Aspect="AspectFill" Opacity="0.7"/>
+                                    <BoxView>
+                                        <BoxView.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#00000000" Offset="0"/>
+                                                <GradientStop Color="#DD000000" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </BoxView.Background>
+                                    </BoxView>
+                                    <VerticalStackLayout VerticalOptions="End"
+                                             Padding="14,10" Spacing="4">
+                                        <Label Text="{Binding Name}"
+                                   TextColor="White" FontSize="15"
+                                   FontAttributes="Bold"/>
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Border BackgroundColor="#F97316"
+                                        StrokeShape="RoundRectangle 6"
+                                        Padding="6,2">
+                                                <Label Text="{Binding Duration}"
+                                           TextColor="White" FontSize="10"/>
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+            
             <!-- ĐỊA ĐIỂM NỔI BẬT -->
             <VerticalStackLayout Padding="16,24,16,16" Spacing="12">
                 <HorizontalStackLayout>

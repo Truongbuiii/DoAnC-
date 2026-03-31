@@ -20,10 +20,14 @@ public partial class PoiDetailPage : ContentPage
         InitializeComponent();
         _poi = poi;
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
-
-        // Set BindingContext để XAML binding hoạt động như MainPage
         BindingContext = _poi;
+    }
 
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        // Set text ở đây — view đã render xong
         if (_poi != null)
         {
             DetailName.Text = _poi.Name;
@@ -32,22 +36,7 @@ public partial class PoiDetailPage : ContentPage
         }
 
         UpdateFavoriteButton();
-    }
 
-    private void LoadImage()
-    {
-        if (string.IsNullOrEmpty(_poi?.ImageSource)) return;
-        try
-        {
-            // Dùng string trực tiếp như XAML binding — không dùng ImageSource.FromFile()
-            MainImage.Source = _poi.ImageSource;
-        }
-        catch { }
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
 #if ANDROID
         _androidTts = new AndroidTtsService();
         await _androidTts.InitializeAsync();

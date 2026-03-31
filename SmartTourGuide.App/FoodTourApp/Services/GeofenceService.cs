@@ -20,7 +20,10 @@ namespace FoodTourApp.Services
         
         // Debounce: Phải ở trong vùng ít nhất X giây mới trigger
         public int DebounceSeconds { get; set; } = 3;
-        
+
+        // Thêm property DefaultRadius
+        public int DefaultRadius { get; set; } = 0; // 0 = dùng radius của từng POI
+
         // Theo dõi thời gian vào vùng
         private readonly Dictionary<int, DateTime> _enterTimes = new();
 
@@ -56,7 +59,8 @@ namespace FoodTourApp.Services
                     : $"{distKm:F1} km";
 
                 // Kiểm tra có trong bán kính không
-                if (distMeters <= poi.TriggerRadius)
+                double radius = DefaultRadius > 0 ? DefaultRadius : poi.TriggerRadius;
+                if (distMeters <= radius)
                 {
                     // Tìm POI gần nhất trong vùng
                     if (distMeters < nearestDistance)
