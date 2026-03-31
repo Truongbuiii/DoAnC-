@@ -1,0 +1,35 @@
+﻿@model AdminWeb.Models.Tour
+
+@{
+    ViewData["Title"] = "Xóa Hành trình";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5 text-center">
+                    <div class="display-1 text-danger mb-4">
+                        <i class="bi bi-exclamation-octagon"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-3">Xác nhận xóa?</h3>
+                    <p class="text-muted mb-4">
+                        Tài có chắc chắn muốn xóa hành trình <br>
+                        <strong class="text-danger fs-5">"@Model.TourName"</strong> không? <br>
+                        <span class="small text-secondary">Hành động này không thể hoàn tác và sẽ xóa tất cả lộ trình liên quan.</span>
+                    </p>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="TourId" />
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold">
+                                <i class="bi bi-trash3 me-2"></i>Xóa vĩnh viễn
+                            </button>
+                            <a asp-action="Index" class="btn btn-light btn-lg rounded-pill text-muted">Hủy bỏ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

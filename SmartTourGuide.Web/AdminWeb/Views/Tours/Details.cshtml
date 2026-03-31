@@ -1,0 +1,65 @@
+﻿@model AdminWeb.Models.Tour
+
+@{
+    ViewData["Title"] = "Chi tiết Hành trình";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-info text-white p-4 border-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="fw-bold mb-1">@Model.TourName</h2>
+                            <span class="badge bg-white text-info rounded-pill px-3">Dự kiến: @Model.TotalTime</span>
+                        </div>
+                        <a asp-action="Edit" asp-route-id="@Model.TourId" class="btn btn-light btn-sm rounded-pill px-3">
+                            <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6 class="text-uppercase fw-bold text-muted small mb-2">Giới thiệu hành trình</h6>
+                        <p class="text-dark">@Model.Description</p>
+                    </div>
+
+                    <h6 class="text-uppercase fw-bold text-muted small mb-4">Lộ trình di chuyển chi tiết</h6>
+                    
+                    <div class="position-relative ps-4 ms-2 border-start border-2 border-info-subtle">
+                        @if (Model.TourDetails != null && Model.TourDetails.Any())
+                        {
+                            foreach (var detail in Model.TourDetails.OrderBy(d => d.Order))
+                            {
+                                <div class="mb-4 position-relative">
+                                    <div class="position-absolute translate-middle-x start-0 bg-info text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                                         style="width: 32px; height: 32px; left: -26px; top: 0; font-size: 0.8rem; font-weight: bold; z-index: 2;">
+                                        @detail.Order
+                                    </div>
+                                    <div class="ms-3 pt-1">
+                                        <h6 class="fw-bold text-dark mb-1">@detail.Poi?.Name</h6>
+                                        <p class="text-muted small mb-0">
+                                            <i class="bi bi-tag me-1"></i> @detail.Poi?.Category | 
+                                            <i class="bi bi-geo-alt me-1"></i> @detail.Poi?.Latitude, @detail.Poi?.Longitude
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted italic">Tour này chưa được thiết lập các điểm dừng.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light p-3 border-0 d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Quay lại danh sách</a>
+                    <small class="text-muted align-self-center">ID Tour: #@Model.TourId</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

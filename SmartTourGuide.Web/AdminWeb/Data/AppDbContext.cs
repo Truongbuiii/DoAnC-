@@ -12,9 +12,22 @@ namespace AdminWeb.Data
         public DbSet<Location> Locations { get; set; }
         public DbSet<Audio> Audios { get; set; }
 
+        // --- THÊM DÒNG NÀY (BƯỚC 2.1) ---
+        public DbSet<Admin> Admins { get; set; }
+        public DbSet<Tour> Tours { get; set; }
+        public DbSet<TourDetail> TourDetails { get; set; }
+        public DbSet<ActivityLogs> ActivityLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // --- THÊM CẤU HÌNH BẢNG ADMINS (BƯỚC 2.2) ---
+            modelBuilder.Entity<Admin>(entity =>
+            {
+                entity.ToTable("Admins"); // Khớp với tên bảng dbo.Admins trong SSMS
+                entity.HasKey(e => e.AdminId);
+                entity.Property(e => e.AdminId).HasColumnName("AdminId");
+            });
 
             // Cấu hình bảng POIs
             modelBuilder.Entity<POI>(entity =>
@@ -38,5 +51,3 @@ namespace AdminWeb.Data
         }
     }
 }
-
-        

@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using AdminWeb.Data;
 using AdminWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AdminWeb.Controllers
 {
+    [Authorize]
     public class POIController : Controller
     {
         private readonly AppDbContext _context;
