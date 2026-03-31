@@ -2,66 +2,130 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.Pages.PoiDetailPage"
-             Title="Chi tiết địa điểm"
-             BackgroundColor="#F9FAFB">
+             Title=""
+             BackgroundColor="#F3F4F6">
 
     <ScrollView>
         <VerticalStackLayout Spacing="0">
-            <Grid HeightRequest="300">
-                <Image x:Name="MainImage" Aspect="AspectFill" Source="ocoanh.jpg"/>
-                <BoxView Color="#66000000"/>
-                <VerticalStackLayout VerticalOptions="End" Margin="20" Spacing="5">
-                    <Label x:Name="DetailName" TextColor="White" FontSize="28" FontAttributes="Bold"/>
-                    <Label x:Name="DetailCategory" TextColor="Orange" FontSize="16"/>
-                </VerticalStackLayout>
-                <ImageButton Source="back_icon.png" WidthRequest="30" HeightRequest="30" 
-                             VerticalOptions="Start" HorizontalOptions="Start" 
-                             Margin="20" Clicked="OnBackClicked"/>
-            </Grid>
 
-            <Border Margin="20,-20,20,0" Padding="20" BackgroundColor="White" StrokeShape="RoundRectangle 20" StrokeThickness="0">
+            <!-- ẢNH HEADER -->
+            <AbsoluteLayout HeightRequest="300">
+                <BoxView Color="#1F2937"
+                         AbsoluteLayout.LayoutFlags="All"
+                         AbsoluteLayout.LayoutBounds="0,0,1,1"/>
+                <Image x:Name="MainImage"
+                       Source="{Binding FullImageUrl}"
+                       Aspect="AspectFill"
+                       AbsoluteLayout.LayoutFlags="All"
+                       AbsoluteLayout.LayoutBounds="0,0,1,1"/>
+                <BoxView AbsoluteLayout.LayoutFlags="All"
+                         AbsoluteLayout.LayoutBounds="0,0,1,1">
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#33000000" Offset="0"/>
+                            <GradientStop Color="#CC000000" Offset="1"/>
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+
+                <!-- Tên + Category -->
+                <VerticalStackLayout Spacing="6"
+                                     AbsoluteLayout.LayoutFlags="WidthProportional"
+                                     AbsoluteLayout.LayoutBounds="20,240,0.9,AutoSize">
+                    <Border BackgroundColor="#F97316"
+                            StrokeShape="RoundRectangle 8"
+                            Padding="10,4" HorizontalOptions="Start">
+                        <Label x:Name="DetailCategory"
+                               TextColor="White" FontSize="11"
+                               FontAttributes="Bold"/>
+                    </Border>
+                    <Label x:Name="DetailName"
+                           TextColor="White" FontSize="24"
+                           FontAttributes="Bold"
+                           LineBreakMode="TailTruncation"/>
+                </VerticalStackLayout>
+
+                <!-- Nút back -->
+                <ImageButton Source="back_icon.png"
+                             WidthRequest="40" HeightRequest="40"
+                             Clicked="OnBackClicked"
+                             BackgroundColor="#66000000"
+                             CornerRadius="20"
+                             AbsoluteLayout.LayoutBounds="16,48,40,40"
+                             AbsoluteLayout.LayoutFlags="None"/>
+            </AbsoluteLayout>
+
+            <!-- MÔ TẢ -->
+            <Border Margin="16,-24,16,0" Padding="20"
+                    BackgroundColor="White"
+                    StrokeShape="RoundRectangle 20"
+                    StrokeThickness="0">
                 <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.1"/>
+                    <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.08"/>
                 </Border.Shadow>
-                <VerticalStackLayout Spacing="15">
-                    <Label Text="Giới thiệu &amp; Lịch sử" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                    <Label x:Name="DetailDescription" FontSize="15" LineHeight="1.5" TextColor="#4B5563"/>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Giới thiệu" FontSize="16"
+                           FontAttributes="Bold" TextColor="#111827"/>
+                    <BoxView HeightRequest="2" WidthRequest="40"
+                             Color="#F97316" HorizontalOptions="Start"
+                             CornerRadius="2"/>
+                    <Label x:Name="DetailDescription" FontSize="14"
+                           LineHeight="1.7" TextColor="#4B5563"/>
                 </VerticalStackLayout>
             </Border>
 
-            <VerticalStackLayout Padding="20" Spacing="20">
-                <Border Padding="15" StrokeShape="RoundRectangle 15" BackgroundColor="#F3F4F6" StrokeThickness="0">
-                    <VerticalStackLayout Spacing="10">
-                        <Label Text="🍽️ Món ăn nên thử" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                        <Label x:Name="DetailMenu" Text="• Ốc hương trứng muối&#10;• Càng ghẹ rang muối&#10;• Sò lông nướng mỡ hành" FontSize="15" TextColor="#2C3E50"/>
-                    </VerticalStackLayout>
-                </Border>
+            <!-- MÓN ĂN -->
+            <Border Margin="16,12,16,0" Padding="20"
+                    BackgroundColor="White"
+                    StrokeShape="RoundRectangle 16"
+                    StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.08"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🍽️ Món nên thử" FontSize="16"
+                           FontAttributes="Bold" TextColor="#111827"/>
+                    <BoxView HeightRequest="2" WidthRequest="40"
+                             Color="#F97316" HorizontalOptions="Start"
+                             CornerRadius="2"/>
+                    <Label x:Name="DetailMenu"
+                           Text="• Ốc hương trứng muối&#10;• Càng ghẹ rang muối&#10;• Sò lông nướng mỡ hành"
+                           FontSize="14" TextColor="#374151" LineHeight="1.6"/>
+                </VerticalStackLayout>
+            </Border>
 
-                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                    <Button x:Name="BtnFavorite"
-            Text="🤍 Yêu thích"
-            Clicked="OnFavoriteClicked"
-            BackgroundColor="#E74C3C"
-            TextColor="White"
-            CornerRadius="25"
-            WidthRequest="130" HeightRequest="45"
-            FontAttributes="Bold"/>
-                    <Button Text="🔊 Nghe"
-            Clicked="OnSpeakClicked"
-            BackgroundColor="Orange"
-            TextColor="White"
-            CornerRadius="25"
-            WidthRequest="100" HeightRequest="45"
-            FontAttributes="Bold"/>
-                    <Button Text="🧭 Dẫn đường"
-            Clicked="OnDirectClicked"
-            BackgroundColor="#1F2937"
-            TextColor="White"
-            CornerRadius="25"
-            WidthRequest="130" HeightRequest="45"
-            FontAttributes="Bold"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
+            <!-- 4 NÚT -->
+            <Grid RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="*,*"
+                  RowSpacing="10" ColumnSpacing="10"
+                  Margin="16,16,16,32">
+                <Button Grid.Row="0" Grid.Column="0"
+                        x:Name="BtnFavorite"
+                        Text="❤️ Yêu thích"
+                        Clicked="OnFavoriteClicked"
+                        BackgroundColor="#EF4444" TextColor="White"
+                        CornerRadius="14" HeightRequest="50"
+                        FontAttributes="Bold" FontSize="14"/>
+                <Button Grid.Row="0" Grid.Column="1"
+                        Text="🔊 Nghe"
+                        Clicked="OnSpeakClicked"
+                        BackgroundColor="#F97316" TextColor="White"
+                        CornerRadius="14" HeightRequest="50"
+                        FontAttributes="Bold" FontSize="14"/>
+                <Button Grid.Row="1" Grid.Column="0"
+                        Text="🗺️ Bản đồ"
+                        Clicked="OnViewOnMapClicked"
+                        BackgroundColor="#3B82F6" TextColor="White"
+                        CornerRadius="14" HeightRequest="50"
+                        FontAttributes="Bold" FontSize="14"/>
+                <Button Grid.Row="1" Grid.Column="1"
+                        Text="🧭 Dẫn đường"
+                        Clicked="OnDirectClicked"
+                        BackgroundColor="#1F2937" TextColor="White"
+                        CornerRadius="14" HeightRequest="50"
+                        FontAttributes="Bold" FontSize="14"/>
+            </Grid>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

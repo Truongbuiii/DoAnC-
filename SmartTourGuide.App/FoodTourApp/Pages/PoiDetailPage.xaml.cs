@@ -19,21 +19,30 @@ public partial class PoiDetailPage : ContentPage
     {
         InitializeComponent();
         _poi = poi;
-
-        // Đọc ngôn ngữ hiện tại từ Settings
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
+
+        // Set BindingContext để XAML binding hoạt động như MainPage
+        BindingContext = _poi;
 
         if (_poi != null)
         {
-            MainImage.Source = _poi.FullImageUrl;
             DetailName.Text = _poi.Name;
             DetailCategory.Text = _poi.Category.ToUpper();
-            // Dùng đúng ngôn ngữ
             DetailDescription.Text = _poi.GetDescription(_currentLanguage);
         }
 
-        // Cập nhật nút yêu thích theo trạng thái thật
         UpdateFavoriteButton();
+    }
+
+    private void LoadImage()
+    {
+        if (string.IsNullOrEmpty(_poi?.ImageSource)) return;
+        try
+        {
+            // Dùng string trực tiếp như XAML binding — không dùng ImageSource.FromFile()
+            MainImage.Source = _poi.ImageSource;
+        }
+        catch { }
     }
 
     protected override async void OnAppearing()
@@ -67,12 +76,10 @@ public partial class PoiDetailPage : ContentPage
     private void OnFavoriteClicked(object sender, EventArgs e)
     {
         if (_poi == null) return;
-
         if (FavoritesPage.IsFavorite(_poi.PoiId))
             FavoritesPage.RemoveFavorite(_poi.PoiId);
         else
             FavoritesPage.AddFavorite(_poi.PoiId);
-
         UpdateFavoriteButton();
     }
 
@@ -101,5 +108,12 @@ public partial class PoiDetailPage : ContentPage
             string lon = _poi.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
             await Launcher.OpenAsync($"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}&travelmode=walking");
         }
+    }
+
+    private async void OnViewOnMapClicked(object sender, EventArgs e)
+    {
+        if (_poi == null) return;
+        Preferences.Set("HighlightPoiId", _poi.PoiId);
+        await Shell.Current.GoToAsync("//MapPage");
     }
 }

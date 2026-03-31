@@ -2,65 +2,110 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.MainPage"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="#F3F4F6">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="25">
+        <VerticalStackLayout Spacing="0">
 
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Chào bạn, hôm nay ăn gì?" FontSize="14" TextColor="Gray"/>
-                <Label Text="VĨNH KHÁNH FOOD" FontSize="26" FontAttributes="Bold" TextColor="#1F2937"/>
-            </VerticalStackLayout>
+            <!-- HEADER -->
+            <Grid HeightRequest="130" BackgroundColor="#1F2937">
+                <Ellipse Fill="#22F97316" WidthRequest="200" HeightRequest="200"
+                         HorizontalOptions="End" VerticalOptions="Start"
+                         Margin="0,-60,-40,0"/>
+                <Ellipse Fill="#11F97316" WidthRequest="120" HeightRequest="120"
+                         HorizontalOptions="End" VerticalOptions="End"
+                         Margin="0,0,60,-40"/>
+                <VerticalStackLayout Padding="24,40,24,20" Spacing="4"
+                                     VerticalOptions="End">
+                    <Label Text="Chào mừng đến" TextColor="#9CA3AF" FontSize="13"/>
+                    <Label Text="Phố ẩm thực Vĩnh Khánh 🍜"
+                           TextColor="White" FontSize="22" FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Grid>
 
-            <VerticalStackLayout Spacing="15">
-                <Label Text="Gợi ý Tour hôm nay" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                <CollectionView HeightRequest="220" x:Name="ToursList" SelectionMode="Single" SelectionChanged="OnTourSelected">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
-                    </CollectionView.ItemsLayout>
+            <!-- BANNER -->
+            <Border Margin="16,-20,16,0" StrokeShape="RoundRectangle 20"
+                    StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,8" Radius="20" Opacity="0.2"/>
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBannerTapped"/>
+                </Border.GestureRecognizers>
+                <Grid HeightRequest="120">
+                    <BoxView>
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#F97316" Offset="0"/>
+                                <GradientStop Color="#EA580C" Offset="1"/>
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
+                    <Ellipse Fill="#22FFFFFF" WidthRequest="120" HeightRequest="120"
+                             HorizontalOptions="End" VerticalOptions="Center"
+                             Margin="0,0,-30,0"/>
+                    <VerticalStackLayout Padding="20" Spacing="4"
+                                         VerticalOptions="Center">
+                        <Label Text="🏆 Top 10 thế giới 2025"
+                               TextColor="#FED7AA" FontSize="11" FontAttributes="Bold"/>
+                        <Label Text="Khám phá ngay →"
+                               TextColor="White" FontSize="18" FontAttributes="Bold"/>
+                        <Label Text="Thiên đường ốc &amp; hải sản Quận 4"
+                               TextColor="#FFEDD5" FontSize="12"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- ĐỊA ĐIỂM NỔI BẬT -->
+            <VerticalStackLayout Padding="16,24,16,16" Spacing="12">
+                <HorizontalStackLayout>
+                    <Label Text="📍 Địa điểm nổi bật"
+                           FontSize="17" FontAttributes="Bold" TextColor="#1F2937"/>
+                </HorizontalStackLayout>
+
+                <CollectionView x:Name="FeaturedPoisList"
+                                SelectionMode="Single"
+                                SelectionChanged="OnPoiSelected">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border WidthRequest="300" StrokeShape="RoundRectangle 20" StrokeThickness="0">
-                                <Grid>
-                                    <Image Source="{Binding FullImageUrl}" 
-                                           Aspect="AspectFill" />
-                                    <BoxView Color="#66000000"/>
-                                    <VerticalStackLayout VerticalOptions="End" Padding="20">
-                                        <Label Text="{Binding Name}" TextColor="White" FontAttributes="Bold" FontSize="18"/>
-                                        <Label Text="{Binding Duration}" TextColor="#DDD" FontSize="12"/>
-                                    </VerticalStackLayout>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </VerticalStackLayout>
-
-            <VerticalStackLayout Spacing="15">
-                <Label Text="Địa điểm nổi bật" FontSize="18" FontAttributes="Bold" TextColor="#1F2937"/>
-                <CollectionView x:Name="FeaturedPoisList" SelectionMode="Single" SelectionChanged="OnPoiSelected">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Border Margin="0,0,0,15" StrokeShape="RoundRectangle 15" BackgroundColor="White" StrokeThickness="0">
+                            <Border Margin="0,0,0,12"
+                                    StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="White"
+                                    StrokeThickness="0">
                                 <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,5" Radius="10" Opacity="0.1"/>
+                                    <Shadow Brush="Black" Offset="0,4"
+                                            Radius="12" Opacity="0.08"/>
                                 </Border.Shadow>
-                                <Grid ColumnDefinitions="100, *" Padding="10">
-
+                                <Grid ColumnDefinitions="90, *" Padding="12">
                                     <Image Grid.Column="0"
-                                           Source="{Binding FullImageUrl}" 
-                                           Aspect="AspectFill" 
-                                           HeightRequest="80" 
+                                           Source="{Binding FullImageUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="80"
                                            WidthRequest="80">
                                         <Image.Clip>
-                                            <RoundRectangleGeometry CornerRadius="10" Rect="0,0,80,80"/>
+                                            <RoundRectangleGeometry CornerRadius="12"
+                                                                    Rect="0,0,80,80"/>
                                         </Image.Clip>
                                     </Image>
 
-                                    <VerticalStackLayout Grid.Column="1" Margin="15,0" VerticalOptions="Center">
-                                        <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="15" TextColor="#1F2937"/>
-                                        <Label Text="{Binding Category}" FontSize="12" TextColor="Orange"/>
-                                        <Label Text="📍 Quận 4, TP.HCM" FontSize="11" TextColor="Gray"/>
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Margin="14,0,0,0"
+                                                         VerticalOptions="Center"
+                                                         Spacing="4">
+                                        <Label Text="{Binding Name}"
+                                               FontAttributes="Bold"
+                                               FontSize="15"
+                                               TextColor="#111827"/>
+                                        <Border BackgroundColor="#FFF7ED"
+                                                StrokeShape="RoundRectangle 6"
+                                                Padding="8,3" HorizontalOptions="Start">
+                                            <Label Text="{Binding Category}"
+                                                   FontSize="11"
+                                                   TextColor="#F97316"
+                                                   FontAttributes="Bold"/>
+                                        </Border>
+                                        <Label Text="📍 Vĩnh Khánh, Quận 4"
+                                               FontSize="11" TextColor="#9CA3AF"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

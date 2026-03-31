@@ -61,8 +61,6 @@ public partial class MapPage : ContentPage
         PoisListView.ItemsSource = _poiListForDisplay;
 
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
-        int langIndex = Array.IndexOf(_languageCodes, _currentLanguage);
-        if (langIndex >= 0) LanguagePicker.SelectedIndex = langIndex;
     }
 
     // ============================================================
@@ -83,15 +81,7 @@ public partial class MapPage : ContentPage
 #endif
     }
 
-    private void OnLanguageChanged(object sender, EventArgs e)
-    {
-        if (LanguagePicker.SelectedIndex < 0) return;
-        _currentLanguage = _languageCodes[LanguagePicker.SelectedIndex];
-        _narrationService.CurrentLanguage = _currentLanguage;
-        Preferences.Set("AppLanguage", _currentLanguage);
-        if (_currentDisplayedPoi != null)
-            SpeakText(_currentDisplayedPoi.GetDescription(_currentLanguage));
-    }
+
 
     private string GetLanguageFlag(string code) => code switch
     {
@@ -126,10 +116,11 @@ public partial class MapPage : ContentPage
             iconSize: [{iconSize},{iconSize}],
             iconAnchor: [{int.Parse(iconSize) / 2},{int.Parse(iconSize)}]
         }});
-        var marker_{p.PoiId} = L.marker([{lat},{lon}], {{icon: icon_{p.PoiId}}}).addTo(map)
+        var marker_{p.PoiId} = L.marker([{lat},{lon}], {{icon: icon_{p.PoiId}}})
             .bindPopup('<b>{name}</b><br/><i>{cat}</i>{(isHighlight ? "<br/>📍 Gần nhất!" : "")}')
             .on('click', function() {{ window.location.href = 'poi://{p.PoiId}'; }});
-        {(isHighlight ? $"marker_{p.PoiId}.openPopup();" : "")}";
+        {(isHighlight ? $"marker_{p.PoiId}.openPopup();" : "")}
+        markerCluster.addLayer(marker_{p.PoiId});";
         }));
 
         string latStr = centerLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -141,7 +132,10 @@ public partial class MapPage : ContentPage
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>
+    <link rel='stylesheet' href='https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css'/>
+    <link rel='stylesheet' href='https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css'/>
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+    <script src='https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'></script>
     <style>* {{margin:0;padding:0}} #map {{height:100vh;width:100vw}}</style>
 </head>
 <body>
@@ -154,8 +148,18 @@ public partial class MapPage : ContentPage
             maxZoom: 20
         }}).addTo(map);
 
+        // Cluster group - tự gộp marker gần nhau
+        var markerCluster = L.markerClusterGroup({{
+            maxClusterRadius: 50,
+            disableClusteringAtZoom: 18,
+            spiderfyOnMaxZoom: true
+        }});
+
         {markersJs}
 
+        markerCluster.addTo(map);
+
+        // Blue dot vị trí người dùng
         var userMarker = null;
         var userCircle = null;
 
@@ -246,12 +250,30 @@ public partial class MapPage : ContentPage
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            UpdateInterface(lat, lon, result.NearestPoi);
-            RefreshListView();
-
+            // Cập nhật blue dot TRƯỚC — không reload map
             string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
             MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+
+            // Chỉ cập nhật UI card, KHÔNG reload map
+            RefreshListView();
+
+            if (result.NearestPoi != null)
+            {
+                var poi = result.NearestPoi;
+                _currentDisplayedPoi = poi;
+                PoiCard.IsVisible = true;
+                CurrentPoiName.Text = poi.Name;
+                CategoryLabel.Text = poi.Category.ToUpper();
+                PoiImage.Source = poi.FullImageUrl;
+                StatusLabel.Text = $"📍 Cách {poi.DistanceDisplay}";
+                BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId) ? "❤️ Đã lưu" : "🤍 Yêu thích";
+                MapLoading.IsVisible = false;
+            }
+            else
+            {
+                StatusLabel.Text = $"📍 GPS: {lat:F5}, {lon:F5}";
+            }
 
             if (result.ShouldNarrate && result.PoiToNarrate != null)
                 SpeakText(result.PoiToNarrate.GetDescription(_currentLanguage));
@@ -306,6 +328,8 @@ public partial class MapPage : ContentPage
     {
         base.OnAppearing();
 
+        _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
+
 #if ANDROID
         _androidTts = new AndroidTtsService();
         await _androidTts.InitializeAsync();
@@ -317,23 +341,67 @@ public partial class MapPage : ContentPage
         _allPoisFromDb = pois.ToList();
         RefreshListView();
 
-        var defaultHtml = new HtmlWebViewSource();
-        defaultHtml.Html = GenerateMapHtml(10.75750, 106.70700, _allPoisFromDb);
-        MapWebView.Source = defaultHtml;
-        MapLoading.IsVisible = false;
-
-        await Task.Delay(1500);
-
-        // Xin quyền location
-        var status = await Permissions.RequestAsync<Permissions.LocationAlways>();
-        if (status != PermissionStatus.Granted)
-            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-
+        // Fix 1: Lấy vị trí thật trước khi load map
+        var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
+        {
+            try
+            {
+                var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(5));
+                var location = await Geolocation.Default.GetLocationAsync(request);
+                if (location != null)
+                {
+                    _lastUserLat = location.Latitude;
+                    _lastUserLon = location.Longitude;
+                    _hasUserLocation = true;
+
+                    // Load map tại vị trí thật của user
+                    var html = new HtmlWebViewSource();
+                    html.Html = GenerateMapHtml(location.Latitude, location.Longitude, _allPoisFromDb);
+                    MapWebView.Source = html;
+                    MapLoading.IsVisible = false;
+
+                    await Task.Delay(1000);
+                    string latStr = location.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    string lonStr = location.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+                }
+                else
+                {
+                    LoadDefaultMap();
+                }
+            }
+            catch
+            {
+                LoadDefaultMap();
+            }
+
             StartTrackingLocation();
+        }
         else
+        {
+            LoadDefaultMap();
             StatusLabel.Text = "⚠️ Cần quyền vị trí để hoạt động";
+        }
+
+        // Highlight POI từ PoiDetailPage nếu có
+        int highlightId = Preferences.Get("HighlightPoiId", -1);
+        if (highlightId > 0)
+        {
+            Preferences.Remove("HighlightPoiId");
+            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
+            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
+        }
     }
+
+    private void LoadDefaultMap()
+    {
+        var html = new HtmlWebViewSource();
+        html.Html = GenerateMapHtml(10.76186, 106.70224, _allPoisFromDb); // Cổng chào Vĩnh Khánh
+        MapWebView.Source = html;
+        MapLoading.IsVisible = false;
+    }
+
 
     protected override void OnDisappearing()
     {
@@ -373,7 +441,68 @@ public partial class MapPage : ContentPage
     // ============================================================
     // EVENT HANDLERS
     // ============================================================
-    private void OnSearchTextChanged(object sender, TextChangedEventArgs e) => RefreshListView();
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        var keyword = e.NewTextValue?.ToLower() ?? "";
+
+        if (string.IsNullOrEmpty(keyword))
+        {
+            // Ẩn dropdown khi xóa hết
+            SuggestionBorder.IsVisible = false;
+            SuggestionList.ItemsSource = null;
+            RefreshListView();
+            return;
+        }
+
+        // Lọc POI theo tên hoặc category
+        var suggestions = _allPoisFromDb
+            .Where(p => p.Name.ToLower().Contains(keyword) ||
+                        p.Category.ToLower().Contains(keyword))
+            .Take(5) // tối đa 5 gợi ý
+            .ToList();
+
+        if (suggestions.Any())
+        {
+            SuggestionList.ItemsSource = suggestions;
+            SuggestionBorder.IsVisible = true;
+        }
+        else
+        {
+            SuggestionBorder.IsVisible = false;
+        }
+
+        RefreshListView();
+    }
+
+    private void OnSuggestionSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not POI selected) return;
+
+        // Ẩn dropdown
+        SuggestionBorder.IsVisible = false;
+        SuggestionList.SelectedItem = null;
+        SearchEntry.Text = selected.Name;
+
+        // Hiện POI card + focus map
+        _currentDisplayedPoi = selected;
+        PoiCard.IsVisible = true;
+        CurrentPoiName.Text = selected.Name;
+        CategoryLabel.Text = selected.Category.ToUpper();
+        PoiImage.Source = selected.FullImageUrl;
+        StatusLabel.Text = "🔍 Kết quả tìm kiếm";
+        BtnFavorite.Text = FavoritesPage.IsFavorite(selected.PoiId) ? "❤️ Đã lưu" : "🤍 Yêu thích";
+
+        // Focus map vào POI
+        string latStr = selected.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string lonStr = selected.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        MapWebView.Eval($"map.setView([{latStr},{lonStr}], 18)");
+
+        // Phát TTS
+        SpeakText(selected.GetDescription(_currentLanguage));
+
+        // Ẩn bàn phím
+        SearchEntry.Unfocus();
+    }
 
     private void OnPoiSelected(object sender, SelectionChangedEventArgs e)
     {
@@ -436,46 +565,6 @@ public partial class MapPage : ContentPage
         await Navigation.PushAsync(new PoiDetailPage(_currentDisplayedPoi));
     }
 
-    // ============================================================
-    // SIMULATE
-    // ============================================================
-    private void SimulateOcOanh(object sender, EventArgs e)
-    {
-        var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == 2);
-        if (poi == null) return;
-        poi.DistanceDisplay = "5 m";
-        _currentDisplayedPoi = poi;
-        _lastUserLat = poi.Latitude;
-        _lastUserLon = poi.Longitude;
-        _hasUserLocation = true;
-        UpdateInterface(poi.Latitude, poi.Longitude, poi);
-        SpeakText(poi.GetDescription(_currentLanguage));
-    }
+ 
 
-    private void SimulateOcVu(object sender, EventArgs e)
-    {
-        var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == 3);
-        if (poi == null) return;
-        poi.DistanceDisplay = "10 m";
-        _currentDisplayedPoi = poi;
-        _lastUserLat = poi.Latitude;
-        _lastUserLon = poi.Longitude;
-        _hasUserLocation = true;
-        UpdateInterface(poi.Latitude, poi.Longitude, poi);
-        SpeakText(poi.GetDescription(_currentLanguage));
-    }
-
-    private void SimulateReset(object sender, EventArgs e)
-    {
-        _geofenceService.ResetAll();
-        _currentDisplayedPoi = null;
-        _hasUserLocation = false;
-        PoiCard.IsVisible = false;
-        StopSpeaking();
-
-        var defaultHtml = new HtmlWebViewSource();
-        defaultHtml.Html = GenerateMapHtml(10.75750, 106.70700, _allPoisFromDb);
-        MapWebView.Source = defaultHtml;
-        StatusLabel.Text = "📍 Đã reset";
-    }
 }

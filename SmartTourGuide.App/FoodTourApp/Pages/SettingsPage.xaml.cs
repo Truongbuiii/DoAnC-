@@ -1,4 +1,3 @@
-// SettingsPage.xaml.cs
 namespace FoodTourApp.Pages;
 
 public partial class SettingsPage : ContentPage
@@ -13,15 +12,12 @@ public partial class SettingsPage : ContentPage
 
     private void LoadSettings()
     {
-        // Khôi phục ngôn ngữ đã lưu
         var lang = Preferences.Get("AppLanguage", "vi-VN");
         LangPicker.SelectedIndex = Array.IndexOf(_languageCodes, lang);
-
-        // Khôi phục auto narrate
         AutoNarrateSwitch.IsToggled = Preferences.Get("AutoNarrate", true);
-
-        // Khôi phục cooldown
         CooldownSlider.Value = Preferences.Get("CooldownMinutes", 5);
+        RadiusLabel.Text = $"{(int)RadiusSlider.Value}m";
+        CooldownLabel.Text = $"{(int)CooldownSlider.Value} phút";
     }
 
     private void OnLanguageChanged(object sender, EventArgs e)
@@ -34,12 +30,12 @@ public partial class SettingsPage : ContentPage
         => Preferences.Set("AutoNarrate", e.Value);
 
     private void OnRadiusChanged(object sender, ValueChangedEventArgs e)
-        => RadiusLabel.Text = $"Bán kính: {(int)e.NewValue}m";
+        => RadiusLabel.Text = $"{(int)e.NewValue}m";
 
     private void OnCooldownChanged(object sender, ValueChangedEventArgs e)
     {
         int val = (int)e.NewValue;
-        CooldownLabel.Text = $"Cooldown: {val} phút";
+        CooldownLabel.Text = $"{val} phút";
         Preferences.Set("CooldownMinutes", val);
     }
 

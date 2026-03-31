@@ -20,26 +20,27 @@ public partial class QRPage : ContentPage
     {
         base.OnAppearing();
 
-        // Xin quyền camera
-        var status = await Permissions.RequestAsync<Permissions.Camera>();
-        if (status != PermissionStatus.Granted)
+        try
         {
-            await DisplayAlertAsync("Cần quyền camera",
-                "Vui lòng cấp quyền camera để quét mã QR", "OK");
-            return;
+            // Xin quyền camera
+            var status = await Permissions.RequestAsync<Permissions.Camera>();
+            if (status != PermissionStatus.Granted)
+            {
+                await DisplayAlertAsync("Cần quyền camera",
+                    "Vui lòng cấp quyền camera để quét mã QR", "OK");
+                return;
+            }
+
+            _isProcessing = false;
+            StatusLabel.Text = "📷 Đang chờ quét mã QR...";
+
+            await Task.Delay(1000);
+            BarcodeReader.IsDetecting = true;
         }
-
-        _isProcessing = false;
-        StatusLabel.Text = "📷 Đang chờ quét mã QR...";
-
-        // Fix màn hình đen trên Android
-        BarcodeReader.IsDetecting = true;
-#if ANDROID
-        await Task.Delay(500);
-        BarcodeReader.IsDetecting = false;
-        await Task.Delay(200);
-        BarcodeReader.IsDetecting = true;
-#endif
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Lỗi camera", ex.Message, "OK");
+        }
     }
 
     protected override void OnDisappearing()

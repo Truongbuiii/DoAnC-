@@ -35,158 +35,158 @@ namespace FoodTourApp.Services
         private List<POI> GetMultiLanguagePOIs()
         {
             return new List<POI>
-            {
-                new POI
-                {
-                    PoiId = 1,
-                    Name = "Cổng chào Phố ẩm thực",
-                    Category = "Ăn vặt",
-                    TriggerRadius = 50,
-                    Latitude = 10.75750,
-                    Longitude = 106.70700,
-                    ImageSource = "cong_chao.jpg",
-                    DescriptionVi = "Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4.",
-                    DescriptionEn = "Welcome to Vinh Khanh Food Street, the most vibrant nighttime food paradise in District 4.",
-                    DescriptionZh = "欢迎来到永康美食街，这是第四区最繁华的夜间美食天堂。",
-                    DescriptionKo = "4군에서 가장 활기찬 야간 음식 천국인 빈칸 푸드 스트리트에 오신 것을 환영합니다.",
-                    DescriptionJa = "4区で最も活気のある夜の食の楽園、ヴィンカン・フードストリートへようこそ。"
-                },
-                new POI
-                {
-                    PoiId = 2,
-                    Name = "Ốc Oanh 534",
-                    Category = "Hải sản",
-                    TriggerRadius = 35,
-                    Latitude = 10.75883,
-                    Longitude = 106.70505,
-                    ImageSource = "ocoanh.jpg",
-                    DescriptionVi = "Hệ thống nhận diện bạn đang đứng trước Ốc Oanh, quán nổi tiếng nhất khu vực với món ốc hương sốt trứng muối đặc trưng.",
-                    DescriptionEn = "You are standing in front of Oc Oanh, the most famous restaurant in the area, known for its signature salted egg sauce snail dish.",
-                    DescriptionZh = "您正站在Ốc Oanh前面，这是该地区最著名的餐厅，以其招牌咸蛋酱蜗牛菜闻名。",
-                    DescriptionKo = "당신은 이 지역에서 가장 유명한 레스토랑인 옥 오안 앞에 서 있습니다. 소금에 절인 달걀 소스 달팽이 요리로 유명합니다.",
-                    DescriptionJa = "あなたはこの地域で最も有名なレストラン、オック・オアンの前に立っています。塩卵ソースのカタツムリ料理で知られています。"
-                },
-                new POI
-                {
-                    PoiId = 3,
-                    Name = "Ốc Vũ 37",
-                    Category = "Hải sản",
-                    TriggerRadius = 30,
-                    Latitude = 10.75916,
-                    Longitude = 106.70452,
-                    ImageSource = "ocvu.jpg",
-                    DescriptionVi = "Bạn đang ở gần Ốc Vũ. Quán nổi tiếng với các loại hải sản tươi sống bắt tại hồ.",
-                    DescriptionEn = "You are near Oc Vu. This restaurant is famous for fresh seafood caught directly from the tank.",
-                    DescriptionZh = "您在Ốc Vũ附近。这家餐厅以从水箱中直接捕获的新鲜海鲜而闻名。",
-                    DescriptionKo = "옥 부 근처에 있습니다. 이 레스토랑은 탱크에서 직접 잡은 신선한 해산물로 유명합니다.",
-                    DescriptionJa = "オック・ブの近くにいます。このレストランは、水槽から直接獲れた新鮮なシーフードで有名です。"
-                },
-                new POI
-                {
-                    PoiId = 4,
-                    Name = "Lẩu bò Khu Nhà Cháy",
-                    Category = "Món Lẩu",
-                    TriggerRadius = 40,
-                    Latitude = 10.75822,
-                    Longitude = 106.70611,
-                    ImageSource = "laubo.jpg",
-                    DescriptionVi = "Bạn đang tiến vào khu vực quán Lẩu bò Nhà Cháy. Đây là địa điểm ăn uống lâu đời với nước dùng đậm đà.",
-                    DescriptionEn = "You are entering the Nha Chay Beef Hotpot area. This is a long-established eatery with rich and flavorful broth.",
-                    DescriptionZh = "您正在进入Nhà Cháy牛肉火锅区。这是一家历史悠久的餐厅，汤底浓郁可口。",
-                    DescriptionKo = "나차이 소고기 훠궈 구역으로 들어가고 있습니다. 풍부하고 맛있는 육수로 유명한 오래된 식당입니다.",
-                    DescriptionJa = "ニャチャイ牛肉鍋エリアに入っています。濃厚で風味豊かなスープで知られる老舗の飲食店です。"
-                },
-                new POI
-                {
-                    PoiId = 5,
-                    Name = "Sữa tươi chiên",
-                    Category = "Ăn vặt",
-                    TriggerRadius = 25,
-                    Latitude = 10.75850,
-                    Longitude = 106.70555,
-                    ImageSource = "suatuoi.jpg",
-                    DescriptionVi = "Hệ thống gợi ý bạn thử món sữa tươi chiên ngay phía trước. Những viên sữa được chiên vàng giòn bên ngoài.",
-                    DescriptionEn = "We suggest you try the fried fresh milk right ahead. The milk pieces are fried golden and crispy on the outside.",
-                    DescriptionZh = "我们建议您尝试前面的炸鲜奶。牛奶块外面炸得金黄酥脆。",
-                    DescriptionKo = "앞에 있는 튀긴 우유를 맛보시길 권합니다. 우유 조각은 겉이 황금색으로 바삭하게 튀겨집니다.",
-                    DescriptionJa = "目の前にある揚げミルクを試してみることをお勧めします。ミルクは外側がきつね色でカリカリに揚げられています。"
-                },
-                new POI
-                {
-                    PoiId = 6,
-                    Name = "Phá lấu Dì Nũi",
-                    Category = "Ăn vặt",
-                    TriggerRadius = 30,
-                    Latitude = 10.75940,
-                    Longitude = 106.70410,
-                    ImageSource = "phalau.jpg",
-                    DescriptionVi = "Bạn đang ở gần hẻm phá lấu Dì Nũi nổi tiếng. Với hơn 20 năm kinh nghiệm, chén phá lấu ở đây béo ngậy nước cốt dừa.",
-                    DescriptionEn = "You are near the famous Di Nui Pha Lau alley. With over 20 years of experience, the pha lau here is rich with coconut milk.",
-                    DescriptionZh = "您在著名的Dì Nũi Phá Lấu小巷附近。凭借20多年的经验，这里的phá lấu富含椰奶。",
-                    DescriptionKo = "유명한 디 누이 파라우 골목 근처에 있습니다. 20년 이상의 경험으로, 이곳의 파라우는 코코넛 밀크가 풍부합니다.",
-                    DescriptionJa = "有名なディ・ヌイ・ファーラウ路地の近くにいます。20年以上の経験を持ち、ここのファーラウはココナッツミルクが豊富です。"
-                },
-                new POI
-                {
-                    PoiId = 7,
-                    Name = "Sushi KO",
-                    Category = "Đồ Nhật",
-                    TriggerRadius = 45,
-                    Latitude = 10.75800,
-                    Longitude = 106.70650,
-                    ImageSource = "sushi.jpg",
-                    DescriptionVi = "Phía trước bạn là Sushi KO. Một địa điểm thú vị với các món Nhật Bản giá bình dân.",
-                    DescriptionEn = "In front of you is Sushi KO. An interesting place with affordable Japanese dishes.",
-                    DescriptionZh = "在您面前是Sushi KO。一个有趣的地方，提供价格实惠的日本料理。",
-                    DescriptionKo = "앞에 스시 KO가 있습니다. 저렴한 일본 요리를 제공하는 흥미로운 장소입니다.",
-                    DescriptionJa = "目の前にスシKOがあります。手頃な価格の日本料理を提供する興味深い場所です。"
-                },
-                new POI
-                {
-                    PoiId = 8,
-                    Name = "Bún mắm 135",
-                    Category = "Hải sản",
-                    TriggerRadius = 30,
-                    Latitude = 10.75860,
-                    Longitude = 106.70580,
-                    ImageSource = "bunmam.jpg",
-                    DescriptionVi = "Chào mừng bạn đến với Bún mắm 135. Tô bún ở đây đầy đặn với tôm, mực, heo quay.",
-                    DescriptionEn = "Welcome to Bun Mam 135. The noodle bowl here is full of shrimp, squid, and roasted pork.",
-                    DescriptionZh = "欢迎来到Bún Mắm 135。这里的面碗里满是虾、鱿鱼和烤猪肉。",
-                    DescriptionKo = "분맘 135에 오신 것을 환영합니다. 이곳의 국수 그릇에는 새우, 오징어, 구운 돼지고기가 가득합니다.",
-                    DescriptionJa = "ブンマム135へようこそ。ここの麺丼にはエビ、イカ、ローストポークがたっぷり入っています。"
-                },
-                new POI
-                {
-                    PoiId = 9,
-                    Name = "Trà sữa túi lọc",
-                    Category = "Giải khát",
-                    TriggerRadius = 25,
-                    Latitude = 10.75900,
-                    Longitude = 106.70480,
-                    ImageSource = "trasua.jpg",
-                    DescriptionVi = "Bạn đã đi gần đến khu vực giải khát. Hãy thưởng thức một ly trà sữa túi lọc truyền thống.",
-                    DescriptionEn = "You are near the refreshment area. Enjoy a traditional filter bag milk tea.",
-                    DescriptionZh = "您已接近饮料区。享用一杯传统的袋泡奶茶。",
-                    DescriptionKo = "음료 구역 근처에 있습니다. 전통 필터백 밀크티를 즐겨보세요.",
-                    DescriptionJa = "ドリンクエリアの近くにいます。伝統的なフィルターバッグミルクティーをお楽しみください。"
-                },
-                new POI
-                {
-                    PoiId = 10,
-                    Name = "Xôi gà hẻm 200",
-                    Category = "Ăn vặt",
-                    TriggerRadius = 35,
-                    Latitude = 10.75960,
-                    Longitude = 106.70380,
-                    ImageSource = "xoiga.jpg",
-                    DescriptionVi = "Nếu bạn muốn đổi vị, hãy thử xôi gà tại hẻm 200. Xôi ở đây dẻo thơm, gà được chiên giòn rụm.",
-                    DescriptionEn = "If you want a change, try the chicken sticky rice at alley 200. The sticky rice here is fragrant and the chicken is crispy fried.",
-                    DescriptionZh = "如果您想换口味，可以尝试200巷的鸡肉糯米饭。这里的糯米饭香糯，鸡肉炸得酥脆。",
-                    DescriptionKo = "색다른 맛을 원하시면 200번 골목의 치킨 찹쌀밥을 맛보세요. 이곳의 찹쌀밥은 향긋하고 치킨은 바삭하게 튀겨집니다.",
-                    DescriptionJa = "気分転換したいなら、200番路地のチキンもち米をお試しください。ここのもち米は香り高く、チキンはカリカリに揚げられています。"
-                }
-            };
+    {
+        new POI
+        {
+            PoiId = 1,
+            Name = "Cổng chào Phố ẩm thực",
+            Category = "Điểm tham quan",
+            TriggerRadius = 50,
+            Latitude = 10.761858,
+            Longitude = 106.702236,
+            ImageSource = "congchao.jpg",
+            DescriptionVi = "Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4, lọt top 10 con phố thú vị nhất thế giới 2025.",
+            DescriptionEn = "Welcome to Vinh Khanh Food Street, the most vibrant nighttime food paradise in District 4, ranked top 10 most exciting streets in the world 2025.",
+            DescriptionZh = "欢迎来到永康美食街，这是第四区最繁华的夜间美食天堂，荣登2025年全球最有趣街道前十名。",
+            DescriptionKo = "2025년 세계에서 가장 흥미로운 거리 10위에 선정된 4군 최고의 야간 음식 천국, 빈칸 푸드 스트리트에 오신 것을 환영합니다.",
+            DescriptionJa = "2025年世界で最も魅力的な通りトップ10に選ばれた、4区最大の夜の食の楽園、ヴィンカン・フードストリートへようこそ。"
+        },
+        new POI
+        {
+            PoiId = 2,
+            Name = "Dê Chung",
+            Category = "Lẩu dê",
+            TriggerRadius = 35,
+            Latitude = 10.761500,
+            Longitude = 106.702600,
+            ImageSource = "laubo.jpg",
+            DescriptionVi = "Dê Chung tại số 3 Vĩnh Khánh nổi tiếng với món lẩu dê thơm ngon đặc trưng. Quán mở cửa từ chiều đến đêm khuya, rất đông khách địa phương.",
+            DescriptionEn = "De Chung at 3 Vinh Khanh is famous for its aromatic goat hotpot. The restaurant is open from afternoon until late night and is very popular with locals.",
+            DescriptionZh = "位于永康3号的Dê Chung以其香气扑鼻的山羊火锅而闻名，从下午营业至深夜，深受当地人喜爱。",
+            DescriptionKo = "빈칸 3번지에 위치한 Dê Chung은 향긋한 염소 샤부샤부로 유명합니다. 오후부터 늦은 밤까지 영업하며 현지인들에게 매우 인기가 높습니다.",
+            DescriptionJa = "ヴィンカン通り3番地のDê Chungは香り豊かなヤギ鍋で有名です。午後から深夜まで営業しており、地元の人々に非常に人気があります。"
+        },
+        new POI
+        {
+            PoiId = 3,
+            Name = "Ốc Vũ 37",
+            Category = "Hải sản",
+            TriggerRadius = 35,
+            Latitude = 10.761403,
+            Longitude = 106.702705,
+            ImageSource = "ocvu.jpg",
+            DescriptionVi = "Ốc Vũ tại số 37 Vĩnh Khánh là quán ốc chuẩn local của Quận 4, nổi tiếng với ốc len xào dừa và nước chấm tự pha độc quyền. Mở cửa từ 11h đến 6h sáng.",
+            DescriptionEn = "Oc Vu at 37 Vinh Khanh is an authentic local seafood restaurant in District 4, famous for stir-fried snails with coconut and their signature homemade dipping sauce.",
+            DescriptionZh = "位于永康37号的Ốc Vũ是第四区正宗的当地海鲜餐厅，以椰子炒蜗牛和自制蘸料而闻名，营业时间从11时到次日6时。",
+            DescriptionKo = "빈칸 37번지의 옥 부는 4군의 정통 로컬 해산물 식당으로, 코코넛 볶음 달팽이와 독자적인 수제 소스로 유명합니다. 오전 11시부터 새벽 6시까지 영업합니다.",
+            DescriptionJa = "ヴィンカン通り37番地のOc Vuは4区の本格的な地元海鮮レストランで、ヤシの実炒めカタツムリと自家製ディッピングソースで有名です。"
+        },
+        new POI
+        {
+            PoiId = 4,
+            Name = "Bún cá Châu Đốc Dì Tư",
+            Category = "Bún cá",
+            TriggerRadius = 30,
+            Latitude = 10.761200,
+            Longitude = 106.703100,
+            ImageSource = "bunmam.jpg",
+            DescriptionVi = "Bún cá Châu Đốc Dì Tư tại số 75 Vĩnh Khánh mang hương vị miền Tây đặc trưng. Mỗi tô bún là sự kết hợp hài hòa giữa cá tươi, bún mềm và rau sống.",
+            DescriptionEn = "Bun Ca Chau Doc Di Tu at 75 Vinh Khanh brings authentic Mekong Delta flavors. Each bowl combines fresh fish, soft vermicelli and fresh vegetables.",
+            DescriptionZh = "位于永康75号的Bún Cá Châu Đốc Dì Tư带来正宗湄公河三角洲风味，每碗面条都融合了新鲜鱼肉、软米粉和新鲜蔬菜。",
+            DescriptionKo = "빈칸 75번지의 Bún Cá Châu Đốc Dì Tư는 메콩 델타의 정통 맛을 선사합니다. 각 그릇은 신선한 생선, 부드러운 쌀국수, 신선한 채소가 조화롭게 어우러집니다.",
+            DescriptionJa = "ヴィンカン通り75番地のBún Cá Châu Đốc Dì Tưは本格的なメコンデルタの味を提供します。各丼には新鮮な魚、柔らかい米麺、新鮮な野菜が調和よく入っています。"
+        },
+        new POI
+        {
+            PoiId = 5,
+            Name = "Ốc Thảo 123",
+            Category = "Hải sản",
+            TriggerRadius = 35,
+            Latitude = 10.760750,
+            Longitude = 106.704600,
+            ImageSource = "ocoanh.jpg",
+            DescriptionVi = "Ốc Thảo tại số 123 Vĩnh Khánh là thiên đường hải sản đa dạng nhất phố. Quán có hơn 30 loại ốc tươi sống, giá bình dân, phục vụ từ học sinh đến du khách.",
+            DescriptionEn = "Oc Thao at 123 Vinh Khanh is the most diverse seafood paradise on the street, offering over 30 types of fresh snails at affordable prices.",
+            DescriptionZh = "位于永康123号的Ốc Thảo是该街道最多样化的海鲜天堂，提供超过30种新鲜蜗牛，价格实惠。",
+            DescriptionKo = "빈칸 123번지의 옥 타오는 거리에서 가장 다양한 해산물 천국으로, 30가지 이상의 신선한 달팽이를 저렴한 가격에 제공합니다.",
+            DescriptionJa = "ヴィンカン通り123番地のOc Thaoは通りで最も多様な海鮮の楽園で、30種類以上の新鮮なカタツムリをリーズナブルな価格で提供しています。"
+        },
+        new POI
+        {
+            PoiId = 6,
+            Name = "Sushi KO",
+            Category = "Đồ Nhật",
+            TriggerRadius = 30,
+            Latitude = 10.760739,
+            Longitude = 106.704651,
+            ImageSource = "sushi.jpg",
+            DescriptionVi = "Sushi KO tại số 122 Vĩnh Khánh là điểm thú vị giữa phố ốc, phục vụ các món Nhật Bản sáng tạo với giá bình dân, phù hợp cho những ai muốn đổi vị.",
+            DescriptionEn = "Sushi KO at 122 Vinh Khanh is an interesting spot amid the seafood street, serving creative Japanese dishes at affordable prices for those who want a change.",
+            DescriptionZh = "位于永康122号的Sushi KO是海鲜街中的有趣去处，以实惠的价格提供创意日本料理，适合想换口味的食客。",
+            DescriptionKo = "빈칸 122번지의 스시 KO는 해산물 거리 속에 흥미로운 공간으로, 저렴한 가격에 창의적인 일본 요리를 제공하여 색다른 맛을 원하는 분들에게 적합합니다.",
+            DescriptionJa = "ヴィンカン通り122番地のSushi KOは海鮮ストリートの中の興味深いスポットで、気分転換したい方にリーズナブルな価格で創作日本料理を提供しています。"
+        },
+        new POI
+        {
+            PoiId = 7,
+            Name = "Chilli Lẩu Nướng 232",
+            Category = "Lẩu nướng",
+            TriggerRadius = 35,
+            Latitude = 10.760900,
+            Longitude = 106.703800,
+            ImageSource = "laubo.jpg",
+            DescriptionVi = "Chilli Lẩu Nướng tại số 232 Vĩnh Khánh phục vụ lẩu và nướng tự chọn giá từ 59.000đ. Món tủ là gà cay phô mai Hàn Quốc và tôm sốt trứng muối. Mở đến 3h sáng.",
+            DescriptionEn = "Chilli Hot Pot & Grill at 232 Vinh Khanh serves all-you-can-choose hot pot and grilled dishes from 59,000 VND. Open until 3 AM.",
+            DescriptionZh = "位于永康232号的Chilli火锅烧烤提供从59,000越盾起的自选火锅和烧烤。招牌菜是韩式奶酪辣鸡和咸蛋虾，营业至凌晨3时。",
+            DescriptionKo = "빈칸 232번지의 칠리 훠궈 & 그릴은 59,000동부터 시작하는 셀프 훠궈와 구이 요리를 제공합니다. 새벽 3시까지 영업합니다.",
+            DescriptionJa = "ヴィンカン通り232番地のChilli鍋&グリルは59,000ドンからのセルフ鍋と焼き料理を提供しています。午前3時まで営業しています。"
+        },
+        new POI
+        {
+            PoiId = 8,
+            Name = "Ốc Đào 2",
+            Category = "Hải sản",
+            TriggerRadius = 30,
+            Latitude = 10.760820,
+            Longitude = 106.703500,
+            ImageSource = "ocvu.jpg",
+            DescriptionVi = "Ốc Đào 2 tại số 232/123 Vĩnh Khánh có thực đơn đa dạng với hơn 30 loại ốc, đặc biệt nổi tiếng với sốt trứng muối và xào me đậm vị.",
+            DescriptionEn = "Oc Dao 2 at 232/123 Vinh Khanh has a diverse menu with over 30 types of snails, especially famous for its salted egg sauce and tamarind stir-fry.",
+            DescriptionZh = "位于永康232/123号的Ốc Đào 2拥有超过30种蜗牛的多样菜单，尤其以咸蛋酱和酸角炒而闻名。",
+            DescriptionKo = "빈칸 232/123번지의 옥 다오 2는 30가지 이상의 달팽이 다양한 메뉴를 보유하고 있으며, 특히 소금 달걀 소스와 타마린드 볶음으로 유명합니다.",
+            DescriptionJa = "ヴィンカン通り232/123番地のOc Dao 2は30種類以上のカタツムリの多様なメニューを持ち、特に塩卵ソースとタマリンド炒めで有名です。"
+        },
+        new POI
+        {
+            PoiId = 9,
+            Name = "Ốc Thảo 383",
+            Category = "Hải sản",
+            TriggerRadius = 30,
+            Latitude = 10.760770,
+            Longitude = 106.703400,
+            ImageSource = "ocoanh.jpg",
+            DescriptionVi = "Ốc Thảo tại số 383 Vĩnh Khánh có không gian rộng rãi, hải sản tươi ngon mỗi ngày. Quán nổi tiếng với các món nướng, luộc, hấp đậm đà truyền thống.",
+            DescriptionEn = "Oc Thao at 383 Vinh Khanh has a spacious setting with fresh seafood daily, famous for its rich traditional grilled, boiled and steamed dishes.",
+            DescriptionZh = "位于永康383号的Ốc Thảo空间宽敞，每日提供新鲜海鲜，以传统风味浓郁的烤、煮、蒸菜肴而闻名。",
+            DescriptionKo = "빈칸 383번지의 옥 타오는 넓은 공간과 매일 신선한 해산물을 제공하며, 전통적인 풍미의 구이, 삶기, 찜 요리로 유명합니다.",
+            DescriptionJa = "ヴィンカン通り383番地のOc Thaoは広いスペースで毎日新鮮な海鮮を提供し、伝統的な風味豊かな焼き、茹で、蒸し料理で有名です。"
+        },
+        new POI
+        {
+            PoiId = 10,
+            Name = "Ốc Oanh 534",
+            Category = "Hải sản",
+            TriggerRadius = 40,
+            Latitude = 10.760719,
+            Longitude = 106.703297,
+            ImageSource = "ocoanh.jpg",
+            DescriptionVi = "Ốc Oanh tại số 534 Vĩnh Khánh là quán ốc nổi tiếng nhất phố, được Michelin Bib Gourmand 2024 vinh danh. Chuyên ốc hương, nghêu, sò, bạch tuộc tươi sống.",
+            DescriptionEn = "Oc Oanh at 534 Vinh Khanh is the most famous seafood restaurant on the street, awarded Michelin Bib Gourmand 2024, specializing in fresh snails, clams and squid.",
+            DescriptionZh = "位于永康534号的Ốc Oanh是该街道最著名的海鲜餐厅，荣获2024年米其林必比登推介，专营新鲜蜗牛、蛤蜊和鱿鱼。",
+            DescriptionKo = "빈칸 534번지의 옥 오안은 거리에서 가장 유명한 해산물 식당으로, 2024 미슐랭 빕 구르망을 수상했으며 신선한 달팽이, 조개, 오징어를 전문으로 합니다.",
+            DescriptionJa = "ヴィンカン通り534番地のOc Oanhは通りで最も有名な海鮮レストランで、2024年ミシュランビブグルマンを受賞し、新鮮なカタツムリ、アサリ、イカを専門としています。"
+        }
+    };
         }
 
         public async Task<List<POI>> GetPOIsAsync()
