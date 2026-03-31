@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using AdminWeb.Data;
 using AdminWeb.Models;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AdminWeb.Controllers
 {
@@ -15,86 +14,78 @@ namespace AdminWeb.Controllers
             _context = context;
         }
 
-        // 1. TRANG DANH SÁCH + TÌM KIẾM (Đã cập nhật để khớp với Index.cshtml)
+        // 1. TRANG DANH SÁCH + TÌM KIẾM
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
 
-            var pois = _context.POIs
-                .Include(p => p.Category)
-                .Include(p => p.Location)
-                .AsQueryable();
+            // Giờ không cần .Include nữa vì dữ liệu đã nằm chung 1 bảng POIs
+            var query = _context.POIs.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                // Tìm kiếm theo tên quán
-                pois = pois.Where(s => s.Name.Contains(searchString));
+                query = query.Where(s => s.Name.Contains(searchString));
             }
 
-            return View(await pois.ToListAsync());
+            var model = await query.ToListAsync();
+            return View(model);
         }
 
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
         public IActionResult Create()
         {
-            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName");
             return View();
         }
 
         // 3. XỬ LÝ LƯU DỮ LIỆU THÊM MỚI (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(POI poi, IFormFile? imageFile, double Latitude, double Longitude, double TriggerRadius, string Address)
+        public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
         {
-            if (string.IsNullOrEmpty(poi.Name))
-            {
-                ModelState.AddModelError("Name", "Tài ơi, bạn bắt buộc phải nhập Tên địa điểm nhé!");
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // A. Tạo Location mới
-                    var newLoc = new Location { Latitude = Latitude, Longitude = Longitude, TriggerRadius = TriggerRadius, Address = Address };
-                    _context.Locations.Add(newLoc);
-                    await _context.SaveChangesAsync();
-
-                    // B. Xử lý ảnh
+                    // Xử lý lưu File ảnh vào wwwroot/images
                     if (imageFile != null && imageFile.Length > 0)
                     {
+                        string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                        if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
-                        using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
+                        string path = Path.Combine(uploadDir, fileName);
+
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(stream);
+                        }
                         poi.ImageSource = fileName;
                     }
 
-                    // C. Gán ID và lưu POI
-                    poi.LocationId = newLoc.LocationId;
                     _context.POIs.Add(poi);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex) { ModelState.AddModelError("", "Lỗi: " + ex.Message); }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Lỗi rồi Tài ơi: " + ex.Message);
+                }
             }
-            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
             return View(poi);
         }
 
         // 4. TRANG CHỈNH SỬA (GET)
         public async Task<IActionResult> Edit(int id)
         {
-            var poi = await _context.POIs.Include(p => p.Location).FirstOrDefaultAsync(m => m.PoiId == id);
+            var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
-
-            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
             return View(poi);
         }
 
         // 5. XỬ LÝ LƯU DỮ LIỆU SAU KHI SỬA (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile, double Latitude, double Longitude, double TriggerRadius, string Address)
+        public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile)
         {
             if (id != poi.PoiId) return NotFound();
 
@@ -102,16 +93,7 @@ namespace AdminWeb.Controllers
             {
                 try
                 {
-                    // Cập nhật tọa độ
-                    var loc = await _context.Locations.FindAsync(poi.LocationId);
-                    if (loc != null)
-                    {
-                        loc.Latitude = Latitude; loc.Longitude = Longitude;
-                        loc.TriggerRadius = TriggerRadius; loc.Address = Address;
-                        _context.Update(loc);
-                    }
-
-                    // Cập nhật ảnh mới nếu có
+                    // Nếu có ảnh mới thì cập nhật, không thì giữ ảnh cũ
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
@@ -119,24 +101,31 @@ namespace AdminWeb.Controllers
                         using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
                         poi.ImageSource = fileName;
                     }
+                    else
+                    {
+                        // Giữ lại tên ảnh cũ nếu không upload ảnh mới
+                        _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
+                    }
 
                     _context.Update(poi);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException) { return NotFound(); }
-                return RedirectToAction(nameof(Index));
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.POIs.Any(e => e.PoiId == poi.PoiId)) return NotFound();
+                    else throw;
+                }
             }
-            ViewBag.Categories = new SelectList(_context.Categories, "CategoryId", "CategoryName", poi.CategoryId);
             return View(poi);
         }
 
         // 6. XỬ LÝ XÓA
         public async Task<IActionResult> Delete(int id)
         {
-            var poi = await _context.POIs.Include(p => p.Location).FirstOrDefaultAsync(m => m.PoiId == id);
+            var poi = await _context.POIs.FindAsync(id);
             if (poi != null)
             {
-                if (poi.Location != null) _context.Locations.Remove(poi.Location);
                 _context.POIs.Remove(poi);
                 await _context.SaveChangesAsync();
             }

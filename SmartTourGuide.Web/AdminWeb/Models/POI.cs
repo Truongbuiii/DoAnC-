@@ -1,32 +1,33 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace AdminWeb.Models
 {
-    [Table("POIs")] // Chỉ định chính xác tên bảng trong SQL của Tài
+    [Table("POIs")]
     public class POI
     {
-        [Key] // Khai báo đây là Khóa chính
+        [Key]
+        [Column("PoiId")]
         public int PoiId { get; set; }
 
         [Required(ErrorMessage = "Tên quán không được để trống")]
-        [StringLength(200)]
         public string Name { get; set; } = string.Empty;
 
-        public string? Description { get; set; }
-
+        public string? Category { get; set; } // Giờ là kiểu chuỗi (NVARCHAR)
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double TriggerRadius { get; set; }
         public string? ImageSource { get; set; }
 
-        // --- KHÓA NGOẠI CATEGORY (1-n) ---
-        public int CategoryId { get; set; }
+        // --- 5 CỘT ĐA NGÔN NGỮ ---
+        public string? DescriptionVi { get; set; }
+        public string? DescriptionEn { get; set; }
+        public string? DescriptionZh { get; set; }
+        public string? DescriptionKo { get; set; }
+        public string? DescriptionJa { get; set; }
 
-        [ForeignKey("CategoryId")]
-        public virtual Category? Category { get; set; }
-
-        // --- KHÓA NGOẠI LOCATION (1-1) ---
-        public int LocationId { get; set; }
-
-        [ForeignKey("LocationId")]
-        public virtual Location? Location { get; set; }
+        // Kết nối với bảng Audio (Quan hệ 1 - Nhiều)
+        public virtual ICollection<Audio>? Audios { get; set; }
     }
 }

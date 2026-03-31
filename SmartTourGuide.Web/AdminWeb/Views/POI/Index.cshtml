@@ -1,119 +1,292 @@
-﻿@model List<AdminWeb.Models.POI>
+﻿    @model List<AdminWeb.Models.POI>
 
-@* Thêm thư viện Icon của Bootstrap *@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<div class="container-fluid py-4">
-    <div class="card shadow-sm border-0">
-        @* Header Section: Đã thêm thanh tìm kiếm *@
-        <div class="card-header bg-white py-3">
+    <style>
+        /* Áp dụng font Inter toàn trang */
+        body { 
+            background-color: #f4f7f6; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            -webkit-font-smoothing: antialiased;
+        }
+    
+        /* --- GIỮ NGUYÊN PHẦN TIÊU ĐỀ --- */
+        .header-banner {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 6px solid #4e73df;
+            margin-bottom: 25px;
+        }
+
+        .title-main {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .title-sub {
+            color: #718096;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .poi-count-badge {
+            background: #eef2ff;
+            color: #4e73df;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            border: 1px solid #e0e7ff;
+        }
+
+        /* --- GIỮ NGUYÊN NÚT THÊM MỚI --- */
+        .btn-create-new {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+            text-decoration: none;
+        }
+
+        .btn-create-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 115, 223, 0.4);
+            filter: brightness(1.1);
+        }
+
+        /* --- BẢNG VÀ NỘI DUNG (CHỈNH VÁCH NGĂN ĐẬM) --- */
+        .poi-container { 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            border: 2px solid #dee2e6; /* Viền ngoài đậm */
+            overflow: hidden;
+        }
+
+        .table thead th { 
+            background-color: #4e73df; 
+            color: #ffffff; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            padding: 18px;
+            border: 1px solid #3659c2 !important; /* Kẻ ô tiêu đề đậm */
+            letter-spacing: 0.5px;
+        }
+
+        /* Kẻ dọc và ngang đậm chia rõ từng ô theo ý Tài */
+        .table td, .table th {
+            border: 1px solid #dee2e6 !important; 
+        }
+
+        .poi-row { border-bottom: 1px solid #dee2e6; transition: 0.2s; }
+        .poi-row:hover { background-color: #f8faff !important; }
+
+        .poi-img-circle { 
+            width: 65px; height: 65px; 
+            object-fit: cover; 
+            border-radius: 15px; 
+        }
+
+        .poi-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a202c;
+        }
+
+        .geo-text {
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #2d3748;
+        }
+
+       /* THANH CUỘN (SCROLLBAR) - LUÔN HIỆN */
+        .description-box { 
+            max-height: 85px; 
+            overflow-y: scroll; /* Thay 'auto' bằng 'scroll' để ép buộc luôn hiện thanh cuộn */
+            padding-right: 10px; 
+        }   
+        /* Làm đẹp thanh cuộn */
+        .description-box::-webkit-scrollbar { width: 5px; }
+        .description-box::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .description-box::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .description-box::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+    
+        .description-text {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #4a5568;
+        }
+
+        .lang-badge { font-size: 0.65rem; font-weight: 900; padding: 2px 4px; border-radius: 4px; margin-right: 8px; }
+        .category-badge { padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 0.75rem; display: inline-block; }
+
+        /* GIỮ NGUYÊN MÀU SẮC NÚT BẤM */
+        .action-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #edf2f7;
+            background: white;
+            transition: 0.2s;
+        }
+        .btn-edit { color: #4e73df; }
+        .btn-edit:hover { background: #4e73df; color: white !important; }
+        .btn-delete { color: #e74a3b; }
+        .btn-delete:hover { background: #e74a3b; color: white !important; }
+
+        /* RESPONSIVE - CẤU HÌNH CHO ĐIỆN THOẠI */
+        @@media (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+            .header-banner { padding: 15px; }
+            .title-main { font-size: 1.2rem; }
+            .btn-create-new { width: 100%; justify-content: center; margin-top: 15px; }
+            .poi-img-circle { width: 50px; height: 50px; }
+            .geo-text { font-size: 0.8rem; }
+        }
+    </style>
+
+    <div class="container-fluid py-4 px-4">
+    
+        <div class="header-banner shadow-sm mb-4">
             <div class="row align-items-center">
-                <div class="col-md-4">
-                    <h5 class="mb-0 fw-bold text-primary">
-                        <i class="bi bi-geo-alt-fill me-2"></i>DANH SÁCH ĐIỂM THUYẾT MINH (POI)
-                    </h5>
-                </div>
-                <div class="col-md-8 d-flex justify-content-end align-items-center gap-3">
-                    @* Form tìm kiếm nhỏ gọn *@
-                    <form asp-action="Index" method="get" class="d-flex">
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" name="searchString" class="form-control" placeholder="Tìm tên quán..." value="@ViewData["CurrentFilter"]">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </div>
-                    </form>
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-3">
+                        <h1 class="title-main mb-0">Hệ Thống Quản Lý POI</h1>
+                        <span class="poi-count-badge shadow-sm">
+                            <i class="bi bi-database-fill-check me-1"></i> @Model.Count Địa điểm
+                        </span>
+                    </div>
+                
+                    <p class="mt-3 text-secondary d-none d-md-block" style="max-width: 700px; font-size: 0.9rem; line-height: 1.6;">
+                        Hệ thống hỗ trợ quản lý các <strong>Điểm Thuyết Minh (POI)</strong> đa ngôn ngữ tại khu vực Vĩnh Khánh. 
+                        Dữ liệu bao gồm tọa độ GPS, hình ảnh thực tế và nội dung thuyết minh tự động (TTS) bằng 05 ngôn ngữ nhằm phục vụ khách du lịch quốc tế.
+                    </p>
 
-                    <a class="btn btn-primary btn-sm px-3 shadow-sm" asp-action="Create">
-                        <i class="bi bi-plus-lg me-1"></i> Thêm quán mới
+                    <div class="title-sub mt-2">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>Khu vực vận hành: <strong>Phố ẩm thực Vĩnh Khánh, Quận 4, TP.HCM</strong></span>
+                    </div>
+                </div>
+            
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a class="btn-create-new d-inline-flex shadow" asp-action="Create">
+                        <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                        <span>THÊM QUÁN MỚI</span>
                     </a>
                 </div>
             </div>
         </div>
 
-        @* Table Section *@
-        <div class="card-body p-0">
+        <div class="poi-container card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-secondary text-uppercase" style="font-size: 0.85rem;">
+                    <thead>
                         <tr>
-                            <th class="ps-4" style="width: 100px;">Ảnh</th>
-                            <th>Tên địa điểm</th>
-                            <th>Phân loại</th>
-                            <th>Địa chỉ & Tọa độ</th>
+                            <th class="text-center" style="width: 100px;">Ảnh</th>
+                            <th style="width: 45%;">Địa điểm & Thuyết minh</th>
+                            <th class="hide-mobile">Phân loại</th>
+                            <th>Tọa độ GPS</th>
                             <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var poi in Model)
                         {
-                            <tr>
-                                <td class="ps-4">
+                            <tr class="poi-row">
+                                <td class="text-center ps-3 pe-3">
                                     <img src="~/images/@(string.IsNullOrEmpty(poi.ImageSource) ? "default.jpg" : poi.ImageSource)" 
-                                         class="rounded-3 shadow-sm border" 
-                                         style="width: 60px; height: 60px; object-fit: cover;" 
+                                         class="poi-img-circle shadow-sm border" 
                                          onerror="this.src='/images/default.jpg';" />
                                 </td>
 
-                                <td>
-                                    <div class="fw-bold text-dark">@poi.Name</div>
-                                    <small class="text-muted d-block text-truncate" style="max-width: 300px;">
-                                        @poi.Description
-                                    </small>
-                                </td>
-
-                                <td>
-                                    <span class="badge rounded-pill @GetBadgeColor(poi.Category?.CategoryName)">
-                                        @(poi.Category?.CategoryName ?? "Chưa phân loại")
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div class="small">
-                                        <i class="bi bi-house-door me-1 text-secondary"></i>
-                                        @(poi.Location?.Address ?? "Chưa có địa chỉ")
-                                    </div>
-                                    <div class="small text-primary mt-1" style="font-size: 0.75rem;">
-                                        <i class="bi bi-pin-map me-1"></i>
-                                        @(poi.Location != null ? $"{poi.Location.Latitude}, {poi.Location.Longitude}" : "0, 0")
+                                <td class="px-3">
+                                    <div class="poi-name mb-1">@poi.Name</div>
+                                    <div class="description-box">
+                                        <div class="d-flex align-items-start mb-2">
+                                            <span class="lang-badge bg-danger text-white">VN</span>
+                                            <div class="description-text">@poi.DescriptionVi</div>
+                                        </div>
+                                        <div class="d-flex align-items-start">
+                                            <span class="lang-badge bg-primary text-white">EN</span>
+                                            <div class="description-text italic">@poi.DescriptionEn</div>
+                                        </div>
                                     </div>
                                 </td>
 
-                                <td class="text-center pe-4">
-                                    <div class="btn-group shadow-sm">
-                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@poi.PoiId" title="Sửa">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@poi.PoiId"
-                                           onclick="return confirm('Tài ơi, bạn chắc chắn muốn xóa quán @poi.Name?')" title="Xóa">
-                                            <i class="bi bi-trash3"></i>
-                                        </a>
+                                <td class="text-center hide-mobile">
+                                    <div class="category-badge @GetBadgeColor(poi.Category)">
+                                        <i class="bi bi-tag-fill me-1"></i>@(poi.Category ?? "N/A")
                                     </div>
                                 </td>
+
+                                <td class="px-3">
+                                    <div class="mb-2">
+                                        <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LAT</span> 
+                                        <span class="geo-text ms-1">@poi.Latitude</span>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LON</span> 
+                                        <span class="geo-text ms-1">@poi.Longitude</span>
+                                    </div>
+                                    <div class="mt-2 text-muted" style="font-size: 0.7rem; font-weight: 600;">
+                                        <i class="bi bi-broadcast me-1"></i>BK: @poi.TriggerRadius m
+                                    </div>
+                                </td>
+
+                                <td class="text-center pe-3">
+        <div class="d-flex justify-content-center gap-2">
+            <a class="action-btn btn-edit shadow-sm" asp-action="Edit" asp-route-id="@poi.PoiId" title="Sửa">
+                <i class="bi bi-pencil-fill"></i>
+            </a>
+
+            <button type="button" 
+                    class="action-btn btn-delete shadow-sm" 
+                    onclick="confirmDelete('@poi.PoiId', '@poi.Name')" 
+                    title="Xóa">
+                <i class="bi bi-trash-fill"></i>
+            </button>
+        </div>
+    </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         </div>
-        
-        <div class="card-footer bg-white text-muted py-3 small">
-            Tổng cộng: <strong>@Model.Count</strong> địa điểm thuyết minh.
-        </div>
     </div>
-</div>
 
-@functions {
-    public string GetBadgeColor(string? category)
-    {
-        return category switch
+    @functions {
+        public string GetBadgeColor(string? category)
         {
-            "Hải sản & Ốc" => "bg-danger-subtle text-danger border border-danger-subtle",
-            "Món Lẩu" => "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
-            "Giải khát" => "bg-info-subtle text-info-emphasis border border-info-subtle",
-            "Ăn vặt & Đường phố" => "bg-success-subtle text-success border border-success-subtle",
-            "Đồ Nhật" => "bg-dark-subtle text-dark border border-dark-subtle",
-            _ => "bg-light text-dark border"
-        };
+            if (string.IsNullOrEmpty(category)) return "bg-light text-secondary border";
+        
+            return category switch
+            {
+                "Hải sản" or "Quán ốc" => "bg-danger-subtle text-danger border border-danger-subtle",
+                "Lẩu dê" or "Món Lẩu" => "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+                "Đồ Nhật" => "bg-dark-subtle text-dark border border-dark-subtle",
+                "Ăn nhẹ" or "Ăn vặt" => "bg-success-subtle text-success border border-success-subtle",
+                "Điểm tham quan" => "bg-info-subtle text-info-emphasis border border-info-subtle",
+                _ => "bg-secondary-subtle text-secondary border"
+            };
+        }
     }
-}

@@ -1,34 +1,38 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
+<html lang="vi">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smart Tour Admin</title>
     <link rel="stylesheet" href="~/css/admin.css">
-    </head>
+</head>
 
-    <body>
+<body>
+    <div class="sidebar">
+        <h2>Admin</h2>
+        @* Link chuẩn dùng Tag Helper *@
+        <a asp-controller="POI" asp-action="Index">POI</a>
+        <a asp-controller="Audios" asp-action="Index">Audio</a>
+        <a asp-controller="Tour" asp-action="Index">Tour</a>
+        <a asp-controller="Analytics" asp-action="Index">Analytics</a>
+    </div>
 
-        <div class="sidebar">
-
-            <h2>Admin</h2>
-
-            <a href="/POI">POI</a>
-            <a href="/Audio">Audio</a>
-            <a href="/Tour">Tour</a>
-            <a href="/Analytics">Analytics</a>
-
+    <div class="main">
+        <div class="topbar">
+            Smart Tour Guide Admin
         </div>
 
-        <div class="main">
-
-            <div class="topbar">
-                Smart Tour Guide Admin
-            </div>
-
-            <div class="content">
-                @RenderBody()
-            </div>
-
+        <div class="content">
+            @RenderBody()
         </div>
+    </div>
 
-    </body>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="~/js/poi-management.js" asp-append-version="true"></script>
+
+    @* Dòng này cực kỳ quan trọng để các trang con chạy được Script riêng *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
 </html>

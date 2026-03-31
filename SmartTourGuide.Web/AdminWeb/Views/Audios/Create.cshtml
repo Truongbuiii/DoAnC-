@@ -1,0 +1,63 @@
+﻿@model AdminWeb.Models.Audio
+
+@{
+    ViewData["Title"] = "Thêm mới Audio Guide";
+}
+
+<h1>Tạo mới Audio</h1>
+
+<h4>Thông tin bản ghi âm</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6"> @* Tăng độ rộng lên 6 cho dễ nhìn *@
+        @* CỰC KỲ QUAN TRỌNG: Phải có enctype="multipart/form-data" mới upload được file *@
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Tiêu đề bản nhạc</label>
+                <input asp-for="AudioName" class="form-control" placeholder="Ví dụ: Giới thiệu Quán Ốc A" />
+                <span asp-validation-for="AudioName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Mô tả chi tiết</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Ngôn ngữ</label>
+                <select asp-for="Language" class="form-control">
+                    <option value="Vietnamese">Tiếng Việt</option>
+                    <option value="English">Tiếng Anh</option>
+                </select>
+                <span asp-validation-for="Language" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Chọn File Nhạc (.mp3, .wav)</label>
+                @* name="audioFile" phải khớp với tên tham số trong Controller *@
+                <input type="file" name="audioFile" class="form-control" accept="audio/*" required />
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="control-label">Thuộc Quán ốc (POI)</label>
+                @* Lấy danh sách POI từ ViewBag mà mình đã chuẩn bị ở Controller *@
+                <select asp-for="PoiId" class="form-control" asp-items="ViewBag.PoiId">
+                    <option value="">-- Chọn địa điểm --</option>
+                </select>
+                <span asp-validation-for="PoiId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Tải lên và Lưu" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

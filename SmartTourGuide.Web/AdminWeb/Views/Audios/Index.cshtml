@@ -1,0 +1,60 @@
+﻿@model IEnumerable<AdminWeb.Models.Audio>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Quản lý Audio Guide</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Tạo mới Audio</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Mô tả</th>
+            <th>Ngôn ngữ</th>
+            <th>Nghe thử (Audio)</th> @* Đổi tên cột cho chuyên nghiệp *@
+            <th>Địa điểm (POI)</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.AudioName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Language)
+            </td>
+            <td>
+                @if (!string.IsNullOrEmpty(item.FilePath))
+                {
+                    <audio controls style="height: 30px; width: 200px;">
+                        <source src="@item.FilePath" type="audio/mpeg">
+                        Trình duyệt không hỗ trợ.
+                    </audio>
+                }
+                else
+                {
+                    <span class="text-muted">Chưa có file</span>
+                }
+            </td>
+            <td>
+                @* Dùng ?. để an toàn nếu POI chưa được gán *@
+                @(item.Poi?.Name ?? "Chưa gán quán")
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-info">Sửa</a> |
+                <a asp-action="Details" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-secondary">Chi tiết</a> |
+                <a asp-action="Delete" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-danger">Xóa</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
