@@ -1,5 +1,4 @@
-﻿
-USE VinhKhanhAudioGuide;
+﻿USE VinhKhanhAudioGuide;
 GO
 
 -- ==========================================
@@ -79,8 +78,20 @@ GO
 -- ==========================================
 
 -- Nạp 1 tài khoản Admin mặc định
-INSERT INTO Admins (Username, Password, FullName) VALUES ('admin', '123456', N'Nguyễn Đức Tài');
-
+INSERT INTO Admins (Username, [Password], FullName)
+VALUES 
+('admin', '123456', N'2T'),
+('ochoanh', '123', N'Chủ quán Ốc Oanh 534'),
+('ocvu', '123', N'Chủ quán Ốc Vũ 37'),
+('ocdao', '123', N'Chủ quán Ốc Đào 2'),
+('octhao123', '123', N'Chủ quán Ốc Thảo 123'),
+('octhao383', '123', N'Chủ quán Ốc Thảo 383'),
+('sushiko', '123', N'Chủ quán Sushi KO'),
+('chilli', '123', N'Chủ quán Chilli Lẩu Nướng'),
+('laudechung', '123', N'Chủ quán Lẩu Dê Chung'),
+('ditubunca', '123', N'Chủ quán Bún cá Dì Tư'),
+('congchao', '123', N'Ban Quản Lý Cổng Chào');
+GO
 -- Nạp 10 Địa điểm (POIs)
 INSERT INTO POIs (Name, Category, TriggerRadius, Latitude, Longitude, ImageSource, DescriptionVi, DescriptionEn, DescriptionZh, DescriptionKo, DescriptionJa) VALUES 
 (N'Cổng chào Phố ẩm thực', N'Điểm tham quan', 50, 10.761858, 106.702236, 'congchao.jpg', N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4, lọt top 10 con phố thú vị nhất thế giới 2025.', N'Welcome to Vinh Khanh Food Street, the most vibrant nighttime food paradise in District 4, ranked top 10 most exciting streets in the world 2025.', N'欢迎来到永康美食街，这是第四区最繁华的夜间美食天堂，荣登2025年全球最有趣街道前十名。', N'2025년 세계에서 가장 흥미로운 거리 10위에 선정된 4군 최고의 야간 음식 천국, 빈칸 푸드 스트리트에 오신 것을 환영합니다.', N'2025年世界で最も魅力的な通りトップ10に選ばれた、4区最大の夜の食の楽園、ヴィンカン・フードストリートへようこそ。'),

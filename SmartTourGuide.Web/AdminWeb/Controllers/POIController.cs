@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using AdminWeb.Data;
 using AdminWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc.Rendering; // Thêm dòng này để dùng SelectList
 
 namespace AdminWeb.Controllers
 {
@@ -16,13 +18,19 @@ namespace AdminWeb.Controllers
             _context = context;
         }
 
+        // ============================================================
         // 1. TRANG DANH SÁCH + TÌM KIẾM
+        // ============================================================
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
-
-            // Giờ không cần .Include nữa vì dữ liệu đã nằm chung 1 bảng POIs
+            string currentUserName = User.Identity.Name!;
             var query = _context.POIs.AsNoTracking().AsQueryable();
+
+            if (!User.IsInRole("Admin"))
+            {
+                query = query.Where(p => p.OwnerUsername == currentUserName);
+            }
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -33,9 +41,20 @@ namespace AdminWeb.Controllers
             return View(model);
         }
 
-        // 2. TRANG THÊM MỚI (GIAO DIỆN)
-        public IActionResult Create()
+        // ============================================================
+        // 2. TRANG THÊM MỚI (GIAO DIỆN) - ĐÃ SỬA BƯỚC 4
+        // ============================================================
+        public async Task<IActionResult> Create()
         {
+            // Lấy danh sách các tài khoản chủ quán để đổ vào Dropdown
+            // Chỉ lấy những người không phải là 'admin'
+            var owners = await _context.Admins
+                .Where(a => a.Username != "admin")
+                .Select(a => a.Username)
+                .ToListAsync();
+
+            ViewBag.OwnerList = new SelectList(owners);
+
             return View();
         }
 
@@ -48,19 +67,20 @@ namespace AdminWeb.Controllers
             {
                 try
                 {
-                    // Xử lý lưu File ảnh vào wwwroot/images
+                    // Nếu là Chủ quán tạo, tự động gán OwnerUsername là chính họ
+                    // Nếu là Admin tạo, thì nó sẽ lấy giá trị từ Dropdown mà Admin đã chọn
+                    if (!User.IsInRole("Admin"))
+                    {
+                        poi.OwnerUsername = User.Identity.Name;
+                    }
+
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
                         if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
                         string path = Path.Combine(uploadDir, fileName);
-
-                        using (var stream = new FileStream(path, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(stream);
-                        }
+                        using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
                         poi.ImageSource = fileName;
                     }
 
@@ -70,17 +90,33 @@ namespace AdminWeb.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi rồi Tài ơi: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi hệ thống: " + ex.Message);
                 }
             }
             return View(poi);
         }
 
-        // 4. TRANG CHỈNH SỬA (GET)
+        // ============================================================
+        // 4. TRANG CHỈNH SỬA (GET) - ĐÃ SỬA BƯỚC 4
+        // ============================================================
         public async Task<IActionResult> Edit(int id)
         {
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
+
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
+            {
+                return Forbid();
+            }
+
+            // Gửi danh sách chủ quán qua để Admin có thể đổi chủ cho quán này
+            var owners = await _context.Admins
+                .Where(a => a.Username != "admin")
+                .Select(a => a.Username)
+                .ToListAsync();
+
+            ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
+
             return View(poi);
         }
 
@@ -91,11 +127,18 @@ namespace AdminWeb.Controllers
         {
             if (id != poi.PoiId) return NotFound();
 
+            var existingPoi = await _context.POIs.AsNoTracking().FirstOrDefaultAsync(p => p.PoiId == id);
+            if (existingPoi == null) return NotFound();
+
+            if (!User.IsInRole("Admin") && existingPoi.OwnerUsername != User.Identity.Name)
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Nếu có ảnh mới thì cập nhật, không thì giữ ảnh cũ
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
@@ -105,8 +148,14 @@ namespace AdminWeb.Controllers
                     }
                     else
                     {
-                        // Giữ lại tên ảnh cũ nếu không upload ảnh mới
-                        _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
+                        poi.ImageSource = existingPoi.ImageSource;
+                    }
+
+                    // Nếu là Admin sửa, thì lấy giá trị OwnerUsername mới từ form (Dropdown)
+                    // Nếu là Owner sửa, giữ nguyên OwnerUsername cũ của họ
+                    if (!User.IsInRole("Admin"))
+                    {
+                        poi.OwnerUsername = existingPoi.OwnerUsername;
                     }
 
                     _context.Update(poi);
@@ -126,11 +175,15 @@ namespace AdminWeb.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var poi = await _context.POIs.FindAsync(id);
-            if (poi != null)
+            if (poi == null) return NotFound();
+
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
             {
-                _context.POIs.Remove(poi);
-                await _context.SaveChangesAsync();
+                return Forbid();
             }
+
+            _context.POIs.Remove(poi);
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
     }
