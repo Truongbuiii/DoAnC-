@@ -73,6 +73,8 @@ CREATE TABLE ActivityLogs (
 );
 GO
 
+ALTER TABLE POIs ADD OwnerUsername NVARCHAR(100) NULL;
+
 -- ==========================================
 -- 3. NẠP DỮ LIỆU
 -- ==========================================
