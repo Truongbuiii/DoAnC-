@@ -35,7 +35,7 @@ namespace AdminWeb.Controllers
         }
 
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             // Lấy danh sách các tài khoản chủ quán để đổ vào Dropdown
             // Chỉ lấy những người không phải là 'admin'
