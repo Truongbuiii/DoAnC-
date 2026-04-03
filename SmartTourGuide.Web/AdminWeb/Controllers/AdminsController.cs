@@ -56,5 +56,28 @@ namespace AdminWeb.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        // GET: Admins/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var admin = await _context.Admins.FindAsync(id);
+            if (admin == null) return NotFound();
+            return View(admin);
+        }
+
+        // POST: Admins/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Admin admin)
+        {
+            if (id != admin.AdminId) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                _context.Update(admin);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(admin);
+        }
     }
 }

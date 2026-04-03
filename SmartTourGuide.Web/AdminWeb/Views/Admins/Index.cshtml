@@ -37,11 +37,20 @@
                                 </td>
                                 <td class="text-center">
                                     @if(item.Username.ToLower() != "admin") {
-                                        <a asp-action="Delete" asp-route-id="@item.AdminId" 
-                                           class="btn btn-outline-danger btn-sm border-0" 
-                                           onclick="return confirm('Tài có chắc chắn muốn xóa chủ quán này không?')">
-                                            <i class="fas fa-trash-alt"></i> Xóa
-                                        </a>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            @* NÚT SỬA MỚI THÊM *@
+                                            <a asp-action="Edit" asp-route-id="@item.AdminId" 
+                                               class="btn btn-outline-primary btn-sm border-0" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </a>
+
+                                            @* NÚT XÓA *@
+                                            <a asp-action="Delete" asp-route-id="@item.AdminId" 
+                                               class="btn btn-outline-danger btn-sm border-0" 
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa chủ quán này không?')">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </a>
+                                        </div>
                                     } else {
                                         <small class="text-muted fst-italic">Hệ thống</small>
                                     }

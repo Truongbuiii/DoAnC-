@@ -46,7 +46,7 @@
             border: 1px solid #e0e7ff;
         }
 
-        /* --- GIỮ NGUYÊN NÚT THÊM MỚI --- */
+        /* --- GIỮ NGUYÊN NÚT ỚI --- */
         .btn-create-new {
             background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
             color: white !important;
@@ -187,12 +187,23 @@
                     </div>
                 </div>
             
-                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <a class="btn-create-new d-inline-flex shadow" asp-action="Create">
-                        <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
-                        <span>THÊM QUÁN MỚI</span>
-                    </a>
-                </div>
+               <div class="col-md-4 text-md-end mt-3 mt-md-0">
+    @* CHỈ HIỆN NÚT THÊM MỚI NẾU LÀ ADMIN *@
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="btn-create-new d-inline-flex shadow" asp-action="Create">
+            <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
+            <span>THÊM QUÁN MỚI</span>
+        </a>
+    }
+    else
+    {
+        @* Nếu là chủ quán, có thể hiện một dòng chữ chào mừng hoặc để trống *@
+        <span class="badge bg-info text-dark p-2">
+            <i class="bi bi-info-circle me-1"></i> Khu vực quản lý của Chủ sở hữu
+        </span>
+    }
+</div>
             </div>
         </div>
 
@@ -290,3 +301,24 @@
             };
         }
     }
+    @section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Xóa địa điểm này?',
+                text: "Bạn có chắc muốn xóa quán: " + name + "? Dữ liệu sẽ không thể khôi phục!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#858796',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Chuyển hướng đến Action Delete trong Controller
+                    window.location.href = '@Url.Action("Delete", "POI")/' + id;
+                }
+            })
+        }
+    </script>
+}
