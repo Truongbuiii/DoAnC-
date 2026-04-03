@@ -8,6 +8,7 @@ namespace FoodTourApp;
 public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
+    private bool _isFirstLoad = true;
 
     public MainPage()
     {
@@ -18,7 +19,8 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        if (!Preferences.ContainsKey("AppLanguage"))
+        // Chỉ hỏi ngôn ngữ 1 lần duy nhất khi mở app
+        if (_isFirstLoad && !Preferences.ContainsKey("AppLanguage"))
         {
             await Task.Delay(300);
             string action = await DisplayActionSheet(
@@ -41,6 +43,7 @@ public partial class MainPage : ContentPage
             Preferences.Set("AppLanguage", lang);
         }
 
+        _isFirstLoad = false;
         await LoadDashboard();
     }
 
@@ -60,11 +63,8 @@ public partial class MainPage : ContentPage
     {
         if (e.CurrentSelection.FirstOrDefault() is not Itinerary tour) return;
         ((CollectionView)sender).SelectedItem = null;
-
-        // Lưu danh sách POI của tour → MapPage sẽ đọc
         Preferences.Set("TourPoiIds", tour.PoiIdsRaw);
-        Preferences.Set("TourName", tour.Name);
-
+        Preferences.Set("TourName", tour.TourName);
         await Shell.Current.GoToAsync("//MapPage");
     }
 

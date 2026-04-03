@@ -134,8 +134,8 @@
             <!-- DANH SÁCH POI -->
             <CollectionView x:Name="PoisListView" IsVisible="False"
                             SelectionMode="Single" SelectionChanged="OnPoiSelected"/>
+       
 
-      
         </Grid>
     </Grid>
 </ContentPage>

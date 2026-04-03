@@ -14,18 +14,17 @@ namespace FoodTourApp.Services
             var dbPath = Path.Combine(FileSystem.AppDataDirectory, "VinhKhanhTour.db3");
             _database = new SQLiteAsyncConnection(dbPath);
 
-            await _database.DropTableAsync<POI>();
-            await _database.DropTableAsync<Itinerary>();
+            // Tạo bảng nếu chưa có (không xóa data cũ)
             await _database.CreateTableAsync<POI>();
             await _database.CreateTableAsync<Itinerary>();
+            await _database.CreateTableAsync<ActivityLog>();
 
+            // Seed data nếu bảng trống
             if (await _database.Table<POI>().CountAsync() == 0)
                 await _database.InsertAllAsync(GetMultiLanguagePOIs());
 
             if (await _database.Table<Itinerary>().CountAsync() == 0)
                 await _database.InsertAllAsync(GetSampleItineraries());
-
-            await _database.CreateTableAsync<ActivityLog>();
         }
 
         private List<POI> GetMultiLanguagePOIs()

@@ -420,6 +420,7 @@ public partial class MapPage : ContentPage
             StatusLabel.Text = "⚠️ Cần quyền vị trí để hoạt động";
         }
     }
+ 
 
     private void LoadDefaultMap()
     {
