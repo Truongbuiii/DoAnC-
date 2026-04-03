@@ -25,15 +25,26 @@ namespace AdminWeb.Controllers
         {
             ViewData["CurrentFilter"] = searchString;
 
-            // Giờ không cần .Include nữa vì dữ liệu đã nằm chung 1 bảng POIs
+            // 1. Khởi tạo truy vấn gốc
             var query = _context.POIs.AsNoTracking().AsQueryable();
 
+            // 2. --- PHÂN QUYỀN DỮ LIỆU TẠI ĐÂY ---
+            // Nếu tài khoản KHÔNG PHẢI là admin thì chỉ lọc ra những quán do mình làm chủ
+            if (!User.IsInRole("Admin"))
+            {
+                string currentUserName = User.Identity.Name;
+                query = query.Where(p => p.OwnerUsername == currentUserName);
+            }
+
+            // 3. Xử lý tìm kiếm (nếu có)
             if (!string.IsNullOrEmpty(searchString))
+            {
                 query = query.Where(s => s.Name.Contains(searchString));
+            }
+
             var model = await query.ToListAsync();
             return View(model);
         }
-
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
         public async Task<IActionResult> Create()
         {
