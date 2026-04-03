@@ -52,35 +52,18 @@ namespace AdminWeb.Controllers
         // 4. TẠO MỚI (POST): Xử lý lưu File và lưu Data
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Audio audio, IFormFile audioFile)
+        
+        public async Task<IActionResult> Create([Bind("AudioId,AudioName,Description,FilePath,Language,PoiId")] Audio audio)
         {
-            if (audioFile != null && audioFile.Length > 0)
-            {
-                // Tự động tạo thư mục uploads nếu chưa có
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
-                // Lưu file vật lý
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(audioFile.FileName);
-                var filePath = Path.Combine(uploadDir, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await audioFile.CopyToAsync(stream);
-                }
-                audio.FilePath = "/uploads/" + fileName;
-            }
-
-            ModelState.Remove("Poi"); // Bỏ qua kiểm tra ràng buộc object Poi
             if (ModelState.IsValid)
             {
                 _context.Add(audio);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.PoiId = new SelectList(_context.POIs, "PoiId", "Name", audio.PoiId);
+            ViewData["PoiId"] = new SelectList(_context.POIs, "PoiId", "Name", audio.PoiId);
             return View(audio);
         }
-
         // 5. CHỈNH SỬA (GET)
         public async Task<IActionResult> Edit(int? id)
         {

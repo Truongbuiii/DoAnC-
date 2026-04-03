@@ -1,7 +1,6 @@
 ﻿@model IEnumerable<AdminWeb.Models.Audio>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
 <style>
     /* Style đồng bộ với trang POI */
     .header-banner {
@@ -24,9 +23,6 @@
 
     .table td { border: 1px solid #dee2e6 !important; vertical-align: middle; }
 
-    /* Style cho trình phát nhạc */
-    audio { height: 35px; width: 220px; border-radius: 5px; }
-
     .btn-create-audio {
         background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
         color: white !important; padding: 10px 20px; border-radius: 12px;
@@ -40,12 +36,12 @@
     <div class="header-banner shadow-sm mb-4">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1 class="title-main mb-0">Quản Lý Audio Guide</h1>
-                <p class="text-muted mt-2 mb-0">Danh sách các file thuyết minh đa ngôn ngữ cho địa điểm du lịch.</p>
+                <h1 class="title-main mb-0">Quản Lý Nội Dung Thuyết Minh (TTS)</h1>
+                <p class="text-muted mt-2 mb-0">Danh sách các kịch bản đa ngôn ngữ dùng để phát tự động (Text-to-Speech) cho ứng dụng di động.</p>
             </div>
             <div class="col-md-4 text-md-end">
                 <a class="btn-create-audio shadow" asp-action="Create">
-                    <i class="bi bi-plus-circle-fill"></i> TẠO MỚI AUDIO
+                    <i class="bi bi-plus-circle-fill"></i> TẠO MỚI KỊCH BẢN
                 </a>
             </div>
         </div>
@@ -54,13 +50,13 @@
     <div class="audio-container">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead>
+               <thead class="bg-primary text-white">
                     <tr>
-                        <th style="width: 30%;">Tiêu đề & Mô tả</th>
-                        <th class="text-center">Ngôn ngữ</th>
-                        <th class="text-center">Nghe thử</th>
-                        <th>Thuộc địa điểm (POI)</th>
-                        <th class="text-center">Thao tác</th>
+                        <th>TIÊU ĐỀ & MÔ TẢ</th>
+                        <th class="text-center">NGÔN NGỮ</th>
+                        <th>NỘI DUNG KỊCH BẢN (TEXT)</th>
+                        <th>THUỘC ĐỊA ĐIỂM (POI)</th>
+                        <th class="text-center">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,7 +64,6 @@
                     {
                         <tr>
                             <td class="px-3">
-                                @* ĐÃ SỬA: Title -> AudioName *@
                                 <div class="fw-bold text-dark">@item.AudioName</div>
                                 <small class="text-muted">@item.Description</small>
                             </td>
@@ -77,31 +72,29 @@
                                     @item.Language
                                 </span>
                             </td>
-                            <td class="text-center">
-                                @* ĐÃ SỬA: AudioUrl -> FilePath *@
-                                @if (!string.IsNullOrEmpty(item.FilePath))
-                                {
-                                    <audio controls>
-                                        <source src="~/audios/@item.FilePath" type="audio/mpeg">
-                                        Trình duyệt không hỗ trợ.
-                                    </audio>
-                                }
-                                else
-                                {
-                                    <span class="text-muted small italic">Chưa có file</span>
-                                }
-                            </td>
+                            
+                          <td class="px-3 text-wrap" style="max-width: 400px; line-height: 1.5;">
+    @if (!string.IsNullOrEmpty(item.FilePath))
+    {
+        <span class="text-dark">
+            @item.FilePath
+        </span>
+    }
+    else
+    {
+        <span class="text-muted small fst-italic">Chưa có nội dung</span>
+    }
+</td>
                             <td class="px-3">
                                 <i class="bi bi-geo-alt-fill text-danger me-1"></i>
                                 <strong>@(item.Poi?.Name ?? "N/A")</strong>
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a class="action-btn btn-edit shadow-sm" asp-action="Edit" asp-route-id="@item.AudioId">
+                                    <a class="btn btn-outline-primary btn-sm shadow-sm" asp-action="Edit" asp-route-id="@item.AudioId">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
-                                    @* ĐÃ SỬA: Title -> AudioName *@
-                                    <button type="button" class="action-btn btn-delete shadow-sm" 
+                                    <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" 
                                             onclick="confirmDelete('@item.AudioId', '@item.AudioName')">
                                         <i class="bi bi-trash-fill"></i>
                                     </button>

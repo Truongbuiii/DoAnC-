@@ -1,41 +1,86 @@
 ﻿@model AdminWeb.Models.Audio
+
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa Kịch bản Thuyết minh";
 }
 
-<h1>Edit</h1>
-
-<h4>Audio</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="AudioId" />
-            <div class="form-group">
-                <label asp-for="AudioName" class="control-label"></label>
-                <input asp-for="AudioName" class="form-control" />
-                <span asp-validation-for="AudioName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FilePath" class="control-label"></label>
-                <input asp-for="FilePath" class="form-control" />
-                <span asp-validation-for="FilePath" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh sửa Kịch bản Thuyết minh</h2>
+            <p class="text-muted small mb-0">Cập nhật nội dung cho máy đọc tự động (Text-to-Speech)</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="AudioId" />
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AudioName" class="form-label fw-bold text-dark">Tiêu đề Kịch bản <span class="text-danger">*</span></label>
+                                    <input asp-for="AudioName" class="form-control form-control-lg bg-light" placeholder="VD: Chào mừng đến Ốc Oanh" />
+                                    <span asp-validation-for="AudioName" class="text-danger small"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="PoiId" class="form-label fw-bold text-dark">Thuộc Địa điểm (POI) <span class="text-danger">*</span></label>
+                                    <select asp-for="PoiId" class="form-select form-select-lg bg-light" asp-items="ViewBag.PoiId"></select>
+                                    <span asp-validation-for="PoiId" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Language" class="form-label fw-bold text-dark">Ngôn ngữ <span class="text-danger">*</span></label>
+                                    <select asp-for="Language" class="form-select form-select-lg bg-light">
+                                        <option value="VN">Tiếng Việt (VN)</option>
+                                        <option value="EN">Tiếng Anh (EN)</option>
+                                        <option value="ZH">Tiếng Trung (ZH)</option>
+                                        <option value="KO">Tiếng Hàn (KO)</option>
+                                        <option value="JA">Tiếng Nhật (JA)</option>
+                                    </select>
+                                    <span asp-validation-for="Language" class="text-danger small"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Description" class="form-label fw-bold text-dark">Mô tả ngắn</label>
+                                    <input asp-for="Description" class="form-control form-control-lg bg-light" placeholder="Nhập mô tả..." />
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label asp-for="FilePath" class="form-label fw-bold text-dark">Nội dung Kịch bản (Text-to-Speech) <span class="text-danger">*</span></label>
+                                    <textarea asp-for="FilePath" class="form-control bg-light" rows="6" placeholder="Nhập nội dung văn bản để App tự động đọc thành tiếng..."></textarea>
+                                    <span asp-validation-for="FilePath" class="text-danger small"></span>
+                                    <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Đảm bảo nhập đúng chính tả và ngữ pháp để giọng đọc AI phát âm chuẩn xác nhất.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4" />
+
+                        <div class="d-flex justify-content-end gap-3">
+                            <a asp-action="Index" class="btn btn-light px-4 rounded-pill fw-bold text-muted border">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow">
+                                <i class="bi bi-floppy2-fill me-2"></i>Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
