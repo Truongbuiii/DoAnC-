@@ -336,6 +336,17 @@ public partial class MapPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        // Sync từ server nếu có mạng
+        // Thêm vào đầu OnAppearing
+        var apiSync = new ApiSyncService(_dbService);
+        _ = Task.Run(async () =>
+        {
+            var syncResult = await apiSync.SyncPoisAsync();
+            System.Diagnostics.Debug.WriteLine($"=== SYNC POI: {syncResult}");
+
+            var logResult = await apiSync.SyncLogsAsync();
+            System.Diagnostics.Debug.WriteLine($"=== SYNC LOGS: {logResult}");
+        });
 
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         _geofenceService.CooldownMinutes = Preferences.Get("CooldownMinutes", 5);

@@ -20,26 +20,20 @@ namespace AdminWeb.Controllers
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
-
-            // Giờ không cần .Include nữa vì dữ liệu đã nằm chung 1 bảng POIs
             var query = _context.POIs.AsNoTracking().AsQueryable();
-
             if (!string.IsNullOrEmpty(searchString))
-            {
                 query = query.Where(s => s.Name.Contains(searchString));
-            }
-
             var model = await query.ToListAsync();
             return View(model);
         }
 
-        // 2. TRANG THÊM MỚI (GIAO DIỆN)
+        // 2. TRANG THÊM MỚI
         public IActionResult Create()
         {
             return View();
         }
 
-        // 3. XỬ LÝ LƯU DỮ LIỆU THÊM MỚI (POST)
+        // 3. XỬ LÝ LƯU THÊM MỚI
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
@@ -48,35 +42,29 @@ namespace AdminWeb.Controllers
             {
                 try
                 {
-                    // Xử lý lưu File ảnh vào wwwroot/images
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
                         if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
-
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
                         string path = Path.Combine(uploadDir, fileName);
-
                         using (var stream = new FileStream(path, FileMode.Create))
-                        {
                             await imageFile.CopyToAsync(stream);
-                        }
                         poi.ImageSource = fileName;
                     }
-
                     _context.POIs.Add(poi);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi rồi Tài ơi: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi: " + ex.Message);
                 }
             }
             return View(poi);
         }
 
-        // 4. TRANG CHỈNH SỬA (GET)
+        // 4. TRANG CHỈNH SỬA
         public async Task<IActionResult> Edit(int id)
         {
             var poi = await _context.POIs.FindAsync(id);
@@ -84,31 +72,28 @@ namespace AdminWeb.Controllers
             return View(poi);
         }
 
-        // 5. XỬ LÝ LƯU DỮ LIỆU SAU KHI SỬA (POST)
+        // 5. XỬ LÝ LƯU SAU KHI SỬA
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile)
         {
             if (id != poi.PoiId) return NotFound();
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Nếu có ảnh mới thì cập nhật, không thì giữ ảnh cũ
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
                         string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
-                        using (var stream = new FileStream(path, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
+                        using (var stream = new FileStream(path, FileMode.Create))
+                            await imageFile.CopyToAsync(stream);
                         poi.ImageSource = fileName;
                     }
                     else
                     {
-                        // Giữ lại tên ảnh cũ nếu không upload ảnh mới
                         _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
                     }
-
                     _context.Update(poi);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
@@ -133,5 +118,82 @@ namespace AdminWeb.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
+        // ============================================================
+        // API ENDPOINTS CHO MOBILE APP
+        // ============================================================
+
+        // API 1: GET /api/v1/pois
+        [AllowAnonymous]
+        [HttpGet("/api/v1/pois")]
+        public async Task<IActionResult> GetPoisApi()
+        {
+            var pois = await _context.POIs.AsNoTracking().Select(p => new
+            {
+                p.PoiId,
+                p.Name,
+                p.Category,
+                p.Latitude,
+                p.Longitude,
+                p.TriggerRadius,
+                p.ImageSource,
+                p.DescriptionVi,
+                p.DescriptionEn,
+                p.DescriptionZh,
+                p.DescriptionKo,
+                p.DescriptionJa
+            }).ToListAsync();
+            return Json(pois);
+        }
+
+        // API 2: GET /api/v1/audios/{poiId}?lang={langCode}
+        [AllowAnonymous]
+        [HttpGet("/api/v1/audios/{poiId}")]
+        public async Task<IActionResult> GetAudioApi(int poiId, string lang = "VN")
+        {
+            var audio = await _context.Audios
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.PoiId == poiId && a.Language == lang);
+            if (audio == null) return NotFound();
+            return Json(new
+            {
+                audio.AudioId,
+                audio.AudioName,
+                audio.FilePath,
+                audio.Language,
+                audio.PoiId
+            });
+        }
+
+        // API 3: POST /api/v1/analytics/sync
+        [AllowAnonymous]
+        [HttpPost("/api/v1/analytics/sync")]
+        public async Task<IActionResult> SyncAnalyticsApi([FromBody] List<ActivityLogDto> logs)
+        {
+            if (logs == null || !logs.Any()) return BadRequest();
+            foreach (var log in logs)
+            {
+                _context.ActivityLogs.Add(new ActivityLogs
+                {
+                    PoiId = log.PoiId,
+                    ActionType = log.ActionType,
+                    LanguageUsed = log.LanguageUsed,
+                    DeviceType = log.DeviceType,
+                    AccessTime = log.AccessTime
+                });
+            }
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, synced = logs.Count });
+        }
+    }
+
+    // DTO cho Analytics Sync
+    public class ActivityLogDto
+    {
+        public int PoiId { get; set; }
+        public string ActionType { get; set; } = string.Empty;
+        public string LanguageUsed { get; set; } = string.Empty;
+        public string DeviceType { get; set; } = "Android";
+        public DateTime AccessTime { get; set; }
     }
 }

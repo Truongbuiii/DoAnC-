@@ -26,6 +26,26 @@ namespace FoodTourApp.Services
             if (await _database.Table<Itinerary>().CountAsync() == 0)
                 await _database.InsertAllAsync(GetSampleItineraries());
         }
+public async Task SavePOIsFromServerAsync(List<POI> pois)
+{
+    await Init();
+    foreach (var poi in pois)
+        await _database.InsertOrReplaceAsync(poi);
+}
+
+public async Task MarkLogsAsSyncedAsync(List<int> logIds)
+{
+    await Init();
+    foreach (var id in logIds)
+    {
+        var log = await _database.Table<ActivityLog>().FirstOrDefaultAsync(l => l.LogId == id);
+        if (log != null)
+        {
+            log.IsSynced = 1;
+            await _database.UpdateAsync(log);
+        }
+    }
+}
 
         private List<POI> GetMultiLanguagePOIs()
         {

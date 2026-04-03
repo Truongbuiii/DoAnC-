@@ -4,7 +4,7 @@ namespace FoodTourApp.Models
 {
     public class Itinerary
     {
-        [PrimaryKey, AutoIncrement]
+        [PrimaryKey]
         public int TourId { get; set; }
 
         public string TourName { get; set; } = string.Empty;

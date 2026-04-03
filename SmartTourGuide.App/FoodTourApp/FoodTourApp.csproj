@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<MauiIcon Include="Resources\AppIcon\appicon.png" Color="#F97316" />
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#F97316" BaseSize="400,400"/>
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#F97316" BaseSize="400,400" />
 		<MauiImage Include="Resources\Images\*.jpg" />
 		<MauiImage Include="Resources\Images\*.png" />
 		<MauiFont Include="Resources\Fonts\*" />
@@ -46,6 +46,10 @@
 		<MauiXaml Update="Pages\**\*.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Resources\QRCodes\" />
 	</ItemGroup>
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>

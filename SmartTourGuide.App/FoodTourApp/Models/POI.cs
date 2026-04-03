@@ -4,7 +4,7 @@ namespace FoodTourApp.Models
 {
     public class POI
     {
-        [PrimaryKey, AutoIncrement]
+        [PrimaryKey]
         public int PoiId { get; set; }
 
         public string Name { get; set; } = string.Empty;
