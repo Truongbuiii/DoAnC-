@@ -20,11 +20,24 @@ namespace AdminWeb.Controllers
         {
             _context = context;
         }
-
-        // 1. TRANG DANH SÁCH: Hiển thị kèm tên Quán ốc (POI)
+        // 1. TRANG DANH SÁCH: Hiển thị kèm tên Quán ốc (POI) - ĐÃ PHÂN QUYỀN
         public async Task<IActionResult> Index()
         {
-            var audios = await _context.Audios.Include(a => a.Poi).ToListAsync();
+            // Lấy Username của người đang đăng nhập
+            string currentUserName = User.Identity!.Name!;
+
+            // Khởi tạo truy vấn kèm theo bảng Poi để biết chủ sở hữu
+            var query = _context.Audios.Include(a => a.Poi).AsQueryable();
+
+            // LOGIC PHÂN QUYỀN:
+            // Nếu KHÔNG PHẢI Admin (tức là Owner)
+            if (!User.IsInRole("Admin"))
+            {
+                // Chỉ lấy những Audio thuộc về quán (POI) mà User này sở hữu
+                query = query.Where(a => a.Poi != null && a.Poi.OwnerUsername == currentUserName);
+            }
+
+            var audios = await query.ToListAsync();
             return View(audios);
         }
 

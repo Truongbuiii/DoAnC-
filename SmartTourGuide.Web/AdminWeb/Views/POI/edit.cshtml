@@ -1,7 +1,6 @@
 ﻿@model AdminWeb.Models.POI
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
 <style>
     /* CSS nội bộ để đảm bảo giao diện luôn đẹp */
     .edit-container { background-color: #f8f9fa; padding: 30px; border-radius: 20px; }
@@ -79,7 +78,7 @@
                 <div class="col-lg-4">
                     <div class="card-custom">
                         <div class="header-gold">
-                            <i class="bi bi-image me-2"></i>Hình ảnh & Loại hình
+                            <i class="bi bi-image me-2"></i>Hình ảnh & Quản lý
                         </div>
                         <div class="p-4">
                             <div class="text-center mb-3">
@@ -91,6 +90,25 @@
                             </div>
                             <label class="form-label-custom mt-2">Thay đổi ảnh mới</label>
                             <input type="file" name="imageFile" class="form-control mb-3" accept="image/*" />
+
+                            @* ========================================== *@
+                            @* BƯỚC 5: DROPDOWN CHỌN CHỦ QUÁN CHO ADMIN    *@
+                            @* ========================================== *@
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label-custom text-success"><i class="bi bi-person-badge me-1"></i>Giao quyền Chủ Quán</label>
+                                    <select asp-for="OwnerUsername" class="form-control-custom border-success" asp-items="ViewBag.OwnerList">
+                                        <option value="">-- Thuộc quản lý Admin --</option>
+                                    </select>
+                                    <small class="text-muted">Chọn tài khoản sẽ được quyền sửa quán này</small>
+                                </div>
+                            }
+                            else
+                            {
+                                @* Nếu không phải Admin, ẩn giá trị này đi để giữ nguyên chủ sở hữu *@
+                                <input type="hidden" asp-for="OwnerUsername" />
+                            }
 
                             <label class="form-label-custom">Phân loại quán</label>
                             <select asp-for="Category" class="form-control-custom bg-light">

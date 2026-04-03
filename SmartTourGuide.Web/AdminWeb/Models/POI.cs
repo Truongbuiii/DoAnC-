@@ -19,6 +19,7 @@ namespace AdminWeb.Models
         public double Longitude { get; set; }
         public double TriggerRadius { get; set; }
         public string? ImageSource { get; set; }
+        public string? OwnerUsername { get; set; }
 
         // --- 5 CỘT ĐA NGÔN NGỮ ---
         public string? DescriptionVi { get; set; }

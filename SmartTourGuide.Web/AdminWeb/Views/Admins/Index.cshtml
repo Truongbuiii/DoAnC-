@@ -1,0 +1,65 @@
+﻿@model IEnumerable<AdminWeb.Models.Admin>
+
+@* Dùng giao diện này cho đẹp và đồng bộ với Sidebar của Tài nhé *@
+<div class="container-fluid py-4">
+    <div class="card shadow mb-4" style="border-radius: 15px; border: none;">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center" 
+             style="background: linear-gradient(45deg, #4e73df, #224abe); border-radius: 15px 15px 0 0;">
+            <h6 class="m-0 font-weight-bold text-white">
+                <i class="fas fa-user-shield me-2"></i> QUẢN LÝ TÀI KHOẢN HỆ THỐNG
+            </h6>
+            <a asp-action="Create" class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> THÊM CHỦ QUÁN MỚI
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%">Tên đăng nhập</th>
+                            <th style="width: 40%">Họ và Tên</th>
+                            <th style="width: 20%">Vai trò</th>
+                            <th class="text-center" style="width: 15%">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model) {
+                            <tr>
+                                <td class="fw-bold text-dark">@item.Username</td>
+                                <td>@item.FullName</td>
+                                <td>
+                                    @if(item.Username.ToLower() == "admin") {
+                                        <span class="badge bg-danger">Quản trị viên</span>
+                                    } else {
+                                        <span class="badge bg-success">Chủ sở hữu (Owner)</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if(item.Username.ToLower() != "admin") {
+                                        <div class="d-flex justify-content-center gap-2">
+                                            @* NÚT SỬA MỚI THÊM *@
+                                            <a asp-action="Edit" asp-route-id="@item.AdminId" 
+                                               class="btn btn-outline-primary btn-sm border-0" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </a>
+
+                                            @* NÚT XÓA *@
+                                            <a asp-action="Delete" asp-route-id="@item.AdminId" 
+                                               class="btn btn-outline-danger btn-sm border-0" 
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa chủ quán này không?')">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </a>
+                                        </div>
+                                    } else {
+                                        <small class="text-muted fst-italic">Hệ thống</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

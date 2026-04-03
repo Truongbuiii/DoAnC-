@@ -1,0 +1,34 @@
+﻿@model AdminWeb.Models.Admin
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">TẠO TÀI KHOẢN MỚI</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên đăng nhập (Username)</label>
+                            <input asp-for="Username" class="form-control" placeholder="Ví dụ: ocvu37" required />
+                            <small class="text-muted">Tên này dùng để gán quyền trong mục Quản lý POI</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mật khẩu</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu..." required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Tên chủ quán</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Xác nhận tạo tài khoản</button>
+                            <a asp-action="Index" class="btn btn-light text-muted">Hủy bỏ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

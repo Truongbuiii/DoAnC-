@@ -1,0 +1,35 @@
+﻿@model AdminWeb.Models.Admin
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">CẬP NHẬT TÀI KHOẢN</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <input type="hidden" asp-for="AdminId" />
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên đăng nhập</label>
+                            <input asp-for="Username" class="form-control bg-light" readonly />
+                            <small class="text-muted">Không được đổi Username để tránh lỗi phân quyền</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mật khẩu mới</label>
+                            <input asp-for="Password" class="form-control" required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Họ và Tên chủ quán</label>
+                            <input asp-for="FullName" class="form-control" />
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            <a asp-action="Index" class="btn btn-light">Quay lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

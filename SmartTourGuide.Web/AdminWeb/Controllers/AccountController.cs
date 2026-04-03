@@ -1,40 +1,67 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using AdminWeb.Data;
+using AdminWeb.Models;
 
-public class AccountController : Controller
+namespace AdminWeb.Controllers
 {
-    [HttpGet]
-    public IActionResult Login() => View();
-
-    [HttpPost]
-    public async Task<IActionResult> Login(string username, string password)
+    public class AccountController : Controller
     {
-        // Bước này Tài có thể check database. Ở đây mình làm mẫu tài khoản admin
-        if (username == "admin" && password == "123")
+        private readonly AppDbContext _context;
+
+        public AccountController(AppDbContext context)
         {
-            // Tạo danh tính người dùng
-            var claims = new List<Claim> {
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, "MyCookieAuth");
-            var authProperties = new AuthenticationProperties { IsPersistent = true };
-
-            // Đăng nhập vào hệ thống
-            await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
-
-            return RedirectToAction("Index", "POI");
+            _context = context;
         }
 
-        ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng!";
-        return View();
-    }
+        [HttpGet]
+        public IActionResult Login() => View();
 
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync("MyCookieAuth");
-        return RedirectToAction("Login");
+        [HttpPost]
+        public async Task<IActionResult> Login(string username, string password)
+        {
+            // 1. Kiểm tra tài khoản trong DB
+            var user = await _context.Admins
+                .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
+
+            if (user != null)
+            {
+                // 2. Tạo danh sách quyền hạn (Claims)
+                var claims = new List<Claim> {
+                    new Claim(ClaimTypes.Name, user.Username!),
+                    new Claim("FullName", user.FullName ?? "")
+                };
+
+                // Phân vai trò: Nếu là 'admin' thì gán Role Admin, ngược lại là Owner
+                if (user.Username!.ToLower() == "admin")
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                }
+                else
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Owner"));
+                }
+
+                var claimsIdentity = new ClaimsIdentity(claims, "MyCookieAuth");
+                var authProperties = new AuthenticationProperties { IsPersistent = true };
+
+                // 3. Đăng nhập với Scheme "MyCookieAuth" (KHÔNG ĐƯỢC SAI TÊN NÀY)
+                await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
+
+                return RedirectToAction("Index", "POI");
+            }
+
+            ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng!";
+            return View();
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            // 4. Đăng xuất cũng phải dùng "MyCookieAuth"
+            await HttpContext.SignOutAsync("MyCookieAuth");
+            return RedirectToAction("Login");
+        }
     }
 }
