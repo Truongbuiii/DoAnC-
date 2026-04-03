@@ -1,40 +1,61 @@
 ﻿@{
-    ViewData["Title"] = "Thống kê & Phân tích";
+    ViewData["Title"] = ViewBag.AnalyticsTitle;
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Báo Cáo Phân Tích</h2>
+            @* HIỆN TIÊU ĐỀ ĐỘNG TỪ CONTROLLER *@
+            <h2 class="fw-bold text-dark mb-1">@ViewBag.AnalyticsTitle</h2>
             <p class="text-muted small">Dữ liệu thực tế từ lượt truy cập của khách du lịch</p>
         </div>
         <button class="btn btn-outline-primary rounded-pill px-4" onclick="window.print()">
-            <i class="bi bi-printer me-2"></i>Xuất báo cáo
+            <i class="bi bi-printer me-2"></i> Xuất báo cáo
         </button>
     </div>
 
     <div class="row mb-4">
+        @* CỘT 1: TỔNG LƯỢT TRUY CẬP *@
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-primary text-white p-3 rounded-4">
-                <div class="small fw-bold">Tổng lượt truy cập</div>
-                <div class="h3 fw-bold my-2">@(((int[])ViewBag.PoiCounts).Sum())</div>
-                <div class="small opacity-75">Tăng 12% so với tháng trước</div>
+            <div class="card border-0 shadow-sm bg-primary text-white p-3 rounded-4 h-100">
+                <div class="small fw-bold text-uppercase opacity-75">Tổng lượt truy cập</div>
+                <div class="h3 fw-bold my-2">@ViewBag.TotalVisits</div>
+                <div class="small opacity-75">
+                    <i class="bi bi-graph-up-arrow"></i> 
+                    @(ViewBag.IsAdmin ? "Toàn phố Vĩnh Khánh" : "Tại quán của bạn")
+                </div>
             </div>
         </div>
+
+        @* CỘT 2: NGÔN NGỮ PHỔ BIẾN *@
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-white p-3 rounded-4">
-                <div class="small fw-bold text-muted">Ngôn ngữ phổ biến nhất</div>
-                <div class="h3 fw-bold my-2 text-dark">@ViewBag.LangLabels[0]</div>
-                <div class="small text-success fw-bold"><i class="bi bi-caret-up-fill"></i> @ViewBag.LangCounts[0] lượt</div>
+            <div class="card border-0 shadow-sm bg-white p-3 rounded-4 h-100">
+                <div class="small fw-bold text-muted text-uppercase">Ngôn ngữ phổ biến nhất</div>
+                @if (ViewBag.LangLabels != null && ViewBag.LangLabels.Length > 0)
+                {
+                    <div class="h3 fw-bold my-2 text-dark">@ViewBag.LangLabels[0]</div>
+                    <div class="small text-success fw-bold">
+                        <i class="bi bi-caret-up-fill"></i> @ViewBag.LangCounts[0] lượt sử dụng
+                    </div>
+                }
+                else
+                {
+                    <div class="h3 fw-bold my-2 text-muted small italic">Chưa có dữ liệu</div>
+                }
             </div>
         </div>
     </div>
 
     <div class="row">
+        @* BIỂU ĐỒ CHÍNH (CỘT/ĐƯỜNG) *@
         <div class="col-lg-8 mb-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line me-2"></i>Top 5 Địa điểm được ghé thăm nhiều nhất</h6>
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-bar-chart-line me-2 text-primary"></i>
+                        @* TIÊU ĐỀ BIỂU ĐỒ TỰ THAY ĐỔI *@
+                        @(ViewBag.IsAdmin ? "Xếp hạng lượt khách giữa các địa điểm" : "Xu hướng lượt khách ghé quán theo thời gian")
+                    </h6>
                 </div>
                 <div class="card-body">
                     <canvas id="poiChart" style="min-height: 300px;"></canvas>
@@ -42,10 +63,13 @@
             </div>
         </div>
 
+        @* BIỂU ĐỒ TRÒN (NGÔN NGỮ) *@
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-3">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pie-chart me-2"></i>Cơ cấu Ngôn ngữ khách dùng</h6>
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-pie-chart me-2 text-success"></i>Cơ cấu Ngôn ngữ khách dùng
+                    </h6>
                 </div>
                 <div class="card-body d-flex align-items-center">
                     <canvas id="langChart"></canvas>
@@ -59,32 +83,34 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // Cấu hình Font mặc định cho biểu đồ
-        Chart.defaults.font.family = "'Segoe UI', 'Roboto', sans-serif";
+        Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
 
-        // 1. BIỂU ĐỒ CỘT (Top 5 POIs)
+        // 1. BIỂU ĐỒ CỘT (HOẶC ĐƯỜNG)
         const ctxPoi = document.getElementById('poiChart').getContext('2d');
+        const isAdmin = @Json.Serialize(ViewBag.IsAdmin);
+
         new Chart(ctxPoi, {
-            type: 'bar',
+            // Nếu là Chủ quán, dùng biểu đồ 'line' cho mượt, Admin dùng 'bar' để so sánh
+            type: isAdmin ? 'bar' : 'line', 
             data: {
                 labels: @Html.Raw(Json.Serialize(ViewBag.PoiNames)),
                 datasets: [{
-                    label: 'Lượt ghé thăm',
+                    label: '@Html.Raw(ViewBag.ChartLabel)',
                     data: @Html.Raw(Json.Serialize(ViewBag.PoiCounts)),
-                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                    hoverBackgroundColor: '#0d6efd',
+                    backgroundColor: isAdmin ? 'rgba(13, 110, 253, 0.8)' : 'rgba(13, 110, 253, 0.1)',
+                    borderColor: '#0d6efd',
+                    borderWidth: 3,
                     borderRadius: 8,
-                    barThickness: 40
+                    fill: true,
+                    tension: 0.4 // Làm mượt đường line cho chủ quán
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { drawBorder: false } },
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
                     x: { grid: { display: false } }
                 }
             }
@@ -99,15 +125,15 @@
                 datasets: [{
                     data: @Html.Raw(Json.Serialize(ViewBag.LangCounts)),
                     backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#6610f2'],
-                    hoverOffset: 10,
+                    hoverOffset: 15,
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                cutout: '70%',
+                cutout: '75%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 25 } }
                 }
             }
         });
