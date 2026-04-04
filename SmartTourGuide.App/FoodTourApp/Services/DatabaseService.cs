@@ -126,32 +126,35 @@ public async Task MarkLogsAsSyncedAsync(List<int> logIds)
         private List<Itinerary> GetSampleItineraries()
         {
             return new List<Itinerary>
-            {
-                new Itinerary
-                {
-                    TourName = "Tour Ốc Michelin & Đặc Sản",
-                    Description = "Hành trình thưởng thức những quán ốc được Michelin vinh danh và các quán lâu đời nhất phố Vĩnh Khánh.",
-                    TotalTime = "2 giờ 30 phút · 4 điểm",
-                    ImageSource = "ocoanh.jpg",
-                    PoiIds = new List<int> { 1, 3, 8, 10 }
-                    },
-                new Itinerary
-                {
-                    TourName = "Lộ Trình Ăn Đêm Sầm Uất",
-                    Description = "Dạo quanh các điểm ăn uống nhộn nhịp từ đầu phố đến cuối phố, bao gồm Lẩu và Nướng.",
-                    TotalTime = "3 giờ · 4 điểm",
-                    ImageSource = "laubo.jpg",
-                    PoiIds = new List<int> { 2, 4, 7, 9 }
-                },
-                new Itinerary
-                {
-                    TourName = "Tour Hải Sản Đa Quốc Gia",
-                    Description = "Trải nghiệm giao thoa văn hóa ẩm thực giữa Hải sản Việt Nam và Sushi Nhật Bản.",
-                    TotalTime = "2 giờ · 3 điểm",
-                    ImageSource = "sushi.jpg",
-                    PoiIds = new List<int> { 1, 5, 6 }
-                }
-            };
+    {
+        new Itinerary
+        {
+            TourId = 1,  // thêm TourId
+            TourName = "Tour Ốc Michelin & Đặc Sản",
+            Description = "Hành trình thưởng thức những quán ốc được Michelin vinh danh và các quán lâu đời nhất phố Vĩnh Khánh.",
+            TotalTime = "2 giờ 30 phút · 4 điểm",
+            ImageSource = "ocoanh.jpg",
+            PoiIds = new List<int> { 1, 3, 8, 10 }
+        },
+        new Itinerary
+        {
+            TourId = 2,  // thêm TourId
+            TourName = "Lộ Trình Ăn Đêm Sầm Uất",
+            Description = "Dạo quanh các điểm ăn uống nhộn nhịp từ đầu phố đến cuối phố, bao gồm Lẩu và Nướng.",
+            TotalTime = "3 giờ · 4 điểm",
+            ImageSource = "laubo.jpg",
+            PoiIds = new List<int> { 2, 4, 7, 9 }
+        },
+        new Itinerary
+        {
+            TourId = 3,  // thêm TourId
+            TourName = "Tour Hải Sản Đa Quốc Gia",
+            Description = "Trải nghiệm giao thoa văn hóa ẩm thực giữa Hải sản Việt Nam và Sushi Nhật Bản.",
+            TotalTime = "2 giờ · 3 điểm",
+            ImageSource = "sushi.jpg",
+            PoiIds = new List<int> { 1, 5, 6 }
+        }
+    };
         }
 
         public async Task<List<POI>> GetPOIsAsync()

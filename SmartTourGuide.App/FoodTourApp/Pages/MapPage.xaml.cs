@@ -40,8 +40,8 @@ public partial class MapPage : ContentPage
         _geofenceService = new GeofenceService();
         _narrationService = new NarrationService();
 
-        _geofenceService.CooldownMinutes = 5;
-        _geofenceService.DebounceSeconds = 3;
+        _geofenceService.CooldownMinutes = 1;
+        _geofenceService.DebounceSeconds = 1;
 
         _narrationService.OnNarrationStarted += (s, e) =>
         {

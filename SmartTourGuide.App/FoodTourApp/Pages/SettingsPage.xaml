@@ -9,7 +9,7 @@
         <VerticalStackLayout Padding="0,20,0,40" Spacing="0">
 
             <!-- NGÔN NGỮ -->
-            <Label Text="Ngôn ngữ" TextColor="#8E8E93" FontSize="13"
+            <Label Text="Ngôn ngữ" TextColor="#8E8E93" FontSize="12"
                    Margin="20,0,0,6"/>
             <Border BackgroundColor="White" StrokeThickness="0"
                     StrokeShape="RoundRectangle 12" Margin="16,0">
@@ -17,16 +17,16 @@
                     <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.05"/>
                 </Border.Shadow>
                 <Grid ColumnDefinitions="Auto,*,Auto"
-                      Padding="16,12" ColumnSpacing="12">
+      Padding="16,12" ColumnSpacing="12">
                     <Label Grid.Column="0" Text="🌐" FontSize="22"
-                           VerticalOptions="Center"/>
-                    <Label Grid.Column="1" Text="Ngôn ngữ thuyết minh"
-                           FontSize="16" TextColor="#000000"
-                           VerticalOptions="Center"/>
+           VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="Ngôn ngữ"
+           FontSize="15" TextColor="#000000"
+           VerticalOptions="Center"/>
                     <Picker x:Name="LangPicker" Grid.Column="2"
-                            SelectedIndexChanged="OnLanguageChanged"
-                            FontSize="14" TextColor="#8E8E93"
-                            HorizontalOptions="End" MinimumWidthRequest="130">
+            SelectedIndexChanged="OnLanguageChanged"
+            FontSize="13" TextColor="#8E8E93"
+            HorizontalOptions="End" MinimumWidthRequest="120">
                         <Picker.Items>
                             <x:String>🇻🇳 Việt</x:String>
                             <x:String>🇺🇸 English</x:String>
@@ -39,7 +39,7 @@
             </Border>
 
             <!-- THUYẾT MINH -->
-            <Label Text="Thuyết minh" TextColor="#8E8E93" FontSize="13"
+            <Label Text="Thuyết minh" TextColor="#8E8E93" FontSize="12"
                    Margin="20,20,0,6"/>
             <Border BackgroundColor="White" StrokeThickness="0"
                     StrokeShape="RoundRectangle 12" Margin="16,0">
@@ -64,7 +64,7 @@
             </Border>
 
             <!-- GPS -->
-            <Label Text="GPS &amp; Geofence" TextColor="#8E8E93" FontSize="13"
+            <Label Text="GPS &amp; Geofence" TextColor="#8E8E93" FontSize="12"
                    Margin="20,20,0,6"/>
             <Border BackgroundColor="White" StrokeThickness="0"
                     StrokeShape="RoundRectangle 12" Margin="16,0">
@@ -115,7 +115,7 @@
             </Border>
 
             <!-- DỮ LIỆU -->
-            <Label Text="Dữ liệu" TextColor="#8E8E93" FontSize="13"
+            <Label Text="Dữ liệu" TextColor="#8E8E93" FontSize="12"
                    Margin="20,20,0,6"/>
             <Border BackgroundColor="White" StrokeThickness="0"
                     StrokeShape="RoundRectangle 12" Margin="16,0">
@@ -136,7 +136,7 @@
             </Border>
 
             <!-- THÔNG TIN -->
-            <Label Text="Thông tin" TextColor="#8E8E93" FontSize="13"
+            <Label Text="Thông tin" TextColor="#8E8E93" FontSize="12"
                    Margin="20,20,0,6"/>
             <Border BackgroundColor="White" StrokeThickness="0"
                     StrokeShape="RoundRectangle 12" Margin="16,0">
@@ -172,7 +172,7 @@
 
             <Label Text="Vĩnh Khánh Tour · v1.0.0"
                    HorizontalOptions="Center" TextColor="#C7C7CC"
-                   FontSize="13" Margin="0,24,0,0"/>
+                   FontSize="12" Margin="0,24,0,0"/>
 
         </VerticalStackLayout>
     </ScrollView>

@@ -37,7 +37,7 @@ public class LocationForegroundService : Service
         {
             try
             {
-                var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10));
+                var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
                 var location = await Geolocation.Default.GetLocationAsync(request, token);
                 if (location != null)
                     LocationUpdated?.Invoke(this, location);
