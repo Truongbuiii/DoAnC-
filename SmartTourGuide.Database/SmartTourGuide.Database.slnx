@@ -1,6 +1,4 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="VinhKhanhAudioGuide.sql.sql" />
-  </Folder>
+  <Folder Name="/Solution Items/" />
   <Project Path="SmartTourGuide.Database/SmartTourGuide.Database.csproj" />
 </Solution>

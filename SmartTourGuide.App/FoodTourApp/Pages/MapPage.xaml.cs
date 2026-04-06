@@ -336,6 +336,10 @@ public partial class MapPage : ContentPage
         {
             var syncResult = await apiSync.SyncPoisAsync();
             System.Diagnostics.Debug.WriteLine($"=== SYNC POI: {syncResult}");
+
+            var tourResult = await apiSync.SyncToursAsync();
+            System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS: {tourResult}");
+
             var logResult = await apiSync.SyncLogsAsync();
             System.Diagnostics.Debug.WriteLine($"=== SYNC LOGS: {logResult}");
         });

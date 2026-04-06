@@ -236,6 +236,29 @@ namespace AdminWeb.Controllers
             await _context.SaveChangesAsync();
             return Json(new { success = true, synced = logs.Count });
         }
+        // API 4: GET /api/v1/tours
+        [AllowAnonymous]
+        [HttpGet("/api/v1/tours")]
+        public async Task<IActionResult> GetToursApi()
+        {
+            var tours = await _context.Tours.AsNoTracking().ToListAsync();
+            var details = await _context.TourDetails.AsNoTracking().ToListAsync();
+
+            var result = tours.Select(t => new
+            {
+                TourId = t.TourId,
+                TourName = t.TourName,
+                Description = t.Description,
+                TotalTime = t.TotalTime,
+                ImageSource = t.ImageSource,
+                PoiIdsRaw = string.Join(",", details
+                    .Where(d => d.TourId == t.TourId)
+                    .OrderBy(d => d.Order)
+                    .Select(d => d.PoiId))
+            });
+
+            return Json(result);
+        }
     }
 
     // DTO cho Analytics Sync
@@ -247,4 +270,7 @@ namespace AdminWeb.Controllers
         public string DeviceType { get; set; } = "Android";
         public DateTime AccessTime { get; set; }
     }
+
+
+
 }

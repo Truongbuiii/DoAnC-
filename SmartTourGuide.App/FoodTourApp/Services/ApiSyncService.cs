@@ -32,7 +32,6 @@ namespace FoodTourApp.Services
 
                 if (pois != null && pois.Count > 0)
                 {
-                    // Thêm base URL vào ImageSource
                     foreach (var poi in pois)
                     {
                         if (!string.IsNullOrEmpty(poi.ImageSource)
@@ -41,7 +40,6 @@ namespace FoodTourApp.Services
                             poi.ImageSource = $"{BaseUrl}/images/{poi.ImageSource}";
                         }
                     }
-
                     await _dbService.SavePOIsFromServerAsync(pois);
                     System.Diagnostics.Debug.WriteLine($"=== SYNC OK: {pois.Count} POIs");
                     return true;
@@ -50,6 +48,37 @@ namespace FoodTourApp.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"=== SYNC FAIL: {ex.Message}");
+            }
+            return false;
+        }
+
+        // SYNC TOURS TỪ SERVER VỀ SQLITE
+        public async Task<bool> SyncToursAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetStringAsync($"{BaseUrl}/api/v1/tours");
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var tours = JsonSerializer.Deserialize<List<Itinerary>>(response, options);
+
+                if (tours != null && tours.Count > 0)
+                {
+                    foreach (var tour in tours)
+                    {
+                        if (!string.IsNullOrEmpty(tour.ImageSource)
+                            && !tour.ImageSource.StartsWith("http"))
+                        {
+                            tour.ImageSource = $"{BaseUrl}/images/{tour.ImageSource}";
+                        }
+                    }
+                    await _dbService.SaveToursFromServerAsync(tours);
+                    System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS OK: {tours.Count}");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS FAIL: {ex.Message}");
             }
             return false;
         }
