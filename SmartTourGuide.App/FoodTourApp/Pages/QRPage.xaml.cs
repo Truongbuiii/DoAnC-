@@ -19,28 +19,37 @@ public partial class QRPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        Lang.Load();
+        ApplyLanguage();
 
         try
         {
-            // Xin quyền camera
             var status = await Permissions.RequestAsync<Permissions.Camera>();
             if (status != PermissionStatus.Granted)
             {
-                await DisplayAlertAsync("Cần quyền camera",
-                    "Vui lòng cấp quyền camera để quét mã QR", "OK");
+                await DisplayAlertAsync(Lang.Get("btn_ok"),
+                    "Vui lòng cấp quyền camera để quét mã QR", Lang.Get("btn_ok"));
                 return;
             }
 
             _isProcessing = false;
-            StatusLabel.Text = "📷 Đang chờ quét mã QR...";
-
+            StatusLabel.Text = Lang.Get("qr_waiting");
             await Task.Delay(1000);
             BarcodeReader.IsDetecting = true;
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Lỗi camera", ex.Message, "OK");
+            await DisplayAlertAsync("Lỗi camera", ex.Message, Lang.Get("btn_ok"));
         }
+    }
+
+    private void ApplyLanguage()
+    {
+        Title = Lang.Get("tab_qr");
+            LblHint.Text = Lang.Get("qr_hint");
+        StatusLabel.Text = Lang.Get("qr_waiting");
+        BtnFlash.Text = Lang.Get("qr_flash");
+        BtnManual.Text = Lang.Get("qr_manual");
     }
 
     protected override void OnDisappearing()
@@ -53,7 +62,6 @@ public partial class QRPage : ContentPage
     {
         if (_isProcessing) return;
         _isProcessing = true;
-
         BarcodeReader.IsDetecting = false;
 
         var result = e.Results.FirstOrDefault();
@@ -63,16 +71,14 @@ public partial class QRPage : ContentPage
 
         MainThread.BeginInvokeOnMainThread(async () =>
         {
-            StatusLabel.Text = $"✅ Đã quét: {code}";
+            StatusLabel.Text = $"✅ {code}";
 
-            // Parse poiId TRƯỚC
             int poiId = -1;
             if (code.StartsWith("POI_"))
                 int.TryParse(code.Replace("POI_", ""), out poiId);
             else
                 int.TryParse(code, out poiId);
 
-            // Ghi log ScanQR SAU KHI có poiId
             if (poiId > 0)
             {
                 var lang = Preferences.Get("AppLanguage", "vi-VN");
@@ -88,12 +94,12 @@ public partial class QRPage : ContentPage
                 }
             }
 
-            await DisplayAlertAsync("Không tìm thấy",
-                $"Mã QR '{code}' không khớp với địa điểm nào!", "OK");
+            await DisplayAlertAsync(Lang.Get("qr_not_found"),
+                $"{Lang.Get("qr_not_found_msg")} '{code}'", Lang.Get("btn_ok"));
 
             _isProcessing = false;
             BarcodeReader.IsDetecting = true;
-            StatusLabel.Text = "📷 Đang chờ quét mã QR...";
+            StatusLabel.Text = Lang.Get("qr_waiting");
         });
     }
 
@@ -101,15 +107,14 @@ public partial class QRPage : ContentPage
     {
         _isFlashOn = !_isFlashOn;
         BarcodeReader.IsTorchOn = _isFlashOn;
-        ((Button)sender).Text = _isFlashOn ? "🔦 Tắt đèn" : "🔦 Đèn flash";
+        BtnFlash.Text = _isFlashOn ? "🔦 Off" : Lang.Get("qr_flash");
     }
 
     private async void OnManualEntry(object sender, EventArgs e)
     {
         string? code = await DisplayPromptAsync(
-            "Nhập mã QR",
-            "Nhập số POI (1-10):",
-            "OK", "Hủy",
+            Lang.Get("qr_manual"),
+            "1-10:", Lang.Get("btn_ok"), Lang.Get("btn_cancel"),
             keyboard: Keyboard.Numeric);
 
         if (string.IsNullOrEmpty(code)) return;
@@ -124,6 +129,7 @@ public partial class QRPage : ContentPage
             }
         }
 
-        await DisplayAlertAsync("Lỗi", "Không tìm thấy địa điểm!", "OK");
+        await DisplayAlertAsync(Lang.Get("qr_not_found"),
+            Lang.Get("qr_not_found_msg"), Lang.Get("btn_ok"));
     }
 }

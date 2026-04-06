@@ -12,57 +12,46 @@
                 <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*, Auto" Padding="20,0">
-                <Label Text="📍 VĨNH KHÁNH TOUR" VerticalOptions="Center"
-               FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
+                <Label x:Name="LblMapTitle" VerticalOptions="Center"
+                       FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
                 <Image Grid.Column="1" Source="notification_icon.png"
-               WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
+                       WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
             </Grid>
         </Border>
 
-        <!-- SEARCH BAR + GỢI Ý -->
+        <!-- SEARCH BAR -->
         <Grid Grid.Row="1" Margin="15,10">
             <VerticalStackLayout Spacing="0">
                 <Border StrokeShape="RoundRectangle 25" Padding="15,0"
-                StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="White">
-                    <Entry x:Name="SearchEntry"
-                   Placeholder="Tìm quán ăn..."
-                   FontSize="14"
-                   TextColor="#1F2937"
-                   PlaceholderColor="#9CA3AF"
-                   TextChanged="OnSearchTextChanged"/>
+                        StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="White">
+                    <Entry x:Name="SearchEntry" FontSize="14"
+                           TextColor="#1F2937" PlaceholderColor="#9CA3AF"
+                           TextChanged="OnSearchTextChanged"/>
                 </Border>
-
-                <!-- DROPDOWN GỢI Ý -->
-                <Border x:Name="SuggestionBorder"
-                IsVisible="False"
-                StrokeShape="RoundRectangle 15"
-                BackgroundColor="White"
-                StrokeThickness="1"
-                Stroke="#E5E7EB"
-                Margin="0,4,0,0"
-                MaximumHeightRequest="200">
+                <Border x:Name="SuggestionBorder" IsVisible="False"
+                        StrokeShape="RoundRectangle 15" BackgroundColor="White"
+                        StrokeThickness="1" Stroke="#E5E7EB"
+                        Margin="0,4,0,0" MaximumHeightRequest="200">
                     <Border.Shadow>
                         <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.1"/>
                     </Border.Shadow>
                     <CollectionView x:Name="SuggestionList"
-                            SelectionMode="Single"
-                            SelectionChanged="OnSuggestionSelected">
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnSuggestionSelected">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Grid ColumnDefinitions="Auto,*" Padding="15,10" ColumnSpacing="12">
                                     <Border Grid.Column="0" BackgroundColor="#FFF7ED"
-                                    StrokeShape="RoundRectangle 8"
-                                    WidthRequest="36" HeightRequest="36">
+                                            StrokeShape="RoundRectangle 8"
+                                            WidthRequest="36" HeightRequest="36">
                                         <Label Text="📍" FontSize="16"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"/>
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding Name}"
-                                       FontSize="14" FontAttributes="Bold"
-                                       TextColor="#111827"/>
-                                        <Label Text="{Binding Category}"
-                                       FontSize="12" TextColor="#F97316"/>
+                                        <Label Text="{Binding Name}" FontSize="14"
+                                               FontAttributes="Bold" TextColor="#111827"/>
+                                        <Label Text="{Binding Category}" FontSize="12" TextColor="#F97316"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </DataTemplate>
@@ -75,7 +64,6 @@
         <!-- MAP + CONTROLS -->
         <Grid Grid.Row="2">
             <WebView x:Name="MapWebView" HorizontalOptions="Fill" VerticalOptions="Fill"/>
-
             <ActivityIndicator x:Name="MapLoading" IsRunning="True"
                                VerticalOptions="Center" HorizontalOptions="Center" Color="Orange"/>
 
@@ -86,7 +74,6 @@
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,10" Radius="20" Opacity="0.2"/>
                 </Border.Shadow>
-
                 <Grid ColumnDefinitions="Auto, *" ColumnSpacing="15">
                     <Image x:Name="PoiImage" Source="cong_chao.jpg" Aspect="AspectFill"
                            HeightRequest="80" WidthRequest="80">
@@ -94,34 +81,27 @@
                             <RoundRectangleGeometry CornerRadius="12" Rect="0,0,80,80"/>
                         </Image.Clip>
                     </Image>
-
                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                        <!-- ✅ 3 Label quan trọng -->
-                        <Label x:Name="CurrentPoiName" Text="Phố ẩm thực Vĩnh Khánh"
-                               FontSize="16" FontAttributes="Bold"/>
-                        <Label x:Name="CategoryLabel" Text="KHÁM PHÁ"
-                               FontSize="11" TextColor="Orange"/>
-                        <Label x:Name="StatusLabel" Text="Đang cập nhật GPS..."
-                               FontSize="11" TextColor="Gray"/>
-
-                        <!-- ✅ 4 nút dạng Grid 2x2, không dùng FillAndExpand -->
+                        <Label x:Name="CurrentPoiName" FontSize="16" FontAttributes="Bold"/>
+                        <Label x:Name="CategoryLabel" FontSize="11" TextColor="Orange"/>
+                        <Label x:Name="StatusLabel" FontSize="11" TextColor="Gray"/>
                         <Grid RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,5,0,0">
                             <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                <Button Grid.Column="0" Text="🧭 Dẫn đường"
+                                <Button x:Name="BtnNavigate" Grid.Column="0"
                                         Clicked="OnNavigateClicked"
                                         BackgroundColor="#1F2937" TextColor="White"
                                         CornerRadius="15" HeightRequest="35" FontSize="11"/>
-                                <Button Grid.Column="1" Text="🔊 Nghe lại"
+                                <Button x:Name="BtnReplay" Grid.Column="1"
                                         Clicked="OnReplayClicked"
                                         BackgroundColor="Orange" TextColor="White"
                                         CornerRadius="15" HeightRequest="35" FontSize="11"/>
                             </Grid>
                             <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="8">
                                 <Button x:Name="BtnFavorite" Grid.Column="0"
-                                        Text="🤍 Yêu thích" Clicked="OnToggleFavorite"
+                                        Clicked="OnToggleFavorite"
                                         BackgroundColor="#FF6B6B" TextColor="White"
                                         CornerRadius="15" HeightRequest="35" FontSize="11"/>
-                                <Button Grid.Column="1" Text="📋 Chi tiết"
+                                <Button x:Name="BtnDetail" Grid.Column="1"
                                         Clicked="OnDetailClicked"
                                         BackgroundColor="#6B7280" TextColor="White"
                                         CornerRadius="15" HeightRequest="35" FontSize="11"/>
@@ -131,11 +111,8 @@
                 </Grid>
             </Border>
 
-            <!-- DANH SÁCH POI -->
             <CollectionView x:Name="PoisListView" IsVisible="False"
                             SelectionMode="Single" SelectionChanged="OnPoiSelected"/>
-       
-
         </Grid>
     </Grid>
 </ContentPage>

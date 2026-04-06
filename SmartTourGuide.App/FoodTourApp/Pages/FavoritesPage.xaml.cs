@@ -16,7 +16,17 @@ public partial class FavoritesPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        Lang.Load();
+        ApplyLanguage();
         await LoadFavorites();
+    }
+
+    private void ApplyLanguage()
+    {
+        Title = Lang.Get("tab_favorites");
+        LblTitle.Text = Lang.Get("fav_title");
+        LblEmpty.Text = Lang.Get("fav_empty");
+        LblEmptySub.Text = Lang.Get("fav_empty_sub");
     }
 
     private async Task LoadFavorites()
@@ -40,17 +50,15 @@ public partial class FavoritesPage : ContentPage
         if (btn.CommandParameter is not int poiId) return;
 
         bool confirm = await DisplayAlertAsync(
-            "Xóa yêu thích",
-            "Bạn muốn xóa quán này khỏi danh sách yêu thích?",
-            "Xóa", "Hủy");
+            Lang.Get("tab_favorites"),
+            Lang.Get("confirm_clear_fav"),
+            Lang.Get("btn_delete"),
+            Lang.Get("btn_cancel"));
 
         if (!confirm) return;
-
         RemoveFavorite(poiId);
         await LoadFavorites();
     }
-
-    // ── Static helpers dùng chung toàn app ──
 
     public static List<int> GetFavoriteIds()
     {

@@ -17,7 +17,6 @@ namespace FoodTourApp.Services
             _dbService = dbService;
             _httpClient = new HttpClient
             {
-
                 Timeout = TimeSpan.FromSeconds(10)
             };
         }
@@ -33,6 +32,16 @@ namespace FoodTourApp.Services
 
                 if (pois != null && pois.Count > 0)
                 {
+                    // Thêm base URL vào ImageSource
+                    foreach (var poi in pois)
+                    {
+                        if (!string.IsNullOrEmpty(poi.ImageSource)
+                            && !poi.ImageSource.StartsWith("http"))
+                        {
+                            poi.ImageSource = $"{BaseUrl}/images/{poi.ImageSource}";
+                        }
+                    }
+
                     await _dbService.SavePOIsFromServerAsync(pois);
                     System.Diagnostics.Debug.WriteLine($"=== SYNC OK: {pois.Count} POIs");
                     return true;

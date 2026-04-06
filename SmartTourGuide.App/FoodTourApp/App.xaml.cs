@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FoodTourApp.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FoodTourApp
 {
@@ -7,6 +8,7 @@ namespace FoodTourApp
         public App()
         {
             InitializeComponent();
+            Lang.Load(); // load ngôn ngữ đã chọn
             MainPage = new AppShell();
         }
 

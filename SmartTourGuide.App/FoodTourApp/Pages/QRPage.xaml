@@ -3,25 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
              x:Class="FoodTourApp.Pages.QRPage"
-             Title="Quét QR"
              BackgroundColor="Black">
 
     <Grid RowDefinitions="*, Auto">
 
         <zxing:CameraBarcodeReaderView
-    x:Name="BarcodeReader"
-    Grid.Row="0"
-    BarcodesDetected="OnBarcodeDetected"
-    HorizontalOptions="Fill"
-    VerticalOptions="Fill">
+            x:Name="BarcodeReader"
+            Grid.Row="0"
+            BarcodesDetected="OnBarcodeDetected"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
             <zxing:CameraBarcodeReaderView.Options>
                 <zxing:BarcodeReaderOptions
-            Formats="QrCode"
-            AutoRotate="True"
-            Multiple="False"/>
+                    Formats="QrCode"
+                    AutoRotate="True"
+                    Multiple="False"/>
             </zxing:CameraBarcodeReaderView.Options>
         </zxing:CameraBarcodeReaderView>
-        VerticalOptions="Fill"/>
 
         <!-- Khung ngắm overlay -->
         <Grid Grid.Row="0" InputTransparent="True">
@@ -30,8 +28,7 @@
                     Stroke="Orange" StrokeThickness="3"
                     StrokeShape="RoundRectangle 12"
                     BackgroundColor="Transparent"/>
-            <Label Text="Hướng camera vào mã QR của quán"
-                   TextColor="White" FontSize="14"
+            <Label x:Name="LblHint" TextColor="White" FontSize="14"
                    HorizontalOptions="Center" VerticalOptions="End"
                    Margin="0,0,0,30"/>
         </Grid>
@@ -39,16 +36,14 @@
         <!-- Bottom controls -->
         <VerticalStackLayout Grid.Row="1" Padding="20" Spacing="10"
                              BackgroundColor="#1F2937">
-            <Label x:Name="StatusLabel"
-                   Text="📷 Đang chờ quét mã QR..."
-                   TextColor="White" FontSize="14"
+            <Label x:Name="StatusLabel" TextColor="White" FontSize="14"
                    HorizontalOptions="Center"/>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Button Grid.Column="0" Text="🔦 Đèn flash"
+                <Button x:Name="BtnFlash" Grid.Column="0"
                         Clicked="OnFlashToggle"
                         BackgroundColor="#374151" TextColor="White"
                         CornerRadius="10" HeightRequest="45"/>
-                <Button Grid.Column="1" Text="📋 Nhập mã tay"
+                <Button x:Name="BtnManual" Grid.Column="1"
                         Clicked="OnManualEntry"
                         BackgroundColor="Orange" TextColor="White"
                         CornerRadius="10" HeightRequest="45"/>

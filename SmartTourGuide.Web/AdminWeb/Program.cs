@@ -45,7 +45,7 @@ app.UseAuthorization();
 // 3. ĐỊNH NGHĨA ĐƯỜNG DẪN (ROUTES)
 app.MapControllerRoute(
     name: "default",
-    // Khi mới mở web, nó sẽ chạy vào Account/Login trước để bắt Tài đăng nhập
+    // Khi mới mở web, nó sẽ chạy vào Account/Login trước để bắt đăng nhập
     pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

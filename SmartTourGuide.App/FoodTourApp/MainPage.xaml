@@ -17,15 +17,13 @@
                          Margin="0,0,60,-40"/>
                 <VerticalStackLayout Padding="24,40,24,20" Spacing="4"
                                      VerticalOptions="End">
-                    <Label Text="Chào mừng đến" TextColor="#9CA3AF" FontSize="13"/>
-                    <Label Text="Phố ẩm thực Vĩnh Khánh 🍜"
-                           TextColor="White" FontSize="22" FontAttributes="Bold"/>
+                    <Label x:Name="LblWelcome" TextColor="#9CA3AF" FontSize="13"/>
+                    <Label x:Name="LblTitle" TextColor="White" FontSize="22" FontAttributes="Bold"/>
                 </VerticalStackLayout>
             </Grid>
 
             <!-- BANNER -->
-            <Border Margin="16,-20,16,0" StrokeShape="RoundRectangle 20"
-                    StrokeThickness="0">
+            <Border Margin="16,-20,16,0" StrokeShape="RoundRectangle 20" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,8" Radius="20" Opacity="0.2"/>
                 </Border.Shadow>
@@ -44,41 +42,31 @@
                     <Ellipse Fill="#22FFFFFF" WidthRequest="120" HeightRequest="120"
                              HorizontalOptions="End" VerticalOptions="Center"
                              Margin="0,0,-30,0"/>
-                    <VerticalStackLayout Padding="20" Spacing="4"
-                                         VerticalOptions="Center">
-                        <Label Text="🏆 Top 10 thế giới 2025"
-                               TextColor="#FED7AA" FontSize="11" FontAttributes="Bold"/>
-                        <Label Text="Khám phá ngay →"
-                               TextColor="White" FontSize="18" FontAttributes="Bold"/>
-                        <Label Text="Thiên đường ốc &amp; hải sản Quận 4"
-                               TextColor="#FFEDD5" FontSize="12"/>
+                    <VerticalStackLayout Padding="20" Spacing="4" VerticalOptions="Center">
+                        <Label x:Name="LblTop10" TextColor="#FED7AA" FontSize="11" FontAttributes="Bold"/>
+                        <Label x:Name="LblExplore" TextColor="White" FontSize="18" FontAttributes="Bold"/>
+                        <Label x:Name="LblSubtitle" TextColor="#FFEDD5" FontSize="12"/>
                     </VerticalStackLayout>
                 </Grid>
             </Border>
 
             <!-- TOUR GỢI Ý -->
-            <VerticalStackLayout Padding="16,0,16,0" Spacing="12">
-                <Label Text="🗺️ Tour gợi ý" FontSize="17"
-           FontAttributes="Bold" TextColor="#111827"/>
-
-                <CollectionView x:Name="ToursList"
-                    HeightRequest="160"
-                    SelectionMode="Single"
-                    SelectionChanged="OnTourSelected">
+            <VerticalStackLayout Padding="16,24,16,0" Spacing="12">
+                <Label x:Name="LblTours" FontSize="17" FontAttributes="Bold" TextColor="#111827"/>
+                <CollectionView x:Name="ToursList" HeightRequest="160"
+                                SelectionMode="Single" SelectionChanged="OnTourSelected">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12"/>
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border WidthRequest="260" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 16">
+                            <Border WidthRequest="260" StrokeThickness="0" StrokeShape="RoundRectangle 16">
                                 <Border.Shadow>
                                     <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.15"/>
                                 </Border.Shadow>
                                 <Grid HeightRequest="160">
                                     <BoxView Color="#1F2937"/>
-                                    <Image Source="{Binding ImageSource}"
-                               Aspect="AspectFill" Opacity="0.7"/>
+                                    <Image Source="{Binding ImageSource}" Aspect="AspectFill" Opacity="0.7"/>
                                     <BoxView>
                                         <BoxView.Background>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -87,19 +75,13 @@
                                             </LinearGradientBrush>
                                         </BoxView.Background>
                                     </BoxView>
-                                    <VerticalStackLayout VerticalOptions="End"
-                                             Padding="14,10" Spacing="4">
-                                        <Label Text="{Binding Name}"
-                                   TextColor="White" FontSize="15"
-                                   FontAttributes="Bold"/>
-                                        <HorizontalStackLayout Spacing="6">
-                                            <Border BackgroundColor="#F97316"
-                                        StrokeShape="RoundRectangle 6"
-                                        Padding="6,2">
-                                                <Label Text="{Binding Duration}"
-                                           TextColor="White" FontSize="10"/>
-                                            </Border>
-                                        </HorizontalStackLayout>
+                                    <VerticalStackLayout VerticalOptions="End" Padding="14,10" Spacing="4">
+                                        <Label Text="{Binding Name}" TextColor="White"
+                                               FontSize="15" FontAttributes="Bold"/>
+                                        <Border BackgroundColor="#F97316"
+                                                StrokeShape="RoundRectangle 6" Padding="6,2">
+                                            <Label Text="{Binding Duration}" TextColor="White" FontSize="10"/>
+                                        </Border>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
@@ -107,57 +89,37 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </VerticalStackLayout>
-            
+
             <!-- ĐỊA ĐIỂM NỔI BẬT -->
             <VerticalStackLayout Padding="16,24,16,16" Spacing="12">
-                <HorizontalStackLayout>
-                    <Label Text="📍 Địa điểm nổi bật"
-                           FontSize="17" FontAttributes="Bold" TextColor="#1F2937"/>
-                </HorizontalStackLayout>
-
+                <Label x:Name="LblFeatured" FontSize="17" FontAttributes="Bold" TextColor="#1F2937"/>
                 <CollectionView x:Name="FeaturedPoisList"
-                                SelectionMode="Single"
-                                SelectionChanged="OnPoiSelected">
+                                SelectionMode="Single" SelectionChanged="OnPoiSelected">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,12"
-                                    StrokeShape="RoundRectangle 16"
-                                    BackgroundColor="White"
-                                    StrokeThickness="0">
+                            <Border Margin="0,0,0,12" StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="White" StrokeThickness="0">
                                 <Border.Shadow>
-                                    <Shadow Brush="Black" Offset="0,4"
-                                            Radius="12" Opacity="0.08"/>
+                                    <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.08"/>
                                 </Border.Shadow>
                                 <Grid ColumnDefinitions="90, *" Padding="12">
-                                    <Image Grid.Column="0"
-                                           Source="{Binding FullImageUrl}"
-                                           Aspect="AspectFill"
-                                           HeightRequest="80"
-                                           WidthRequest="80">
+                                    <Image Grid.Column="0" Source="{Binding FullImageUrl}"
+                                           Aspect="AspectFill" HeightRequest="80" WidthRequest="80">
                                         <Image.Clip>
-                                            <RoundRectangleGeometry CornerRadius="12"
-                                                                    Rect="0,0,80,80"/>
+                                            <RoundRectangleGeometry CornerRadius="12" Rect="0,0,80,80"/>
                                         </Image.Clip>
                                     </Image>
-
-                                    <VerticalStackLayout Grid.Column="1"
-                                                         Margin="14,0,0,0"
-                                                         VerticalOptions="Center"
-                                                         Spacing="4">
-                                        <Label Text="{Binding Name}"
-                                               FontAttributes="Bold"
-                                               FontSize="15"
-                                               TextColor="#111827"/>
+                                    <VerticalStackLayout Grid.Column="1" Margin="14,0,0,0"
+                                                         VerticalOptions="Center" Spacing="4">
+                                        <Label Text="{Binding Name}" FontAttributes="Bold"
+                                               FontSize="15" TextColor="#111827"/>
                                         <Border BackgroundColor="#FFF7ED"
                                                 StrokeShape="RoundRectangle 6"
                                                 Padding="8,3" HorizontalOptions="Start">
-                                            <Label Text="{Binding Category}"
-                                                   FontSize="11"
-                                                   TextColor="#F97316"
-                                                   FontAttributes="Bold"/>
+                                            <Label Text="{Binding Category}" FontSize="11"
+                                                   TextColor="#F97316" FontAttributes="Bold"/>
                                         </Border>
-                                        <Label Text="📍 Vĩnh Khánh, Quận 4"
-                                               FontSize="11" TextColor="#9CA3AF"/>
+                                        <Label x:Name="LblLocation" FontSize="11" TextColor="#9CA3AF"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>
