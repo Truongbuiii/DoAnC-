@@ -1,4 +1,5 @@
 using FoodTourApp.Models;
+using FoodTourApp.Services;
 
 #if ANDROID
 using FoodTourApp.Platforms.Android;
@@ -26,15 +27,21 @@ public partial class PoiDetailPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        Lang.Load();
+        _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
 
-        // Set text ở đây — view đã render xong
         if (_poi != null)
         {
             DetailName.Text = _poi.Name;
-            DetailCategory.Text = _poi.Category.ToUpper();
+            DetailCategory.Text = _poi.Category?.ToUpper() ?? "";
             DetailDescription.Text = _poi.GetDescription(_currentLanguage);
+
+            // Hiện menu nếu có data, không thì dùng default
+            if (!string.IsNullOrEmpty(_poi.Menu))
+                DetailMenu.Text = _poi.Menu;
         }
 
+        ApplyLanguage();
         UpdateFavoriteButton();
 
 #if ANDROID
@@ -43,20 +50,30 @@ public partial class PoiDetailPage : ContentPage
 #endif
     }
 
-    protected override void OnDisappearing()
+    private void ApplyLanguage()
     {
-        base.OnDisappearing();
-#if ANDROID
-        _androidTts?.Stop();
-#endif
+        Title = Lang.Get("tab_home"); // ẩn title thanh trên
+        LblIntroTitle.Text = Lang.Get("detail_intro");
+        LblMenuTitle.Text = Lang.Get("detail_menu");
+        BtnListen.Text = Lang.Get("detail_listen");
+        BtnMap.Text = Lang.Get("detail_map");
+        BtnNavigate.Text = Lang.Get("detail_navigate");
     }
 
     private void UpdateFavoriteButton()
     {
         if (_poi == null) return;
         BtnFavorite.Text = FavoritesPage.IsFavorite(_poi.PoiId)
-            ? "❤️ Đã lưu"
-            : "🤍 Yêu thích";
+            ? Lang.Get("detail_favorited")
+            : Lang.Get("detail_favorite");
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+#if ANDROID
+        _androidTts?.Stop();
+#endif
     }
 
     private async void OnBackClicked(object sender, EventArgs e)

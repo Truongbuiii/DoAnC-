@@ -2,13 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.Pages.FavoritesPage"
-             Title="Yêu thích"
              BackgroundColor="#F3F4F6">
 
     <VerticalStackLayout Padding="16" Spacing="12">
 
-        <Label Text="❤️ Địa điểm yêu thích"
-               FontSize="20" FontAttributes="Bold"
+        <Label x:Name="LblTitle" FontSize="20" FontAttributes="Bold"
                TextColor="#111827" Margin="4,8,0,4"/>
 
         <CollectionView x:Name="FavoritesList"
@@ -18,11 +16,9 @@
                 <VerticalStackLayout HorizontalOptions="Center"
                                      VerticalOptions="Center" Margin="0,80" Spacing="12">
                     <Label Text="💔" FontSize="50" HorizontalOptions="Center"/>
-                    <Label Text="Chưa có địa điểm yêu thích"
-                           TextColor="#9CA3AF" FontSize="15"
+                    <Label x:Name="LblEmpty" TextColor="#9CA3AF" FontSize="15"
                            HorizontalOptions="Center"/>
-                    <Label Text="Nhấn ❤️ ở bất kỳ quán nào để lưu lại"
-                           TextColor="#D1D5DB" FontSize="13"
+                    <Label x:Name="LblEmptySub" TextColor="#D1D5DB" FontSize="13"
                            HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
@@ -30,8 +26,7 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border Margin="0,0,0,10" StrokeThickness="0"
-                            StrokeShape="RoundRectangle 14"
-                            BackgroundColor="White">
+                            StrokeShape="RoundRectangle 14" BackgroundColor="White">
                         <Border.Shadow>
                             <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.06"/>
                         </Border.Shadow>
@@ -44,16 +39,12 @@
                                        VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
-                                <Label Text="{Binding Name}"
-                                       FontSize="15" FontAttributes="Bold"
-                                       TextColor="#111827"/>
-                                <Label Text="{Binding Category}"
-                                       FontSize="12" TextColor="#F97316"/>
+                                <Label Text="{Binding Name}" FontSize="15"
+                                       FontAttributes="Bold" TextColor="#111827"/>
+                                <Label Text="{Binding Category}" FontSize="12" TextColor="#F97316"/>
                             </VerticalStackLayout>
-                            <Button Grid.Column="2"
-                                    Text="🗑️" FontSize="18"
-                                    BackgroundColor="Transparent"
-                                    TextColor="#EF4444"
+                            <Button Grid.Column="2" Text="🗑️" FontSize="18"
+                                    BackgroundColor="Transparent" TextColor="#EF4444"
                                     Clicked="OnRemoveFavorite"
                                     CommandParameter="{Binding PoiId}"
                                     VerticalOptions="Center"

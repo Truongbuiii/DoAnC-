@@ -19,12 +19,11 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        // Chỉ hỏi ngôn ngữ 1 lần duy nhất khi mở app
         if (_isFirstLoad && !Preferences.ContainsKey("AppLanguage"))
         {
             await Task.Delay(300);
             string action = await DisplayActionSheet(
-                "Chọn ngôn ngữ thuyết minh",
+                Lang.Get("select_language"),
                 null, null,
                 "🇻🇳 Tiếng Việt",
                 "🇺🇸 English",
@@ -41,17 +40,30 @@ public partial class MainPage : ContentPage
                 _ => "vi-VN"
             };
             Preferences.Set("AppLanguage", lang);
+            Lang.Set(lang);
         }
 
         _isFirstLoad = false;
+        ApplyLanguage();
         await LoadDashboard();
+    }
+
+    private void ApplyLanguage()
+    {
+        Lang.Load();
+        LblWelcome.Text = Lang.Get("home_welcome");
+        LblTitle.Text = Lang.Get("home_title");
+        LblTop10.Text = Lang.Get("home_top10");
+        LblExplore.Text = Lang.Get("home_explore");
+        LblSubtitle.Text = Lang.Get("home_subtitle");
+        LblTours.Text = Lang.Get("home_tours");
+        LblFeatured.Text = Lang.Get("home_featured");
     }
 
     private async Task LoadDashboard()
     {
         var allPois = await _dbService.GetPOIsAsync();
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-
         var tours = await _dbService.GetItinerariesAsync();
         ToursList.ItemsSource = new ObservableCollection<Itinerary>(tours);
     }
