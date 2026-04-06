@@ -224,7 +224,7 @@ namespace AdminWeb.Controllers
             if (logs == null || !logs.Any()) return BadRequest();
             foreach (var log in logs)
             {
-                _context.ActivityLogs.Add(new ActivityLogs
+                _context.ActivityLogs.Add(new ActivityLog
                 {
                     PoiId = log.PoiId,
                     ActionType = log.ActionType,
