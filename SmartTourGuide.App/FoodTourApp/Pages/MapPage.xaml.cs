@@ -65,7 +65,6 @@ public partial class MapPage : ContentPage
     private void ApplyLanguage()
     {
         Title = Lang.Get("tab_map");
-        LblMapTitle.Text = $"📍 {Lang.Get("map_title")}";
         SearchEntry.Placeholder = Lang.Get("map_search");
         BtnNavigate.Text = Lang.Get("map_navigate");
         BtnReplay.Text = Lang.Get("map_replay");
