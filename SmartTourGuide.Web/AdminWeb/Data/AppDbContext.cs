@@ -16,7 +16,7 @@ namespace AdminWeb.Data
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Tour> Tours { get; set; }
         public DbSet<TourDetail> TourDetails { get; set; }
-        public DbSet<ActivityLogs> ActivityLogs { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

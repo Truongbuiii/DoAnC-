@@ -44,9 +44,8 @@ namespace AdminWeb.Controllers
                 ViewBag.AnalyticsTitle = "Phân tích Hoạt động Cửa hàng";
 
                 var ownerQuery = query.Where(l => l.Poi.OwnerUsername == currentUserName);
-
                 var rawStats = await ownerQuery
-                    .GroupBy(l => l.AccessTime.Date)
+                    .GroupBy(l => l.AccessTime.Value.Date) // Thêm .Value trước .Date
                     .Select(g => new { Day = g.Key, Count = g.Count() })
                     .OrderBy(x => x.Day)
                     .ToListAsync();
