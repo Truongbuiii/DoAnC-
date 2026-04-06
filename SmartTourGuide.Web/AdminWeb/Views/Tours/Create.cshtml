@@ -1,81 +1,94 @@
 ﻿@model AdminWeb.Models.Tour
 
 @{
-    ViewData["Title"] = "Thiết kế Hành trình";
+    ViewData["Title"] = "Thiết kế Tour mới";
 }
 
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-primary text-white py-3">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-geo-alt-fill me-2"></i>Thiết kế Hành trình Tour Mới</h5>
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-0">Thiết kế Tour mới</h2>
+                <p class="text-muted small">Điền thông tin và chọn các điểm đến cho lộ trình</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-light border rounded-pill px-4">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-check2-circle me-2"></i>Lưu cấu hình
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h5 class="fw-bold mb-4 text-primary">Thông tin cơ bản</h5>
+                    
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="TourName" class="form-label fw-bold">Tên Hành Trình</label>
+                        <input asp-for="TourName" class="form-control form-control-lg rounded-3" placeholder="VD: Khám phá Vĩnh Khánh đêm" />
+                        <span asp-validation-for="TourName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Ảnh đại diện Tour</label>
+                        <input type="file" name="imgFile" class="form-control rounded-3" accept="image/*" />
+                        <small class="text-muted">Chọn ảnh tiêu biểu cho Phố ẩm thực</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="TotalTime" class="form-label fw-bold">Tổng thời gian dự kiến</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-clock"></i></span>
+                            <input asp-for="TotalTime" class="form-control rounded-end-3 border-start-0" placeholder="VD: 2 giờ 30 phút" />
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="Description" class="form-label fw-bold">Mô tả tóm tắt</label>
+                        <textarea asp-for="Description" class="form-control rounded-3" rows="4" placeholder="Mô tả ngắn gọn..."></textarea>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form asp-action="Create">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
 
-                        <div class="row">
-                            <div class="col-md-5 border-end">
-                                <h6 class="text-uppercase fw-bold text-muted mb-3 small">Thông tin chung</h6>
-                                <div class="mb-3">
-                                    <label asp-for="TourName" class="form-label fw-medium"></label>
-                                    <input asp-for="TourName" class="form-control rounded-pill" placeholder="VD: Tour Ốc Michelin..." />
-                                    <span asp-validation-for="TourName" class="text-danger small"></span>
-                                </div>
-                                <div class="mb-3">
-                                    <label asp-for="TotalTime" class="form-label fw-medium"></label>
-                                    <input asp-for="TotalTime" class="form-control rounded-pill" placeholder="VD: 2 giờ 30 phút" />
-                                    <span asp-validation-for="TotalTime" class="text-danger small"></span>
-                                </div>
-                                <div class="mb-3">
-                                    <label asp-for="Description" class="form-label fw-medium"></label>
-                                    <textarea asp-for="Description" class="form-control" rows="4" placeholder="Mô tả ngắn gọn về hành trình này..."></textarea>
-                                    <span asp-validation-for="Description" class="text-danger small"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-7 ps-md-4">
-                                <h6 class="text-uppercase fw-bold text-muted mb-3 small">Thiết lập lộ trình (Chọn quán ốc)</h6>
-                                <p class="text-muted small italic mb-3"><i class="bi bi-info-circle me-1"></i>Tích chọn các quán ốc Tài muốn đưa vào tour này.</p>
-                                
-                                <div class="list-group shadow-sm overflow-auto" style="max-height: 350px;">
-                                    @if (ViewBag.PoiList != null)
-                                    {
-                                        var pois = (List<AdminWeb.Models.POI>)ViewBag.PoiList;
-                                        foreach (var poi in pois)
-                                        {
-                                            <label class="list-group-item d-flex gap-3 align-items-center border-start-0 border-end-0 py-3 pointer">
-                                                <input class="form-check-input flex-shrink-0" type="checkbox" name="selectedPois" value="@poi.PoiId" style="width: 1.2rem; height: 1.2rem;">
-                                                <div class="d-flex flex-column">
-                                                    <span class="fw-bold">@poi.Name</span>
-                                                    <span class="text-muted x-small">@poi.Category</span>
-                                                </div>
-                                            </label>
-                                        }
-                                    }
-                                </div>
-                            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-dark p-3">
+                        <h6 class="text-white mb-0 fw-bold"><i class="bi bi-geo-fill me-2 text-warning"></i>Thiết lập điểm dừng</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                            @if (ViewBag.Pois != null)
+                            {
+                                foreach (var poi in (IEnumerable<AdminWeb.Models.POI>)ViewBag.Pois)
+                                {
+                                    <div class="list-group-item d-flex align-items-center py-3 border-light">
+                                        <div class="form-check me-2">
+                                            <input class="form-check-input pointer" type="checkbox" name="selectedPois" value="@poi.PoiId" id="poi_@poi.PoiId">
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <label class="fw-bold text-dark d-block mb-0 pointer" for="poi_@poi.PoiId">@poi.Name</label>
+                                            @* Đã sửa Address thành Category để không bị lỗi *@
+                                            <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-tag me-1"></i>@poi.Category</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
                         </div>
-
-                        <hr class="my-4">
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a asp-action="Index" class="btn btn-light rounded-pill px-4"><i class="bi bi-arrow-left me-1"></i> Quay lại</a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-5 shadow">
-                                <i class="bi bi-check-circle me-1"></i> Hoàn tất & Lưu Tour
-                            </button>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="card-footer bg-light border-0 py-3 text-center">
+                        <small class="text-muted">Tích chọn theo thứ tự bạn muốn dừng chân</small>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <style>
     .pointer { cursor: pointer; }
-    .x-small { font-size: 0.75rem; }
-    .list-group-item:hover { background-color: #f8f9fa; }
-    .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+    .list-group::-webkit-scrollbar { width: 5px; }
+    .list-group::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 </style>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AdminWeb.Models
 {
@@ -17,7 +18,11 @@ namespace AdminWeb.Models
         [Display(Name = "Thời gian dự kiến")]
         public string? TotalTime { get; set; }
 
-        // Quan trọng: Nối sang bảng chi tiết để lấy danh sách quán ốc
+        // --- BỔ SUNG THUỘC TÍNH NÀY ---
+        [Display(Name = "Hình ảnh đại diện")]
+        public string? ImageSource { get; set; }
+
+        // Nối sang bảng chi tiết để lấy danh sách quán ốc
         public virtual ICollection<TourDetail> TourDetails { get; set; } = new List<TourDetail>();
     }
 }

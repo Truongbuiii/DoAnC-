@@ -27,14 +27,35 @@
                 <div class="card border-0 shadow-sm hover-shadow transition-all overflow-hidden">
                     <div class="card-body p-0">
                         <div class="row g-0">
-                            <div class="col-md-3 bg-light p-4 border-end">
+                            <div class="col-md-3 p-0 border-end position-relative" style="min-height: 200px;">
+                                @if (!string.IsNullOrEmpty(item.ImageSource))
+                                {
+                                    <img src="~/images/@item.ImageSource" class="w-100 h-100 object-fit-cover" alt="@item.TourName">
+                                }
+                                else
+                                {
+                                    <div class="bg-light-subtle text-muted w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                                        <i class="bi bi-image fs-1 mb-2"></i>
+                                        <span class="small">Chưa có ảnh</span>
+                                    </div>
+                                }
+                                
+                                <span class="badge bg-dark opacity-75 position-absolute top-0 start-0 m-3 rounded-pill px-3 shadow-sm">
+                                    #@item.TourId
+                                </span>
+                            </div>
+
+                            <div class="col-md-9 p-4 bg-white">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
-                                        ID: #@item.TourId
-                                    </span>
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-1">@item.TourName</h5>
+                                        <div class="d-flex align-items-center text-secondary small">
+                                            <i class="bi bi-clock-history me-2 text-primary"></i> Dự kiến: @item.TotalTime
+                                        </div>
+                                    </div>
                                     <div class="dropdown">
                                         <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
+                                            <i class="bi bi-three-dots-vertical fs-5"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                             <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@item.TourId"><i class="bi bi-pencil me-2 text-warning"></i> Chỉnh sửa</a></li>
@@ -44,23 +65,13 @@
                                         </ul>
                                     </div>
                                 </div>
-                                <h5 class="fw-bold text-dark mb-2">@item.TourName</h5>
-                                <div class="d-flex align-items-center text-secondary small mb-3">
-                                    <i class="bi bi-clock-history me-2 text-primary"></i> Dự kiến: @item.TotalTime
-                                </div>
-                                <div class="d-flex gap-2 mt-4">
-                                    <a asp-action="Edit" asp-route-id="@item.TourId" class="btn btn-sm btn-white border shadow-xs w-100 rounded-pill">Sửa</a>
-                                    <a asp-action="Details" asp-route-id="@item.TourId" class="btn btn-sm btn-outline-primary w-100 rounded-pill">Chi tiết</a>
-                                </div>
-                            </div>
 
-                            <div class="col-md-9 p-4 bg-white">
                                 <div class="mb-4">
-                                    <h6 class="text-uppercase text-muted fw-bold x-small mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">Mô tả lộ trình</h6>
-                                    <p class="text-secondary small mb-0">@item.Description</p>
+                                    <h6 class="text-uppercase text-muted fw-bold x-small mb-2" style="letter-spacing: 1px;">Mô tả lộ trình</h6>
+                                    <p class="text-secondary small mb-0 text-truncate-2">@item.Description</p>
                                 </div>
 
-                                <h6 class="text-uppercase text-muted fw-bold x-small mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Sơ đồ điểm dừng</h6>
+                                <h6 class="text-uppercase text-muted fw-bold x-small mb-3" style="letter-spacing: 1px;">Sơ đồ điểm dừng</h6>
                                 <div class="d-flex align-items-center flex-wrap gap-3">
                                     @if (item.TourDetails != null && item.TourDetails.Any())
                                     {
@@ -68,24 +79,26 @@
                                         @foreach (var (detail, index) in sortedDetails.Select((value, i) => (value, i)))
                                         {
                                             <div class="d-flex align-items-center">
-                                                <div class="d-flex flex-column align-items-center">
-                                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: bold;">
+                                                <div class="text-center">
+                                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm mx-auto" style="width: 28px; height: 28px; font-size: 0.75rem; font-weight: bold;">
                                                         @(index + 1)
                                                     </div>
-                                                    <span class="text-dark fw-medium mt-2 small text-center" style="max-width: 100px;">@detail.Poi?.Name</span>
+                                                    <span class="text-dark fw-medium mt-2 small text-truncate d-block" style="max-width: 90px;" title="@detail.Poi?.Name">
+                                                        @detail.Poi?.Name
+                                                    </span>
                                                 </div>
                                                 
                                                 @if (index < sortedDetails.Count - 1)
                                                 {
-                                                    <div class="mx-3 mb-4 border-top border-2 border-dashed border-primary-subtle" style="width: 40px;"></div>
+                                                    <div class="mx-2 mb-4 border-top border-2 border-dashed border-primary-subtle" style="width: 30px;"></div>
                                                 }
                                             </div>
                                         }
                                     }
                                     else
                                     {
-                                        <div class="alert alert-light border-dashed w-100 py-2 text-center small text-muted">
-                                            <i class="bi bi-exclamation-circle me-2"></i> Chưa thiết lập điểm dừng cho tour này
+                                        <div class="alert alert-light border-dashed w-100 py-2 text-center small text-muted mb-0">
+                                            <i class="bi bi-exclamation-circle me-2"></i> Chưa thiết lập điểm dừng
                                         </div>
                                     }
                                 </div>
@@ -99,10 +112,10 @@
 </div>
 
 <style>
-    /* Nâng cấp CSS để giao diện mượt hơn */
-    .hover-shadow { transition: all 0.3s ease; }
-    .hover-shadow:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+    .hover-shadow { transition: all 0.3s ease-in-out; }
+    .hover-shadow:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important; }
     .border-dashed { border-style: dashed !important; }
-    .btn-white { background: white; color: #333; }
-    .x-small { font-size: 0.75rem; }
+    .object-fit-cover { object-fit: cover; }
+    .x-small { font-size: 0.7rem; }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>

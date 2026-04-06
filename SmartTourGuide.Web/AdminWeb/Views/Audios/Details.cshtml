@@ -1,36 +1,140 @@
 ﻿@model AdminWeb.Models.Audio
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết Kịch bản";
 }
 
-<h1>Details</h1>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<div>
-    <h4>Audio</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AudioName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AudioName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FilePath)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FilePath)
-        </dd>
-    </dl>
+<style>
+    body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+    
+    .detail-container { padding: 15px 0; }
+    .card-custom { border: none; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); background: #fff; margin-bottom: 25px; overflow: hidden; }
+    
+    .script-box { 
+        background-color: #f8f9fc; 
+        border-left: 5px solid #4e73df; 
+        padding: 25px; 
+        border-radius: 0 12px 12px 0;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #2d3748;
+        font-style: italic;
+    }
+
+    .meta-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #858796; letter-spacing: 0.5px; margin-bottom: 5px; display: block; }
+    .meta-value { font-size: 1rem; font-weight: 600; color: #2d3748; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+    .btn-edit-custom { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: #fff; font-weight: 600; border: none; padding: 12px 25px; border-radius: 10px; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3); }
+    .btn-edit-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(78, 115, 223, 0.4); color: white; }
+    
+    .btn-back-custom { background: white; color: #4a5568; font-weight: 600; border: 1px solid #e2e8f0; padding: 12px 25px; border-radius: 10px; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-back-custom:hover { background: #f8f9fc; color: #2d3748; border-color: #cbd5e0; }
+    
+    /* Tái sử dụng màu Badge Ngôn ngữ */
+    .lang-badge { font-weight: 800; font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; display: inline-block; text-align: center; }
+    .lang-vn { background-color: #ffe5e5; color: #e74a3b; border: 1px solid #ffcccc; }
+    .lang-en { background-color: #e5f0ff; color: #4e73df; border: 1px solid #cce0ff; }
+    .lang-zh { background-color: #fff3cd; color: #f6c23e; border: 1px solid #ffeeba; }
+    .lang-ko { background-color: #e3f2fd; color: #36b9cc; border: 1px solid #b8e2ef; }
+    .lang-ja { background-color: #f8f9fc; color: #5a5c69; border: 1px solid #eaecf4; }
+</style>
+
+<div class="container-fluid py-4 px-4 detail-container">
+    
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <div class="bg-light p-3 rounded-circle me-3 shadow-sm border">
+                <i class="bi bi-file-earmark-text text-primary fs-4"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold text-dark mb-0">Chi tiết Kịch bản</h2>
+                <p class="text-muted mb-0">Xem trước nội dung sẽ được AI đọc</p>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn-back-custom shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model?.AudioId" class="btn-edit-custom">
+                <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h3 class="fw-bold text-dark mb-1">@Model.AudioName</h3>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-secondary mb-4"><i class="bi bi-card-text me-2"></i>@Model.Description</p>
+                }
+
+                <hr class="border-light mb-4">
+
+                <span class="meta-label text-primary mb-2"><i class="bi bi-soundwave me-1"></i> Nội dung kịch bản (Text-to-Speech)</span>
+                <div class="script-box">
+                    @if (!string.IsNullOrEmpty(Model.FilePath))
+                    {
+                        <i class="bi bi-quote fs-3 text-secondary opacity-50 me-2"></i>
+                        @Model.FilePath
+                    }
+                    else
+                    {
+                        <span class="text-muted">Đang cập nhật nội dung...</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-custom p-4 border-top border-4 border-primary h-100">
+                <h5 class="fw-bold text-dark mb-4"><i class="bi bi-info-circle me-2"></i>Thông tin thuộc tính</h5>
+                
+                <span class="meta-label">Thuộc Địa điểm (POI)</span>
+                <div class="meta-value">
+                    <div class="bg-light border px-2 py-1 rounded">
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                        @(Model.Poi?.Name ?? "Chưa gắn POI")
+                    </div>
+                </div>
+
+                <span class="meta-label">Ngôn ngữ kịch bản</span>
+                <div class="meta-value">
+                    <span class="lang-badge @GetLangClass(Model.Language)">
+                        @(Model.Language ?? "N/A")
+                    </span>
+                </div>
+
+                <span class="meta-label mt-4 pt-4 border-top">Mã định danh (ID)</span>
+                <div class="meta-value text-muted font-monospace">
+                    #@Model.AudioId
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AudioId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+@functions {
+    // Hàm C# hỗ trợ tự động tô màu cho thẻ Ngôn ngữ (Giống bên trang Index)
+    public string GetLangClass(string lang)
+    {
+        if (string.IsNullOrEmpty(lang)) return "lang-ja";
+        return lang.ToUpper() switch
+        {
+            "VN" => "lang-vn",
+            "EN" => "lang-en",
+            "ZH" => "lang-zh",
+            "KO" => "lang-ko",
+            "JA" => "lang-ja",
+            _ => "lang-ja"
+        };
+    }
+}

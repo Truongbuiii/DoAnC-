@@ -1,39 +1,103 @@
 ﻿@model AdminWeb.Models.Audio
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Xác nhận Xóa Kịch bản";
 }
 
-<h1>Delete</h1>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Audio</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AudioName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AudioName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FilePath)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FilePath)
-        </dd>
-    </dl>
+<style>
+    /* Đồng bộ nền và font */
+    body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
     
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="AudioId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+    .delete-container { padding: 40px 0; }
+    .card-custom { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); background: #fff; overflow: hidden; }
+    
+    /* Header màu đỏ cảnh báo */
+    .header-danger { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); color: #fff; padding: 30px 20px; text-align: center; }
+    
+    /* Style thông tin */
+    .info-label { font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: #858796; margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
+    .info-value { font-size: 1.05rem; font-weight: 600; color: #2d3748; margin-bottom: 20px; }
+    
+    /* Hộp text kịch bản bị xóa */
+    .script-box { background-color: #fef2f2; border-left: 4px solid #e74a3b; padding: 15px 20px; border-radius: 0 8px 8px 0; font-style: italic; color: #4a5568; font-size: 0.95rem; }
+    
+    /* Nút thao tác */
+    .btn-delete-confirm { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); color: #fff; font-weight: 700; border: none; padding: 12px 30px; border-radius: 10px; transition: 0.3s; box-shadow: 0 4px 12px rgba(231, 74, 59, 0.3); display: inline-flex; align-items: center; }
+    .btn-delete-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 74, 59, 0.4); color: white; }
+    
+    .btn-cancel { background: white; color: #4a5568; font-weight: 600; border: 1px solid #e2e8f0; padding: 12px 30px; border-radius: 10px; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-cancel:hover { background: #f8f9fc; color: #2d3748; border-color: #cbd5e0; }
+</style>
+
+<div class="container delete-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card-custom">
+                
+                <div class="header-danger">
+                    <i class="bi bi-exclamation-triangle-fill display-4 mb-3 opacity-75"></i>
+                    <h3 class="fw-bold mb-2">Bạn có chắc chắn muốn xóa?</h3>
+                    <p class="mb-0 text-white-50" style="font-size: 0.95rem;">Hành động này không thể hoàn tác. Dữ liệu kịch bản sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
+                </div>
+                
+                <div class="p-4 p-md-5">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <span class="info-label">Tiêu đề kịch bản</span>
+                            <div class="info-value text-danger fs-5">@Model.AudioName</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-2">
+                            <span class="info-label">Ngôn ngữ</span>
+                            <div class="info-value">
+                                <span class="badge bg-light text-dark border px-3 py-2" style="font-size: 0.85rem;">
+                                    <i class="bi bi-translate me-1"></i> @(Model.Language ?? "N/A")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <span class="info-label">Thuộc Địa điểm (POI)</span>
+                            <div class="info-value">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i> @(Model.Poi?.Name ?? "Chưa gắn POI")
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-4 mt-2">
+                            <span class="info-label">Nội dung sẽ bị mất (Text-to-Speech)</span>
+                            <div class="script-box mt-2">
+                                <i class="bi bi-quote fs-5 text-danger opacity-50 me-1"></i>
+                                @if (!string.IsNullOrEmpty(Model.FilePath))
+                                {
+                                    @Model.FilePath
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có nội dung.</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-light mb-4 mt-2">
+
+                    <form asp-action="Delete" class="d-flex justify-content-center gap-3">
+                        <input type="hidden" asp-for="AudioId" />
+                        
+                        <a asp-action="Index" class="btn-cancel shadow-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại an toàn
+                        </a>
+                        
+                        <button type="submit" class="btn-delete-confirm">
+                            <i class="bi bi-trash3-fill me-2"></i>Đồng ý Xóa vĩnh viễn
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

@@ -74,7 +74,7 @@ CREATE TABLE ActivityLogs (
 GO
 
 ALTER TABLE POIs ADD OwnerUsername NVARCHAR(100) NULL;
-
+ALTER TABLE Tours ADD ImageSource nvarchar(max) NULL;
 -- ==========================================
 -- 3. NẠP DỮ LIỆU
 -- ==========================================
@@ -160,11 +160,21 @@ INSERT INTO Audios (AudioName, [Description], FilePath, [Language], PoiId) VALUE
 (N'옥 오안', N'Korean', N'옥 오안은 뛰어난 해산물 품질로 미슐랭 빕 구르망상을 수상한 영광을 안았습니다.', 'KO', 10),
 (N'Oc Oanh', N'Japanese', N'Oc Oanhは、優れた海鮮の品質でミシュラン・ビブグルマンを受賞したことを光栄に思います。', 'JA', 10);
 
--- Nạp 3 Hành trình (Tours)
-INSERT INTO Tours (TourName, [Description], TotalTime) VALUES 
-(N'Tour Ốc Michelin & Đặc Sản Quận 4', N'Hành trình thưởng thức những quán ốc được Michelin vinh danh và các quán ốc lâu đời nhất phố Vĩnh Khánh.', N'2 Giờ 30 Phút'),
-(N'Lộ Trình Ăn Đêm Sầm Uất', N'Dạo quanh các điểm ăn uống nhộn nhịp từ đầu phố đến cuối phố, bao gồm cả Lẩu và Đồ nướng.', N'3 Giờ'),
-(N'Tour Hải Sản Đa Quốc Gia', N'Trải nghiệm sự giao thoa văn hóa ẩm thực giữa Hải sản Việt Nam và Sushi Nhật Bản.', N'2 Giờ');
+INSERT INTO Tours (TourName, [Description], TotalTime, ImageSource) VALUES
+(N'Tour Ốc Michelin & Đặc Sản Quận 4', 
+ N'Hành trình thưởng thức những quán ốc được Michelin vinh danh và các quán ốc lâu đời nhất phố Vĩnh Khánh.', 
+ N'2 Giờ 30 Phút', 
+ N'tour_oc.jpg'), -- Tên file ảnh cho Tour 1
+
+(N'Lộ Trình Ăn Đêm Sầm Uất', 
+ N'Dạo quanh các điểm ăn uống nhộn nhịp từ đầu phố đến cuối phố, bao gồm cả Lẩu và Đồ nướng.', 
+ N'3 Giờ', 
+ N'tour_andem.jpg'), -- Tên file ảnh cho Tour 2
+
+(N'Tour Hải Sản Đa Quốc Gia', 
+ N'Trải nghiệm sự giao thoa văn hóa ẩm thực giữa Hải sản Việt Nam và Sushi Nhật Bản.', 
+ N'2 Giờ', 
+ N'tour_haisan.jpg');
 
 -- Nạp Chi tiết hành trình (TourDetails)
 INSERT INTO TourDetails (TourId, PoiId, [Order]) VALUES 
