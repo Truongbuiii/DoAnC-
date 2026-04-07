@@ -197,3 +197,175 @@ INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType) VALUES
 (10, 'ScanQR', 'VN', 'Android'), (10, 'ScanQR', 'VN', 'iOS'), (10, 'ScanQR', 'EN', 'iOS'), 
 (10, 'AutoTrigger', 'EN', 'Android'), (10, 'ScanQR', 'KO', 'iOS'), (10, 'AutoTrigger', 'VN', 'Android'), (10, 'ScanQR', 'ZH', 'iOS');
 GO
+
+
+
+
+
+-- Xóa bớt log cũ nếu muốn sạch sẽ (Tùy chọn)
+ DELETE FROM ActivityLogs;
+
+-- Nạp dữ liệu mẫu đa dạng cho ActivityLogs
+INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, AccessTime)
+VALUES 
+-- Ngày hôm nay
+(1, N'Listen', 'VI', 'iPhone 15 Pro', GETDATE()),
+(2, N'Listen', 'EN', 'Samsung S24 Ultra', DATEADD(MINUTE, -30, GETDATE())),
+(3, N'Listen', 'VI', 'Web Browser', DATEADD(HOUR, -2, GETDATE())),
+
+-- Ngày hôm qua (Để biểu đồ Analytics có cột)
+(1, N'Listen', 'JA', 'iPhone 14', DATEADD(DAY, -1, GETDATE())),
+(8, N'Listen', 'VI', 'Oppo Reno 11', DATEADD(HOUR, -26, GETDATE())),
+(10, N'Listen', 'EN', 'iPad Air', DATEADD(HOUR, -28, GETDATE())),
+(2, N'Listen', 'VI', 'Xiaomi 14', DATEADD(HOUR, -30, GETDATE())),
+
+-- 2 ngày trước
+(3, N'Listen', 'KO', 'iPhone 13', DATEADD(DAY, -2, GETDATE())),
+(1, N'Listen', 'VI', 'Samsung Tab S9', DATEADD(HOUR, -50, GETDATE())),
+(5, N'Listen', 'EN', 'Desktop Chrome', DATEADD(HOUR, -52, GETDATE()));
+
+-- Kiểm tra lại kết quả
+SELECT TOP 10 * FROM ActivityLogs ORDER BY AccessTime DESC;
+-- 1. Thêm cột Role (mặc định là Owner cho an toàn)
+ALTER TABLE Admins ADD [Role] NVARCHAR(20) DEFAULT 'Owner';
+
+-- 2. Cập nhật tài khoản chính của Tài thành Admin
+UPDATE Admins SET [Role] = 'Admin' WHERE Username = 'admin'; 
+
+-- 3. Đảm bảo các chủ quán khác có Role là 'Owner'
+UPDATE Admins SET [Role] = 'Owner' WHERE Username <> 'admin';
+ 
+
+ -- Kiểm tra danh sách POI để xem ID nào là của quán Ốc Vũ
+SELECT PoiId, Name, OwnerUsername FROM POIs;
+
+-- Cập nhật: Gán quán (ví dụ ID là 1) cho chủ quán 'ocvu'
+-- 1. Gán quán Ốc Vũ
+UPDATE POIs SET OwnerUsername = 'ocvu' WHERE Name LIKE N'%Ốc Vũ%';
+
+-- 2. Gán quán Ốc Oanh
+UPDATE POIs SET OwnerUsername = 'ocoanh' WHERE Name LIKE N'%Ốc Oanh%';
+
+-- 3. Gán quán Ốc Đào
+UPDATE POIs SET OwnerUsername = 'ocdao' WHERE Name LIKE N'%Ốc Đào%';
+
+-- 4. Gán quán Ốc Thảo 123
+UPDATE POIs SET OwnerUsername = 'octhao123' WHERE Name LIKE N'%Ốc Thảo 123%';
+
+-- 5. Gán quán Ốc Thảo 383
+UPDATE POIs SET OwnerUsername = 'octhao383' WHERE Name LIKE N'%Ốc Thảo 383%';
+
+-- 6. Gán quán Sushi KO
+UPDATE POIs SET OwnerUsername = 'sushiko' WHERE Name LIKE N'%Sushi KO%';
+
+-- 7. Gán quán Chilli Lẩu Nướng
+UPDATE POIs SET OwnerUsername = 'chilli' WHERE Name LIKE N'%Chilli%';
+
+-- 8. Gán quán Lẩu Dê Chung
+UPDATE POIs SET OwnerUsername = 'laudechung' WHERE Name LIKE N'%Dê Chung%';
+
+-- 9. Gán quán Bún cá Dì Tư
+UPDATE POIs SET OwnerUsername = 'ditubunca' WHERE Name LIKE N'%Dì Tư%';
+
+-- 10. Gán cho Cổng Chào (Ban quản lý)
+UPDATE POIs SET OwnerUsername = 'congchao' WHERE Name LIKE N'%Cổng chào%';
+
+-- Kiểm tra lại xem đã gán đủ chưa
+SELECT PoiId, Name, OwnerUsername FROM POIs;
+
+
+
+-- 1. Dọn dẹp bảng Audio trước khi nạp mới
+DELETE FROM Audios;
+
+-- TẠO MỘT BẢNG TẠM ĐỂ CHỨA DỮ LIỆU MẪU (Cho code gọn hơn)
+CREATE TABLE #TempAudio (
+    AName NVARCHAR(200), 
+    ADesc NVARCHAR(200), 
+    APath NVARCHAR(MAX), 
+    ALang NVARCHAR(10), 
+    SearchName NVARCHAR(100)
+);
+
+INSERT INTO #TempAudio VALUES
+-- Quán 1: Cổng chào
+(N'Chào mừng', N'Tiếng Việt', N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống sầm uất nhất Quận 4.', 'VN', N'%Cổng chào%'),
+(N'Welcome', N'English', N'Welcome to Vinh Khanh Food Street, the most vibrant food paradise in District 4.', 'EN', N'%Cổng chào%'),
+(N'欢迎', N'Chinese', N'欢迎来到永康美食街，这是第四区最繁华的美食天堂。', 'ZH', N'%Cổng chào%'),
+(N'환영', N'Korean', N'4군 최고의 음식 천국 빈칸 푸드 스트리트에 오신 것을 환영합니다.', 'KO', N'%Cổng chào%'),
+(N'ようこそ', N'Japanese', N'4区最大の食の楽園、ヴィンカン・フードストリートへようこそ。', 'JA', N'%Cổng chào%'),
+
+-- Quán 2: Dê Chung
+(N'Lẩu dê', N'Tiếng Việt', N'Dê Chung nổi tiếng với món lẩu dê thơm ngon đặc trưng.', 'VN', N'%Dê Chung%'),
+(N'Goat Hotpot', N'English', N'De Chung is famous for its aromatic goat hotpot.', 'EN', N'%Dê Chung%'),
+(N'山羊火锅', N'Chinese', N'德忠以其香气铺鼻的山羊火锅而闻名。', 'ZH', N'%Dê Chung%'),
+(N'염소 전골', N'Korean', N'드충은 향긋한 염소 전골로 유명합니다.', 'KO', N'%Dê Chung%'),
+(N'ヤギ鍋', N'Japanese', N'Dê Chungは香り豊かなヤギ鍋で有名です。', 'JA', N'%Dê Chung%'),
+
+-- Quán 3: Ốc Vũ 37
+(N'Hải sản', N'Tiếng Việt', N'Ốc Vũ 37 là quán ốc chuẩn địa phương, nổi tiếng với món ốc len xào dừa.', 'VN', N'%Ốc Vũ%'),
+(N'Seafood', N'English', N'Oc Vu 37 is an authentic local restaurant, famous for stir-fried snails.', 'EN', N'%Ốc Vũ%'),
+(N'海鲜', N'Chinese', N'吴氏37号是正宗的当地餐厅，以椰子炒蜗牛而闻名。', 'ZH', N'%Ốc Vũ%'),
+(N'해산물', N'Korean', N'옥 부 37은 정통 로컬 식당으로 코코넛 볶음 달팽이 요리가 유명합니다.', 'KO', N'%Ốc Vũ%'),
+(N'海鮮', N'Japanese', N'Oc Vu 37は地元の本格的な店で、大理石のカタツムリのココナッツ炒めが有名です。', 'JA', N'%Ốc Vũ%'),
+
+-- Quán 4: Bún cá Dì Tư
+(N'Bún cá', N'Tiếng Việt', N'Bún cá Châu Đốc Dì Tư mang hương vị miền Tây đặc trưng.', 'VN', N'%Dì Tư%'),
+(N'Fish Noodle', N'English', N'Di Tu Fish Noodle brings authentic Mekong Delta flavors.', 'EN', N'%Dì Tư%'),
+(N'鱼粉', N'Chinese', N'迪思阿姨鱼粉带来来自水乡的正宗湄公河三角洲风味。', 'ZH', N'%Dì Tư%'),
+(N'생선 국수', N'Korean', N'디 뜨어 생선 국수는 메콩 델타 지역의 정통 맛을 선사합니다.', 'KO', N'%Dì Tư%'),
+(N'魚の麺', N'Japanese', N'Di Tu 魚の麺は、水辺の地域からの本格的なメコンデルタの味を届けます。', 'JA', N'%Dì Tư%'),
+
+-- Quán 5: Ốc Thảo 123
+(N'Ốc Thảo 123', N'Tiếng Việt', N'Ốc Thảo 123 là thiên đường hải sản đa dạng nhất phố ẩm thực này.', 'VN', N'%Ốc Thảo 123%'),
+(N'Seafood Paradise', N'English', N'Oc Thao 123 is the most diverse seafood paradise.', 'EN', N'%Ốc Thảo 123%'),
+(N'海鲜天堂', N'Chinese', N'奥草123是这条美食街上品种最丰富的海鲜天堂。', 'ZH', N'%Ốc Thảo 123%'),
+(N'해산물 천국', N'Korean', N'옥 타오 123은 이 음식 거리에서 가장 다양한 해산물 천국입니다.', 'KO', N'%Ốc Thảo 123%'),
+(N'海鮮の楽園', N'Japanese', N'Oc Thao 123は、この美食街で最も多様な海鮮の楽園です。', 'JA', N'%Ốc Thảo 123%'),
+
+-- Quán 6: Sushi KO
+(N'Sushi KO', N'Tiếng Việt', N'Sushi KO phục vụ các món Nhật Bản sáng tạo với mức giá bình dân.', 'VN', N'%Sushi KO%'),
+(N'Sushi KO', N'English', N'Sushi KO serves creative Japanese dishes at affordable prices.', 'EN', N'%Sushi KO%'),
+(N'寿司KO', N'Chinese', N'Sushi KO 以非常实惠的价格提供创意的日本料理。', 'ZH', N'%Sushi KO%'),
+(N'스시 KO', N'Korean', N'스시 KO는 매우 저렴한 가격에 창의적인 일본 요리를 제공합니다.', 'KO', N'%Sushi KO%'),
+(N'Sushi KO', N'Japanese', N'Sushi KOは、リーズナブルな価格で創作日本料理を提供しています。', 'JA', N'%Sushi KO%'),
+
+-- Quán 7: Chilli Lẩu Nướng
+(N'Chilli', N'Tiếng Việt', N'Chilli Lẩu Nướng phục vụ thực đơn tự chọn đa dạng giá rẻ.', 'VN', N'%Chilli%'),
+(N'Chilli Grill', N'English', N'Chilli Hotpot and Grill serves a diverse buffet.', 'EN', N'%Chilli%'),
+(N'红辣椒烧烤', N'Chinese', N'红辣椒火锅烧烤提供多样的自助餐。', 'ZH', N'%Chilli%'),
+(N'칠리 그릴', N'Korean', N'칠리 훠궈와 그릴은 다양한 뷔페를 제공합니다.', 'KO', N'%Chilli%'),
+(N'Chilliグリル', N'Japanese', N'Chilli鍋とグリルは、多様なビュッフェを提供しています。', 'JA', N'%Chilli%'),
+
+-- Quán 8: Ốc Đào 2
+(N'Ốc Đào 2', N'Tiếng Việt', N'Ốc Đào 2 đặc biệt nổi tiếng với công thức sốt trứng muối độc quyền.', 'VN', N'%Ốc Đào%'),
+(N'Oc Dao 2', N'English', N'Oc Dao 2 is famous for its exclusive salted egg sauce recipe.', 'EN', N'%Ốc Đào%'),
+(N'奥道2号', N'Chinese', N'奥道2号因其独家咸蛋酱配方 mà đặc biệt闻名。', 'ZH', N'%Ốc Đào%'),
+(N'옥 다오 2', N'Korean', N'옥 다오 2는 독점적인 소금 달걀 소스 레시피로 유명합니다.', 'KO', N'%Ốc Đào%'),
+(N'Oc Dao 2', N'Japanese', N'Oc Dao 2は、独占的な塩卵ソースのレシピで有名です。', 'JA', N'%Ốc Đào%'),
+
+-- Quán 9: Ốc Thảo 383
+(N'Ốc Thảo 383', N'Tiếng Việt', N'Ốc Thảo 383 có không gian rộng rãi phù hợp bữa tiệc đông người.', 'VN', N'%Ốc Thảo 383%'),
+(N'Oc Thao 383', N'English', N'Oc Thao 383 has a spacious setting for large parties.', 'EN', N'%Ốc Thảo 383%'),
+(N'奥草383', N'Chinese', N'奥草383空间宽敞，适合举行大型海鲜派对。', 'ZH', N'%Ốc Thảo 383%'),
+(N'옥 타오 383', N'Korean', N'옥 타오 383은 대규모 해산물 파티에 적합합니다.', 'KO', N'%Ốc Thảo 383%'),
+(N'Oc Thao 383', N'Japanese', N'Oc Thao 383は、大人数での海鮮パーティーに適しています。', 'JA', N'%Ốc Thảo 383%'),
+
+-- Quán 10: Ốc Oanh 534
+(N'Ốc Oanh', N'Tiếng Việt', N'Ốc Oanh vinh dự nhận giải thưởng Michelin Bib Gourmand.', 'VN', N'%Ốc Oanh%'),
+(N'Oc Oanh', N'English', N'Oc Oanh is honored to receive the Michelin Bib Gourmand award.', 'EN', N'%Ốc Oanh%'),
+(N'奥安海鲜', N'Chinese', N'奥安荣获米其林必比登推介。', 'ZH', N'%Ốc Oanh%'),
+(N'옥 오안', N'Korean', N'옥 오안은 미슐랭 빕 구르망상을 수상했습니다.', 'KO', N'%Ốc Oanh%'),
+(N'Oc Oanh', N'Japanese', N'Oc Oanhは、ミシュラン・ビブグルマンを受賞しました。', 'JA', N'%Ốc Oanh%');
+
+-- THỰC HIỆN ĐẨY VÀO BẢNG CHÍNH VÀ TỰ DÒ ID
+INSERT INTO Audios (AudioName, [Description], FilePath, [Language], PoiId)
+SELECT T.AName, T.ADesc, T.APath, T.ALang, P.PoiId
+FROM #TempAudio T
+JOIN POIs P ON P.Name LIKE T.SearchName;
+
+-- Xóa bảng tạm
+DROP TABLE #TempAudio;
+
+-- Kiểm tra lại
+SELECT a.AudioName, p.Name AS TenQuan, p.OwnerUsername FROM Audios a JOIN POIs p ON a.PoiId = p.PoiId;

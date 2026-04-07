@@ -16,10 +16,10 @@ namespace AdminWeb.Controllers
             _context = context;
         }
 
+        // --- PHẢI CÓ HÀM NÀY ĐỂ HIỆN FORM ĐĂNG NHẬP ---
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            // Truyền đường dẫn cũ sang View để sau khi đăng nhập còn biết đường mà quay lại
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
@@ -27,35 +27,27 @@ namespace AdminWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
         {
-            // 1. Kiểm tra tài khoản trong DB
             var user = await _context.Admins
                 .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
 
             if (user != null)
             {
-                // 2. Tạo danh sách quyền hạn (Claims)
                 var claims = new List<Claim> {
                     new Claim(ClaimTypes.Name, user.Username!),
-                    new Claim("FullName", user.FullName ?? "")
+                    new Claim("FullName", user.FullName ?? ""),
+                    // Lấy Role từ DB để phân quyền Admin/Owner
+                    new Claim(ClaimTypes.Role, user.Role ?? "Owner")
                 };
 
-                // Phân vai trò: Admin hoặc Owner
-                if (user.Username!.ToLower() == "admin")
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, "Admin"));
-                }
-                else
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, "Owner"));
-                }
-
                 var claimsIdentity = new ClaimsIdentity(claims, "MyCookieAuth");
-                var authProperties = new AuthenticationProperties { IsPersistent = true };
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                };
 
-                // 3. Đăng nhập
                 await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
 
-                // --- PHẦN SỬA MỚI: ĐIỀU HƯỚNG THÔNG MINH ---
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -67,11 +59,13 @@ namespace AdminWeb.Controllers
             return View();
         }
 
-        [HttpPost] // Thêm cái này để nhận lệnh từ form ẩn phía trên
+        // Sửa Logout thành GET để tránh lỗi 405 khi bấm link trực tiếp
+        [HttpGet, HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("MyCookieAuth");
-            HttpContext.Response.Cookies.Delete("MyCookieAuth");
+            // Xóa cookie thủ công cho chắc chắn
+            Response.Cookies.Delete("MyCookieAuth");
             return RedirectToAction("Login", "Account");
         }
     }

@@ -23,22 +23,21 @@ namespace AdminWeb.Controllers
         // 1. TRANG DANH SÁCH: Hiển thị kèm tên Quán ốc (POI) - ĐÃ PHÂN QUYỀN
         public async Task<IActionResult> Index()
         {
-            // Lấy Username của người đang đăng nhập
-            string currentUserName = User.Identity!.Name!;
+            // 1. Lấy tên user đang đăng nhập (ví dụ: 'ocvu')
+            string currentUserName = User.Identity?.Name;
 
-            // Khởi tạo truy vấn kèm theo bảng Poi để biết chủ sở hữu
+            // 2. Khởi tạo query và nạp kèm bảng POI để lấy được cột OwnerUsername
             var query = _context.Audios.Include(a => a.Poi).AsQueryable();
 
-            // LOGIC PHÂN QUYỀN:
-            // Nếu KHÔNG PHẢI Admin (tức là Owner)
+            // 3. Phân quyền
             if (!User.IsInRole("Admin"))
             {
-                // Chỉ lấy những Audio thuộc về quán (POI) mà User này sở hữu
+                // Phải kiểm tra a.Poi != null để tránh lỗi crash nếu audio chưa gán quán
                 query = query.Where(a => a.Poi != null && a.Poi.OwnerUsername == currentUserName);
             }
 
-            var audios = await query.ToListAsync();
-            return View(audios);
+            var model = await query.ToListAsync();
+            return View(model);
         }
 
         // 2. CHI TIẾT
@@ -56,11 +55,34 @@ namespace AdminWeb.Controllers
         }
 
         // 3. TẠO MỚI (GET): Load danh sách POI vào Dropdown
+        // GET: Audios/Create
+        [HttpGet]
         public IActionResult Create()
         {
-            ViewBag.PoiId = new SelectList(_context.POIs, "PoiId", "Name");
+            var currentUser = User.Identity?.Name;
+
+            if (User.IsInRole("Admin"))
+            {
+                // Admin: Thấy tất cả các địa điểm để gán Audio
+                ViewData["PoiId"] = new SelectList(_context.POIs, "PoiId", "Name");
+            }
+            else
+            {
+                // Owner: Chỉ thấy địa điểm nào mà mình là chủ (khớp OwnerUsername)
+                var myPOIs = _context.POIs.Where(p => p.OwnerUsername == currentUser).ToList();
+
+                // Nếu chủ quán chưa có quán nào, có thể báo lỗi hoặc điều hướng
+                if (!myPOIs.Any())
+                {
+                    TempData["Error"] = "Bạn chưa được gán quản lý địa điểm nào!";
+                    return RedirectToAction("Index");
+                }
+
+                ViewData["PoiId"] = new SelectList(myPOIs, "PoiId", "Name");
+            }
             return View();
         }
+        
 
         // 4. TẠO MỚI (POST): Xử lý lưu File và lưu Data
         [HttpPost]

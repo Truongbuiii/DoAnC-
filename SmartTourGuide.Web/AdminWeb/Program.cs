@@ -11,17 +11,21 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Cấu hình xác thực Cookie (Phải có cái này mới dùng được Login)
-builder.Services.AddAuthentication("MyCookieAuth")
+// --- Cấu hình xác thực Cookie ---
+builder.Services.AddAuthentication("MyCookieAuth") // Tên Schema phải khớp với SignInAsync
     .AddCookie("MyCookieAuth", options =>
     {
         options.Cookie.Name = "MyCookieAuth";
-        options.LoginPath = "/Account/Login"; // Nếu chưa login sẽ bị đá về đây
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout"; // Thêm dòng này cho chắc
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-        options.SlidingExpiration = true; // Tự động gia hạn khi Tài đang thao tác
-    });
+        options.ExpireTimeSpan = TimeSpan.FromHours(24); // Cho hẳn 1 ngày cho thoải mái test
+        options.SlidingExpiration = true;
 
+        // QUAN TRỌNG: Đảm bảo Cookie hoạt động tốt trên Localhost
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
 var app = builder.Build();
 
 // --- 2. CẤU HÌNH PIPELINE (MIDDLEWARE) ---
