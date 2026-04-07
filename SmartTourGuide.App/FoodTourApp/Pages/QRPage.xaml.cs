@@ -87,6 +87,15 @@ public partial class QRPage : ContentPage
                 var poi = await _dbService.GetPOIByIdAsync(poiId);
                 if (poi != null)
                 {
+                    // Phát TTS ngay lập tức
+                    var ttsLang = Preferences.Get("AppLanguage", "vi-VN");
+#if ANDROID
+                    var tts = new FoodTourApp.Platforms.Android.AndroidTtsService();
+                    await tts.InitializeAsync();
+                    tts.SetLanguage(lang);
+                    tts.Speak(poi.GetDescription(lang));
+#endif
+
                     await Navigation.PushAsync(new PoiDetailPage(poi));
                     _isProcessing = false;
                     BarcodeReader.IsDetecting = true;

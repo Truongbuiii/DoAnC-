@@ -138,7 +138,7 @@ namespace FoodTourApp.Services
         /// </summary>
         public void ResetAll()
         {
-            _playedPoiIds.Clear();
+            _playedPoiIds.Clear(); 
             _poiCooldowns.Clear();
             _enterTimes.Clear();
         }

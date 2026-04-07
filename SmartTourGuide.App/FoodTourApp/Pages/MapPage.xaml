@@ -6,21 +6,9 @@
 
     <Grid RowDefinitions="Auto, Auto, *">
 
-        <!-- HEADER -->
-        <Border Grid.Row="0" BackgroundColor="White" StrokeThickness="0" HeightRequest="60">
-            <Border.Shadow>
-                <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.1"/>
-            </Border.Shadow>
-            <Grid ColumnDefinitions="*, Auto" Padding="20,0">
-                <Label x:Name="LblMapTitle" VerticalOptions="Center"
-                       FontAttributes="Bold" FontSize="18" TextColor="#1F2937"/>
-                <Image Grid.Column="1" Source="notification_icon.png"
-                       WidthRequest="25" HeightRequest="25" VerticalOptions="Center"/>
-            </Grid>
-        </Border>
 
         <!-- SEARCH BAR -->
-        <Grid Grid.Row="1" Margin="15,10">
+        <Grid Grid.Row="0" Margin="15,10">
             <VerticalStackLayout Spacing="0">
                 <Border StrokeShape="RoundRectangle 25" Padding="15,0"
                         StrokeThickness="1" Stroke="#E5E7EB" BackgroundColor="White">

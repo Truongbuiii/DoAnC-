@@ -28,8 +28,8 @@ namespace FoodTourApp.Services
         public async Task SavePOIsFromServerAsync(List<POI> pois)
         {
             await Init();
-            foreach (var poi in pois)
-                await _database.InsertOrReplaceAsync(poi);
+            await _database.DeleteAllAsync<POI>();
+            await _database.InsertAllAsync(pois);
         }
 
         public async Task MarkLogsAsSyncedAsync(List<int> logIds)
