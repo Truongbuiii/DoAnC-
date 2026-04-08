@@ -47,7 +47,6 @@ namespace AdminWeb.Controllers
         // GET: Tours/Create
         public IActionResult Create()
         {
-            // Lấy danh sách POI (Quán ăn) để hiển thị checkbox
             ViewBag.Pois = _context.POIs.OrderBy(p => p.Name).ToList();
             return View();
         }
@@ -59,16 +58,12 @@ namespace AdminWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Xử lý Upload ảnh vào cột ImageSource
                 if (imgFile != null)
-                {
                     tour.ImageSource = await SaveImage(imgFile);
-                }
 
                 _context.Add(tour);
                 await _context.SaveChangesAsync();
 
-                // 2. Lưu danh sách điểm dừng
                 if (selectedPois != null && selectedPois.Length > 0)
                 {
                     for (int i = 0; i < selectedPois.Length; i++)
@@ -116,25 +111,22 @@ namespace AdminWeb.Controllers
             {
                 try
                 {
-                    // Truy vấn tour cũ để xử lý ảnh (AsNoTracking để tránh lỗi conflict EF)
-                    var oldTour = await _context.Tours.AsNoTracking().FirstOrDefaultAsync(t => t.TourId == id);
+                    var oldTour = await _context.Tours.AsNoTracking()
+                        .FirstOrDefaultAsync(t => t.TourId == id);
 
                     if (imgFile != null)
                     {
-                        // Nếu có ảnh mới: Xóa ảnh cũ trên server và lưu ảnh mới
                         DeleteImage(oldTour?.ImageSource);
                         tour.ImageSource = await SaveImage(imgFile);
                     }
                     else
                     {
-                        // Nếu không upload ảnh mới: Giữ nguyên tên file cũ trong DB
                         tour.ImageSource = oldTour?.ImageSource;
                     }
 
                     _context.Update(tour);
                     await _context.SaveChangesAsync();
 
-                    // Cập nhật lại danh sách điểm dừng (Xóa hết cũ - Add mới)
                     var oldDetails = _context.TourDetails.Where(td => td.TourId == id);
                     _context.TourDetails.RemoveRange(oldDetails);
 
@@ -163,6 +155,15 @@ namespace AdminWeb.Controllers
             return View(tour);
         }
 
+        // GET: Tours/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var tour = await _context.Tours.FindAsync(id);
+            if (tour == null) return NotFound();
+            return View(tour);
+        }
+
         // POST: Tours/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -171,25 +172,21 @@ namespace AdminWeb.Controllers
             var tour = await _context.Tours.FindAsync(id);
             if (tour != null)
             {
-                // Xóa file vật lý trong thư mục trước khi xóa dòng trong DB
                 DeleteImage(tour.ImageSource);
                 _context.Tours.Remove(tour);
             }
-
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        // --- Các hàm hỗ trợ xử lý File ---
+        // --- Hàm hỗ trợ ---
 
         private async Task<string> SaveImage(IFormFile file)
         {
             string wwwRootPath = _hostEnvironment.WebRootPath;
-            // Tạo tên file duy nhất bằng Guid để tránh trùng lặp
             string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-          string path = Path.Combine(wwwRootPath, "images");
+            string path = Path.Combine(wwwRootPath, "images");
 
-            // Tạo thư mục nếu chưa có
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
             using (var fileStream = new FileStream(Path.Combine(path, fileName), FileMode.Create))
@@ -201,18 +198,12 @@ namespace AdminWeb.Controllers
 
         private void DeleteImage(string? fileName)
         {
-            // 1. Nếu tên file trống thì không làm gì cả
             if (string.IsNullOrEmpty(fileName)) return;
-
-            // 2. PHẢI kết hợp Thư mục + Tên file thì mới ra đường dẫn file cụ thể
             string path = Path.Combine(_hostEnvironment.WebRootPath, "images", fileName);
-
-            // 3. Kiểm tra xem file đó có tồn tại trên ổ cứng không rồi mới xóa
             if (System.IO.File.Exists(path))
-            {
                 System.IO.File.Delete(path);
-            }
         }
+
         private bool TourExists(int id)
         {
             return _context.Tours.Any(e => e.TourId == id);

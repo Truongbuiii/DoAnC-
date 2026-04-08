@@ -19,7 +19,8 @@
                         <span class="small text-secondary">Hành động này không thể hoàn tác và sẽ xóa tất cả lộ trình liên quan.</span>
                     </p>
 
-                    <form asp-action="Delete">
+                    <form asp-action="Delete" asp-route-id="@Model.TourId" method="post">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="TourId" />
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold">
