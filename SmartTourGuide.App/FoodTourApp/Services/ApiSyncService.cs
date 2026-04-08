@@ -10,14 +10,13 @@ namespace FoodTourApp.Services
         private readonly DatabaseService _dbService;
         private readonly HttpClient _httpClient;
 
-        private const string BaseUrl = "http://192.168.1.58:5110";
-
+        public const string BaseUrl = "https://tandra-acetylenic-aurelio.ngrok-free.dev";
         public ApiSyncService(DatabaseService dbService)
         {
             _dbService = dbService;
             _httpClient = new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(10)
+                Timeout = TimeSpan.FromSeconds(60)
             };
         }
 

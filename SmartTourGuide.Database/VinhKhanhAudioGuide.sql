@@ -2,27 +2,27 @@
 GO
 
 -- ==========================================
--- 1. DỌN DẸP SẠCH SẼ CÁC BẢNG CŨ ĐỂ KHÔNG BỊ TRÙNG
--- Lưu ý: Phải xóa bảng con trước, bảng cha sau
+-- 1. DỌN DẸP HỆ THỐNG
 -- ==========================================
 DROP TABLE IF EXISTS ActivityLogs;
 DROP TABLE IF EXISTS TourDetails;
 DROP TABLE IF EXISTS Audios;
 DROP TABLE IF EXISTS Tours;
+DROP TABLE IF EXISTS MenuItems; -- Đã sửa tên đồng nhất
 DROP TABLE IF EXISTS POIs;
-DROP TABLE IF EXISTS Admins; -- Xóa luôn bảng Admins cũ nếu có
+DROP TABLE IF EXISTS Admins;
 GO
 
 -- ==========================================
--- 2. TẠO LẠI CẤU TRÚC BẢNG MỚI TINH
+-- 2. TẠO CẤU TRÚC BẢNG
 -- ==========================================
 
--- Tạo lại bảng Admins (Nếu Tài dùng để đăng nhập Web)
 CREATE TABLE Admins (
     AdminId INT PRIMARY KEY IDENTITY(1,1),
-    Username NVARCHAR(50) NOT NULL,
+    Username NVARCHAR(50) NOT NULL UNIQUE,
     Password NVARCHAR(255) NOT NULL,
-    FullName NVARCHAR(100)
+    FullName NVARCHAR(100),
+    [Role] NVARCHAR(20) DEFAULT 'Owner'
 );
 
 CREATE TABLE POIs (
@@ -37,7 +37,20 @@ CREATE TABLE POIs (
     DescriptionEn NVARCHAR(MAX),
     DescriptionZh NVARCHAR(MAX),
     DescriptionKo NVARCHAR(MAX),
-    DescriptionJa NVARCHAR(MAX)
+    DescriptionJa NVARCHAR(MAX),
+    OwnerUsername NVARCHAR(50) CONSTRAINT FK_POIs_Admins 
+        FOREIGN KEY REFERENCES Admins(Username) 
+        ON DELETE SET NULL 
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE MenuItems (
+    MenuId INT PRIMARY KEY IDENTITY(1,1),
+    PoiId INT FOREIGN KEY REFERENCES POIs(PoiId) ON DELETE CASCADE,
+    DishName NVARCHAR(255),
+    Price NVARCHAR(50),
+    ImageSource NVARCHAR(MAX),
+    IsRecommended BIT DEFAULT 1
 );
 
 CREATE TABLE Audios (
@@ -45,7 +58,7 @@ CREATE TABLE Audios (
     AudioName NVARCHAR(255),
     [Description] NVARCHAR(MAX),
     FilePath NVARCHAR(MAX),
-    [Language] NVARCHAR(50),
+    [Language] NVARCHAR(10), 
     PoiId INT FOREIGN KEY REFERENCES POIs(PoiId) ON DELETE CASCADE
 );
 
@@ -53,7 +66,8 @@ CREATE TABLE Tours (
     TourId INT PRIMARY KEY IDENTITY(1,1),
     TourName NVARCHAR(255) NOT NULL,
     [Description] NVARCHAR(MAX),
-    TotalTime NVARCHAR(50)
+    TotalTime NVARCHAR(50),
+    ImageSource NVARCHAR(MAX)
 );
 
 CREATE TABLE TourDetails (
@@ -73,299 +87,172 @@ CREATE TABLE ActivityLogs (
 );
 GO
 
-ALTER TABLE POIs ADD OwnerUsername NVARCHAR(100) NULL;
-ALTER TABLE Tours ADD ImageSource nvarchar(max) NULL;
--- ==========================================
--- 3. NẠP DỮ LIỆU
--- ==========================================
+-- 3. NẠP 11 TÀI KHOẢN ADMINS
+INSERT INTO Admins (Username, [Password], FullName, [Role]) VALUES 
+('admin', '123456', N'2T', 'Admin'), 
+('ochoanh', '123', N'Chủ quán Ốc Oanh 534', 'Owner'),
+('ocvu', '123', N'Chủ quán Ốc Vũ 37', 'Owner'), 
+('ocdao', '123', N'Chủ quán Ốc Đào 2', 'Owner'),
+('octhao123', '123', N'Chủ quán Ốc Thảo 123', 'Owner'), 
+('octhao383', '123', N'Chủ quán Ốc Thảo 383', 'Owner'),
+('sushiko', '123', N'Chủ quán Sushi KO', 'Owner'), 
+('chilli', '123', N'Chủ quán Chilli Lẩu Nướng', 'Owner'),
+('laudechung', '123', N'Chủ quán Lẩu Dê Chung', 'Owner'), 
+('ditubunca', '123', N'Chủ quán Bún cá Dì Tư', 'Owner'),
+('congchao', '123', N'Ban Quản Lý Cổng Chào', 'Owner');
 
--- Nạp 1 tài khoản Admin mặc định
-INSERT INTO Admins (Username, [Password], FullName)
-VALUES 
-('admin', '123456', N'2T'),
-('ochoanh', '123', N'Chủ quán Ốc Oanh 534'),
-('ocvu', '123', N'Chủ quán Ốc Vũ 37'),
-('ocdao', '123', N'Chủ quán Ốc Đào 2'),
-('octhao123', '123', N'Chủ quán Ốc Thảo 123'),
-('octhao383', '123', N'Chủ quán Ốc Thảo 383'),
-('sushiko', '123', N'Chủ quán Sushi KO'),
-('chilli', '123', N'Chủ quán Chilli Lẩu Nướng'),
-('laudechung', '123', N'Chủ quán Lẩu Dê Chung'),
-('ditubunca', '123', N'Chủ quán Bún cá Dì Tư'),
-('congchao', '123', N'Ban Quản Lý Cổng Chào');
+-- 4. NẠP 10 ĐỊA ĐIỂM POIS (Giữ nguyên tọa độ và mô tả của Duy)
+INSERT INTO POIs (Name, Category, TriggerRadius, Latitude, Longitude, ImageSource, DescriptionVi, DescriptionEn, DescriptionZh, DescriptionKo, DescriptionJa, OwnerUsername) VALUES 
+-- 1. Cổng chào
+(N'Cổng chào Phố ẩm thực', N'Điểm tham quan', 50, 10.761858, 106.702236, 'cong_chao.jpg', 
+N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4, từng lọt top 10 con phố thú vị nhất thế giới 2025. Đây là điểm bắt đầu cho hành trình khám phá vị giác của bạn với hàng trăm quán ăn đa dạng.', 
+N'Welcome to Vinh Khanh Food Street, the most vibrant nighttime food paradise in District 4, ranked top 10 most exciting streets in the world 2025. This is the starting point for your taste discovery journey.', 
+NULL, NULL, NULL, 'congchao'),
+
+-- 2. Dê Chung
+(N'Dê Chung', N'Lẩu dê', 35, 10.761500, 106.702600, 'laubo.jpg', 
+N'Dê Chung tại số 3 Vĩnh Khánh nổi tiếng với món lẩu dê thơm ngon đặc trưng, nước dùng đậm đà nấu cùng thảo mộc thanh mát. Quán có không gian mở thoáng mát, phục vụ từ chiều đến tận đêm khuya cho các tín đồ mê đặc sản dê.', 
+N'De Chung at 3 Vinh Khanh is famous for its aromatic goat hotpot with herbal broth. The restaurant offers a breezy open space, serving from afternoon until late at night for goat specialty lovers.', 
+NULL, NULL, NULL, 'laudechung'),
+
+-- 3. Ốc Vũ 37
+(N'Ốc Vũ 37', N'Hải sản', 35, 10.761403, 106.702705, 'ocvu.jpg', 
+N'Ốc Vũ là quán ốc chuẩn local của Quận 4 với phong cách chế biến dân dã nhưng đậm đà. Món ăn làm nên thương hiệu của quán là ốc len xào dừa với nước sốt béo ngậy, thơm lừng cốt dừa tươi, ăn kèm bánh mì nóng giòn rất tuyệt.', 
+N'Oc Vu at 37 Vinh Khanh is an authentic local seafood restaurant in District 4. Its signature dish is stir-fried snails with rich coconut sauce, perfectly paired with crispy bread.', 
+NULL, NULL, NULL, 'ocvu'),
+
+-- 4. Bún cá Châu Đốc Dì Tư
+(N'Bún cá Châu Đốc Dì Tư', N'Bún cá', 30, 10.761200, 106.703100, 'bunmam.jpg', 
+N'Bún cá Dì Tư mang trọn hương vị miền Tây sông nước lên phố thị. Miếng cá lóc đồng chắc thịt, nước lèo vàng ươm màu nghệ hòa quyện cùng rau nhút, bông điên điển tươi ngon tạo nên trải nghiệm ẩm thực miền Tây đúng điệu.', 
+N'Bun Ca Chau Doc Di Tu at 75 Vinh Khanh brings authentic Mekong Delta flavors. Fresh snakehead fish and golden turmeric broth with local vegetables create a genuine Western Vietnamese experience.', 
+NULL, NULL, NULL, 'ditubunca'),
+
+-- 5. Ốc Thảo 123
+(N'Ốc Thảo 123', N'Hải sản', 35, 10.760750, 106.704600, 'octhao123.jpg', 
+N'Ốc Thảo 123 là thiên đường hải sản sầm uất bậc nhất con phố. Với thực đơn đa dạng hàng trăm món ốc và hải sản tươi sống được nhập mới mỗi ngày, quán luôn là lựa chọn hàng đầu cho các nhóm bạn muốn tận hưởng không khí nhộn nhịp.', 
+N'Oc Thao at 123 Vinh Khanh is the most diverse seafood paradise on the street, offering hundreds of fresh dishes in a lively atmosphere for large groups of friends.', 
+NULL, NULL, NULL, 'octhao123'),
+
+-- 6. Sushi KO
+(N'Sushi KO', N'Đồ Nhật', 30, 10.760739, 106.704651, 'sushi.jpg', 
+N'Sushi KO mang đến làn gió mới cho phố Vĩnh Khánh với các món Nhật Bản sáng tạo. Với tiêu chí chất lượng Nhật - giá bình dân, đây là điểm đến lý tưởng nếu bạn muốn đổi vị với những miếng Sashimi tươi rói sau khi ăn hải sản.', 
+N'Sushi KO serves creative Japanese dishes at affordable prices. It is a perfect spot to change your palate with fresh Sashimi after enjoying the local seafood dishes.', 
+NULL, NULL, NULL, 'sushiko'),
+
+-- 7. Chilli Lẩu Nướng 232
+(N'Chilli Lẩu Nướng 232', N'Lẩu nướng', 35, 10.760900, 106.703800, 'launuong.jpg', 
+N'Chilli phục vụ thực đơn lẩu và nướng tự chọn phong phú với giá cả phải chăng. Đặc trưng của quán là các loại nước sốt ướp thịt đậm đà, thơm cay đúng điệu và hệ thống bếp nướng hiện đại, thu hút rất đông các bạn trẻ tụ tập.', 
+N'Chilli Hot Pot & Grill serves a diverse self-chosen menu. Famous for its flavorful and spicy marinades and modern grills, it is a highly popular gathering spot for local youth.', 
+NULL, NULL, NULL, 'chilli'),
+
+-- 8. Ốc Đào 2
+(N'Ốc Đào 2', N'Hải sản', 30, 10.760820, 106.703500, 'ocdao.jpg', 
+N'Ốc Đào 2 là thương hiệu hải sản lừng lẫy Sài Gòn nay đã có mặt tại Vĩnh Khánh. Quán đặc biệt hút khách nhờ công thức sốt trứng muối độc quyền thơm ngậy, không gian trang nhã sạch sẽ và cung cách phục vụ rất chuyên nghiệp.', 
+N'Oc Dao 2 is a famous seafood brand in Saigon. The restaurant is particularly popular for its exclusive, creamy salted egg sauce and professional service in a clean environment.', 
+NULL, NULL, NULL, 'ocdao'),
+
+-- 9. Ốc Thảo 383
+(N'Ốc Thảo 383', N'Hải sản', 30, 10.760770, 106.703400, 'octhao383.jpg', 
+N'Ốc Thảo 383 sở hữu không gian vô cùng rộng rãi và thoáng đãng, cực kỳ phù hợp cho các buổi tiệc đoàn đông người. Hải sản ở đây luôn đảm bảo tiêu chí tươi - ngon - rẻ với cách chế biến đậm đà nịnh miệng thực khách.', 
+N'Oc Thao at 383 Vinh Khanh features a very spacious and airy setting, ideal for large group parties. Seafood is always fresh and tasty at reasonable prices.', 
+NULL, NULL, NULL, 'octhao383'),
+
+-- 10. Ốc Oanh 534
+(N'Ốc Oanh 534', N'Hải sản', 40, 10.760719, 106.703297, 'ocoanh.jpg', 
+N'Ốc Oanh là niềm tự hào của phố ẩm thực khi được Michelin Bib Gourmand 2024 vinh danh. Những con ốc kích cỡ khủng, nước sốt đậm đà và không khí nhộn nhịp đặc trưng đã tạo nên thương hiệu không thể trộn lẫn của quán.', 
+N'Oc Oanh was honored with the Michelin Bib Gourmand 2024. Famous for its oversized snails, bold seasonings, and vibrant atmosphere, it is a must-visit icon on the street.', 
+NULL, NULL, NULL, 'ochoanh');
 GO
--- Nạp 10 Địa điểm (POIs)
--- Nạp 10 Địa điểm (POIs)
-INSERT INTO POIs (Name, Category, TriggerRadius, Latitude, Longitude, ImageSource, DescriptionVi, DescriptionEn, DescriptionZh, DescriptionKo, DescriptionJa) VALUES 
-(N'Cổng chào Phố ẩm thực', N'Điểm tham quan', 50, 10.761858, 106.702236, 'cong_chao.jpg', N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4, lọt top 10 con phố thú vị nhất thế giới 2025.', N'Welcome to Vinh Khanh Food Street, the most vibrant nighttime food paradise in District 4, ranked top 10 most exciting streets in the world 2025.', N'欢迎来到永康美食街，这是第四区最繁华的夜间美食天堂，荣登2025年全球最有趣街道前十名。', N'2025년 세계에서 가장 흥미로운 거리 10위에 선정된 4군 최고의 야간 음식 천국, 빈칸 푸드 스트리트에 오신 것을 환영합니다.', N'2025年世界で最も魅力的な通りトップ10に選ばれた、4区最大の夜の食の楽園、ヴィンカン・フードストリートへようこそ。'),
-(N'Dê Chung', N'Lẩu dê', 35, 10.761500, 106.702600, 'laubo.jpg', N'Dê Chung tại số 3 Vĩnh Khánh nổi tiếng với món lẩu dê thơm ngon đặc trưng. Quán mở cửa từ chiều đến đêm khuya.', N'De Chung at 3 Vinh Khanh is famous for its aromatic goat hotpot. The restaurant is open from afternoon until late night.', N'位于永康3号的Dê Chung以其香气扑鼻的山羊火锅而闻名。', N'빈칸 3번지에 위치한 Dê Chung은 향긋한 염소 샤부샤부로 유명합니다.', N'ヴィンカン通り3番地のDê Chungは香り豊かなヤギ鍋で有名です。'),
-(N'Ốc Vũ 37', N'Hải sản', 35, 10.761403, 106.702705, 'ocvu.jpg', N'Ốc Vũ tại số 37 Vĩnh Khánh là quán ốc chuẩn local của Quận 4, nổi tiếng với ốc len xào dừa.', N'Oc Vu at 37 Vinh Khanh is an authentic local seafood restaurant in District 4, famous for stir-fried snails with coconut.', N'位于永康37号的Ốc Vũ是第四区正宗的当地海鲜餐厅，以椰子炒蜗牛而闻名。', N'빈칸 37번지의 옥 부는 4군의 정통 로컬 해산물 식당으로, 코코넛 볶음 달팽이로 유명합니다.', N'ヴィンカン通り37番地のOc Vuは4区の本格的な地元海鮮レストランです。'),
-(N'Bún cá Châu Đốc Dì Tư', N'Bún cá', 30, 10.761200, 106.703100, 'bunmam.jpg', N'Bún cá Châu Đốc Dì Tư tại số 75 Vĩnh Khánh mang hương vị miền Tây đặc trưng.', N'Bun Ca Chau Doc Di Tu at 75 Vinh Khanh brings authentic Mekong Delta flavors.', N'位于永康75号的Bún Cá Châu Đốc Dì Tư带来正宗湄公河三角洲风味。', N'빈칸 75번지의 Bún Cá Châu Đốc Dì Tư는 메콩 델타의 정통 맛을 선사합니다.', N'ヴィンカン通り75番地のBún Cá Châu Đốc Dì Tưは本格的なメコンデルタの味を提供します。'),
-(N'Ốc Thảo 123', N'Hải sản', 35, 10.760750, 106.704600, 'octhao123.jpg', N'Ốc Thảo tại số 123 Vĩnh Khánh là thiên đường hải sản đa dạng nhất phố.', N'Oc Thao at 123 Vinh Khanh is the most diverse seafood paradise on the street.', N'位于永康123号的Ốc Thảo是该街道最多样化的海鲜天堂。', N'빈칸 123번지의 옥 타오는 거리에서 가장 다양한 해산물 천국입니다.', N'ヴィンカン通り123番地のOc Thaoは通りで最も多様な海鮮の楽園です。'),
-(N'Sushi KO', N'Đồ Nhật', 30, 10.760739, 106.704651, 'sushi.jpg', N'Sushi KO tại số 122 Vĩnh Khánh phục vụ các món Nhật Bản sáng tạo với giá bình dân.', N'Sushi KO at 122 Vinh Khanh serves creative Japanese dishes at affordable prices.', N'位于永康122号的Sushi KO以实惠的价格提供创意日本料理。', N'빈칸 122번지의 스시 KO는 저렴한 가격에 창의적인 일본 요리를 제공합니다.', N'ヴィンカン通り122番地のSushi KOはリーズナブルな価格で創作日本料理を提供しています。'),
-(N'Chilli Lẩu Nướng 232', N'Lẩu nướng', 35, 10.760900, 106.703800, 'launuong.jpg', N'Chilli Lẩu Nướng tại số 232 Vĩnh Khánh phục vụ lẩu và nướng tự chọn giá từ 59.000đ.', N'Chilli Hot Pot & Grill at 232 Vinh Khanh serves all-you-can-choose hot pot and grilled dishes.', N'位于永康232号的Chilli火锅烧烤提供自选火锅和烧烤。', N'빈칸 232번지의 칠리 훠궈 & 그릴은 셀프 훠궈와 구이 요리를 제공합니다.', N'ヴィンカン通り232番地のChilli鍋&グリルはセルフ鍋と焼き料理を提供しています。'),
-(N'Ốc Đào 2', N'Hải sản', 30, 10.760820, 106.703500, 'ocdao.jpg', N'Ốc Đào 2 tại số 232/123 Vĩnh Khánh đặc biệt nổi tiếng với sốt trứng muối.', N'Oc Dao 2 at 232/123 Vinh Khanh is especially famous for its salted egg sauce.', N'位于永康232/123号的Ốc Đào 2尤其以咸蛋酱而闻名。', N'빈칸 232/123번지의 옥 다오 2는 소금 달걀 소스로 유명합니다.', N'ヴィンカン通り232/123番地のOc Dao 2は塩卵ソースで有名です。'),
-(N'Ốc Thảo 383', N'Hải sản', 30, 10.760770, 106.703400, 'octhao383.jpg', N'Ốc Thảo tại số 383 Vĩnh Khánh có không gian rộng rãi, hải sản tươi ngon mỗi ngày.', N'Oc Thao at 383 Vinh Khanh has a spacious setting with fresh seafood daily.', N'位于永康383号的Ốc Thảo空间宽敞，每日提供新鲜海鲜。', N'빈칸 383번지의 옥 타오는 넓은 공간과 매일 신선한 해산물을 제공합니다.', N'ヴィンカン通り383番地のOc Thaoは広いスペースで毎日新鮮な海鮮を提供します。'),
-(N'Ốc Oanh 534', N'Hải sản', 40, 10.760719, 106.703297, 'ocoanh.jpg', N'Ốc Oanh tại số 534 Vĩnh Khánh được Michelin Bib Gourmand 2024 vinh danh.', N'Oc Oanh at 534 Vinh Khanh was awarded Michelin Bib Gourmand 2024.', N'位于永康534号的Ốc Oanh荣获2024年米其林必比登推介。', N'빈칸 534번지의 옥 오안은 2024 미슐랭 빕 구르망을 수상했습니다.', N'ヴィンカン通り534番地のOc Oanhは2024年ミシュランビブグルマンを受賞。');
 
--- Nạp 50 Audios (Kịch bản TTS)
-INSERT INTO Audios (AudioName, [Description], FilePath, [Language], PoiId) VALUES 
-(N'Chào mừng', N'Tiếng Việt', N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống sầm uất nhất Quận 4.', 'VN', 1),
-(N'Welcome', N'English', N'Welcome to Vinh Khanh Food Street, the most vibrant food paradise in District 4.', 'EN', 1),
-(N'欢迎', N'Chinese', N'欢迎来到永康美食街，这是第四区最繁华的美食天堂。', 'ZH', 1),
-(N'환영', N'Korean', N'4군 최고의 음식 천국 빈칸 푸드 스트리트에 오신 것을 환영합니다.', 'KO', 1),
-(N'ようこそ', N'Japanese', N'4区最大の食の楽園、ヴィンカン・フードストリートへようこそ。', 'JA', 1),
-(N'Lẩu dê', N'Tiếng Việt', N'Dê Chung nổi tiếng với món lẩu dê thơm ngon đặc trưng, mở cửa từ chiều đến đêm khuya.', 'VN', 2),
-(N'Goat Hotpot', N'English', N'De Chung is famous for its aromatic goat hotpot, open from afternoon until late night.', 'EN', 2),
-(N'山羊火锅', N'Chinese', N'德忠以其香气铺鼻的山羊火锅而闻名，从下午营业至深夜。', 'ZH', 2),
-(N'염소 전골', N'Korean', N'드충은 향긋한 염소 전골로 유명하며 오후부터 늦은 밤까지 영업합니다.', 'KO', 2),
-(N'ヤギ鍋', N'Japanese', N'Dê Chungは香り豊かなヤギ鍋で有名で、午後から深夜まで営業しています。', 'JA', 2),
-(N'Hải sản', N'Tiếng Việt', N'Ốc Vũ 37 là quán ốc chuẩn địa phương, nổi tiếng với món ốc len xào dừa.', 'VN', 3),
-(N'Seafood', N'English', N'Oc Vu 37 is an authentic local restaurant, famous for stir-fried snails with coconut.', 'EN', 3),
-(N'海鲜', N'Chinese', N'吴氏37号是正宗的当地餐厅，以椰子炒蜗牛而闻名。', 'ZH', 3),
-(N'해산물', N'Korean', N'옥 부 37은 정통 로컬 식당으로 코코넛 볶음 달팽이 요리가 유명합니다.', 'KO', 3),
-(N'海鮮', N'Japanese', N'Oc Vu 37は地元の本格的な店で、大理石のカタツムリのココナッツ炒めが有名です。', 'JA', 3),
-(N'Bún cá', N'Tiếng Việt', N'Bún cá Châu Đốc Dì Tư mang hương vị miền Tây đặc trưng từ vùng sông nước.', 'VN', 4),
-(N'Fish Noodle', N'English', N'Di Tu Fish Noodle brings authentic Mekong Delta flavors from the river region.', 'EN', 4),
-(N'鱼粉', N'Chinese', N'迪思阿姨鱼粉带来来自水乡的正宗湄公河三角洲风味。', 'ZH', 4),
-(N'생선 국수', N'Korean', N'디 뜨어 생선 국수는 메콩 델타 지역의 정통 맛을 선사합니다.', 'KO', 4),
-(N'魚の麺', N'Japanese', N'Di Tu 魚の麺は、水辺の地域からの本格的なメコンデルタの味を届けます。', 'JA', 4),
-(N'Ốc Thảo 123', N'Tiếng Việt', N'Ốc Thảo 123 là thiên đường hải sản đa dạng nhất phố ẩm thực này.', 'VN', 5),
-(N'Seafood Paradise', N'English', N'Oc Thao 123 is the most diverse seafood paradise on this food street.', 'EN', 5),
-(N'海鲜天堂', N'Chinese', N'奥草123是这条美食街上品种最丰富的海鲜天堂。', 'ZH', 5),
-(N'해산물 천국', N'Korean', N'옥 타오 123은 이 음식 거리에서 가장 다양한 해산물 천국입니다.', 'KO', 5),
-(N'海鮮の楽園', N'Japanese', N'Oc Thao 123は、この美食街で最も多様な海鮮の楽園です。', 'JA', 5),
-(N'Sushi KO', N'Tiếng Việt', N'Sushi KO phục vụ các món Nhật Bản sáng tạo với mức giá cực kỳ bình dân.', 'VN', 6),
-(N'Sushi KO', N'English', N'Sushi KO serves creative Japanese dishes at very affordable prices.', 'EN', 6),
-(N'寿司KO', N'Chinese', N'Sushi KO 以非常实惠的价格提供创意的日本料理。', 'ZH', 6),
-(N'스시 KO', N'Korean', N'스시 KO는 매우 저렴한 가격에 창의적인 일본 요리를 제공합니다.', 'KO', 6),
-(N'Sushi KO', N'Japanese', N'Sushi KOは、非常にリーズナブルな価格で創作日本料理を提供しています。', 'JA', 6),
-(N'Chilli', N'Tiếng Việt', N'Chilli Lẩu Nướng phục vụ thực đơn tự chọn đa dạng, giá chỉ từ 59 nghìn đồng.', 'VN', 7),
-(N'Chilli Grill', N'English', N'Chilli Hotpot and Grill serves a diverse buffet, starting from only 59,000 VND.', 'EN', 7),
-(N'红辣椒烧烤', N'Chinese', N'红辣椒火锅烧烤提供多样的自助餐，价格仅从59,000越南盾起。', 'ZH', 7),
-(N'칠리 그릴', N'Korean', N'칠리 훠궈와 그릴은 59,000동부터 시작하는 다양한 뷔페를 제공합니다.', 'KO', 7),
-(N'Chilliグリル', N'Japanese', N'Chilli鍋とグリルは、わずか59,000ドンからの多様なビュッフェを提供しています。', 'JA', 7),
-(N'Ốc Đào 2', N'Tiếng Việt', N'Ốc Đào 2 đặc biệt nổi tiếng với công thức sốt trứng muối độc quyền thơm ngậy.', 'VN', 8),
-(N'Oc Dao 2', N'English', N'Oc Dao 2 is especially famous for its exclusive and creamy salted egg sauce recipe.', 'EN', 8),
-(N'奥道2号', N'Chinese', N'奥道2号因其独家且浓郁的咸蛋酱配方而特别闻名。', 'ZH', 8),
-(N'옥 다오 2', N'Korean', N'옥 다오 2는 독점적이고 부드러운 소금 달걀 소스 레시피로 특히 유명합니다.', 'KO', 8),
-(N'Oc Dao 2', N'Japanese', N'Oc Dao 2は、独占的でクリーミーな塩卵ソースのレシピで特に有名です。', 'JA', 8),
-(N'Ốc Thảo 383', N'Tiếng Việt', N'Ốc Thảo 383 có không gian rộng rãi, phù hợp cho những bữa tiệc hải sản đông người.', 'VN', 9),
-(N'Oc Thao 383', N'English', N'Oc Thao 383 has a spacious setting, suitable for large seafood parties.', 'EN', 9),
-(N'奥草383', N'Chinese', N'奥草383空间宽敞，适合举行大型海鲜派对。', 'ZH', 9),
-(N'옥 타오 383', N'Korean', N'옥 타오 383은 넓은 공간을 갖추고 있어 대규모 해산물 파티에 적합합니다.', 'KO', 9),
-(N'Oc Thao 383', N'Japanese', N'Oc Thao 383は広い空間があり、大人数での海鮮パーティーに適しています。', 'JA', 9),
-(N'Ốc Oanh', N'Tiếng Việt', N'Ốc Oanh vinh dự nhận giải thưởng Michelin Bib Gourmand cho chất lượng hải sản tuyệt vời.', 'VN', 10),
-(N'Oc Oanh', N'English', N'Oc Oanh is honored to receive the Michelin Bib Gourmand award for excellent seafood quality.', 'EN', 10),
-(N'奥安海鲜', N'Chinese', N'奥安荣获米其林必比登推介，以表彰其卓越的海鲜品质。', 'ZH', 10),
-(N'옥 오안', N'Korean', N'옥 오안은 뛰어난 해산물 품질로 미슐랭 빕 구르망상을 수상한 영광을 안았습니다.', 'KO', 10),
-(N'Oc Oanh', N'Japanese', N'Oc Oanhは、優れた海鮮の品質でミシュラン・ビブグルマンを受賞したことを光栄に思います。', 'JA', 10);
-
+-- 5. NẠP TOURS VÀ TOURDETAILS
 INSERT INTO Tours (TourName, [Description], TotalTime, ImageSource) VALUES
-(N'Tour Ốc Michelin & Đặc Sản Quận 4', 
- N'Hành trình thưởng thức những quán ốc được Michelin vinh danh và các quán ốc lâu đời nhất phố Vĩnh Khánh.', 
- N'2 Giờ 30 Phút', 
- N'tour_oc.jpg'), -- Tên file ảnh cho Tour 1
+(N'Tour Ốc Michelin', N'Hành trình thưởng thức các quán ốc Michelin Quận 4.', N'2 Giờ 30 Phút', 'tour_oc.jpg'),
+(N'Lộ Trình Ăn Đêm', N'Dạo quanh các điểm ăn đêm nhộn nhịp.', N'3 Giờ', 'tour_andem.jpg'),
+(N'Tour Hải Sản Đa Quốc Gia', N'Giao thoa hải sản Việt và Sushi Nhật.', N'2 Giờ', 'tour_haisan.jpg');
 
-(N'Lộ Trình Ăn Đêm Sầm Uất', 
- N'Dạo quanh các điểm ăn uống nhộn nhịp từ đầu phố đến cuối phố, bao gồm cả Lẩu và Đồ nướng.', 
- N'3 Giờ', 
- N'tour_andem.jpg'), -- Tên file ảnh cho Tour 2
-
-(N'Tour Hải Sản Đa Quốc Gia', 
- N'Trải nghiệm sự giao thoa văn hóa ẩm thực giữa Hải sản Việt Nam và Sushi Nhật Bản.', 
- N'2 Giờ', 
- N'tour_haisan.jpg');
-
--- Nạp Chi tiết hành trình (TourDetails)
 INSERT INTO TourDetails (TourId, PoiId, [Order]) VALUES 
 (1, 1, 1), (1, 3, 2), (1, 8, 3), (1, 10, 4),
 (2, 2, 1), (2, 4, 2), (2, 7, 3), (2, 9, 4),
 (3, 1, 1), (3, 5, 2), (3, 6, 3);
 
--- Nạp Nhật ký truy cập (ActivityLogs)
-INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType) VALUES 
-(1, 'AutoTrigger', 'VN', 'iOS'), (1, 'AutoTrigger', 'EN', 'Android'), (1, 'AutoTrigger', 'ZH', 'iOS'),
-(2, 'ScanQR', 'VN', 'Android'), (2, 'AutoTrigger', 'VN', 'iOS'),
-(3, 'ScanQR', 'VN', 'Android'), (3, 'ScanQR', 'EN', 'iOS'), (3, 'ScanQR', 'KO', 'Android'), (3, 'AutoTrigger', 'VN', 'iOS'),
-(4, 'ScanQR', 'VN', 'Android'),
-(5, 'AutoTrigger', 'VN', 'iOS'), (5, 'ScanQR', 'EN', 'Android'),
-(6, 'ScanQR', 'KO', 'iOS'), (6, 'ScanQR', 'KO', 'Android'), (6, 'ScanQR', 'ZH', 'iOS'), (6, 'AutoTrigger', 'EN', 'Android'),
-(7, 'ScanQR', 'VN', 'iOS'), (7, 'AutoTrigger', 'VN', 'Android'),
-(8, 'ScanQR', 'VN', 'Android'), (8, 'ScanQR', 'VN', 'iOS'), (8, 'AutoTrigger', 'EN', 'Android'),
-(9, 'ScanQR', 'VN', 'iOS'), (9, 'AutoTrigger', 'FR', 'iOS'),
-(10, 'ScanQR', 'VN', 'Android'), (10, 'ScanQR', 'VN', 'iOS'), (10, 'ScanQR', 'EN', 'iOS'), 
-(10, 'AutoTrigger', 'EN', 'Android'), (10, 'ScanQR', 'KO', 'iOS'), (10, 'AutoTrigger', 'VN', 'Android'), (10, 'ScanQR', 'ZH', 'iOS');
-GO
-
-
-
-
-
--- Xóa bớt log cũ nếu muốn sạch sẽ (Tùy chọn)
- DELETE FROM ActivityLogs;
-
--- Nạp dữ liệu mẫu đa dạng cho ActivityLogs
-INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, AccessTime)
-VALUES 
--- Ngày hôm nay
-(1, N'Listen', 'VI', 'iPhone 15 Pro', GETDATE()),
-(2, N'Listen', 'EN', 'Samsung S24 Ultra', DATEADD(MINUTE, -30, GETDATE())),
-(3, N'Listen', 'VI', 'Web Browser', DATEADD(HOUR, -2, GETDATE())),
-
--- Ngày hôm qua (Để biểu đồ Analytics có cột)
-(1, N'Listen', 'JA', 'iPhone 14', DATEADD(DAY, -1, GETDATE())),
-(8, N'Listen', 'VI', 'Oppo Reno 11', DATEADD(HOUR, -26, GETDATE())),
-(10, N'Listen', 'EN', 'iPad Air', DATEADD(HOUR, -28, GETDATE())),
-(2, N'Listen', 'VI', 'Xiaomi 14', DATEADD(HOUR, -30, GETDATE())),
-
--- 2 ngày trước
-(3, N'Listen', 'KO', 'iPhone 13', DATEADD(DAY, -2, GETDATE())),
-(1, N'Listen', 'VI', 'Samsung Tab S9', DATEADD(HOUR, -50, GETDATE())),
-(5, N'Listen', 'EN', 'Desktop Chrome', DATEADD(HOUR, -52, GETDATE()));
-
--- Kiểm tra lại kết quả
-SELECT TOP 10 * FROM ActivityLogs ORDER BY AccessTime DESC;
--- 1. Thêm cột Role (mặc định là Owner cho an toàn)
-ALTER TABLE Admins ADD [Role] NVARCHAR(20) DEFAULT 'Owner';
-
--- 2. Cập nhật tài khoản chính của Tài thành Admin
-UPDATE Admins SET [Role] = 'Admin' WHERE Username = 'admin'; 
-
--- 3. Đảm bảo các chủ quán khác có Role là 'Owner'
-UPDATE Admins SET [Role] = 'Owner' WHERE Username <> 'admin';
- 
-
- -- Kiểm tra danh sách POI để xem ID nào là của quán Ốc Vũ
-SELECT PoiId, Name, OwnerUsername FROM POIs;
-
--- Cập nhật: Gán quán (ví dụ ID là 1) cho chủ quán 'ocvu'
--- 1. Gán quán Ốc Vũ
-UPDATE POIs SET OwnerUsername = 'ocvu' WHERE Name LIKE N'%Ốc Vũ%';
-
--- 2. Gán quán Ốc Oanh
-UPDATE POIs SET OwnerUsername = 'ocoanh' WHERE Name LIKE N'%Ốc Oanh%';
-
--- 3. Gán quán Ốc Đào
-UPDATE POIs SET OwnerUsername = 'ocdao' WHERE Name LIKE N'%Ốc Đào%';
-
--- 4. Gán quán Ốc Thảo 123
-UPDATE POIs SET OwnerUsername = 'octhao123' WHERE Name LIKE N'%Ốc Thảo 123%';
-
--- 5. Gán quán Ốc Thảo 383
-UPDATE POIs SET OwnerUsername = 'octhao383' WHERE Name LIKE N'%Ốc Thảo 383%';
-
--- 6. Gán quán Sushi KO
-UPDATE POIs SET OwnerUsername = 'sushiko' WHERE Name LIKE N'%Sushi KO%';
-
--- 7. Gán quán Chilli Lẩu Nướng
-UPDATE POIs SET OwnerUsername = 'chilli' WHERE Name LIKE N'%Chilli%';
-
--- 8. Gán quán Lẩu Dê Chung
-UPDATE POIs SET OwnerUsername = 'laudechung' WHERE Name LIKE N'%Dê Chung%';
-
--- 9. Gán quán Bún cá Dì Tư
-UPDATE POIs SET OwnerUsername = 'ditubunca' WHERE Name LIKE N'%Dì Tư%';
-
--- 10. Gán cho Cổng Chào (Ban quản lý)
-UPDATE POIs SET OwnerUsername = 'congchao' WHERE Name LIKE N'%Cổng chào%';
-
--- Kiểm tra lại xem đã gán đủ chưa
-SELECT PoiId, Name, OwnerUsername FROM POIs;
-
-
-
--- 1. Dọn dẹp bảng Audio trước khi nạp mới
-DELETE FROM Audios;
-
--- TẠO MỘT BẢNG TẠM ĐỂ CHỨA DỮ LIỆU MẪU (Cho code gọn hơn)
-CREATE TABLE #TempAudio (
-    AName NVARCHAR(200), 
-    ADesc NVARCHAR(200), 
-    APath NVARCHAR(MAX), 
-    ALang NVARCHAR(10), 
-    SearchName NVARCHAR(100)
-);
+-- 6. NẠP 50 AUDIOS QUA BẢNG TẠM (Sửa 'VN' thành 'VI')
+CREATE TABLE #TempAudio (AName NVARCHAR(200), ADesc NVARCHAR(200), APath NVARCHAR(MAX), ALang NVARCHAR(10), SearchName NVARCHAR(100));
 
 INSERT INTO #TempAudio VALUES
--- Quán 1: Cổng chào
-(N'Chào mừng', N'Tiếng Việt', N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống sầm uất nhất Quận 4.', 'VN', N'%Cổng chào%'),
-(N'Welcome', N'English', N'Welcome to Vinh Khanh Food Street, the most vibrant food paradise in District 4.', 'EN', N'%Cổng chào%'),
-(N'欢迎', N'Chinese', N'欢迎来到永康美食街，这是第四区最繁华的美食天堂。', 'ZH', N'%Cổng chào%'),
-(N'환영', N'Korean', N'4군 최고의 음식 천국 빈칸 푸드 스트리트에 오신 것을 환영합니다.', 'KO', N'%Cổng chào%'),
-(N'ようこそ', N'Japanese', N'4区最大の食の楽園、ヴィンカン・フードストリートへようこそ。', 'JA', N'%Cổng chào%'),
+(N'Chào mừng', N'Tiếng Việt', N'audio/vi/welcome.mp3', 'VI', N'%Cổng chào%'), (N'Welcome', N'English', N'audio/en/welcome.mp3', 'EN', N'%Cổng chào%'), (N'欢迎', N'Chinese', N'audio/zh/welcome.mp3', 'ZH', N'%Cổng chào%'), (N'환영', N'Korean', N'audio/ko/welcome.mp3', 'KO', N'%Cổng chào%'), (N'ようこそ', N'Japanese', N'audio/ja/welcome.mp3', 'JA', N'%Cổng chào%'),
+(N'Lẩu dê', N'Tiếng Việt', N'audio/vi/dechung.mp3', 'VI', N'%Dê Chung%'), (N'Goat Hotpot', N'English', N'audio/en/dechung.mp3', 'EN', N'%Dê Chung%'), (N'山羊火锅', N'Chinese', N'audio/zh/dechung.mp3', 'ZH', N'%Dê Chung%'), (N'염소 전골', N'Korean', N'audio/ko/dechung.mp3', 'KO', N'%Dê Chung%'), (N'ヤギ鍋', N'Japanese', N'audio/ja/dechung.mp3', 'JA', N'%Dê Chung%'),
+(N'Hải sản', N'Tiếng Việt', N'audio/vi/ocvu.mp3', 'VI', N'%Ốc Vũ%'), (N'Seafood', N'English', N'audio/en/ocvu.mp3', 'EN', N'%Ốc Vũ%'), (N'海鲜', N'Chinese', N'audio/zh/ocvu.mp3', 'ZH', N'%Ốc Vũ%'), (N'해산물', N'Korean', N'audio/ko/ocvu.mp3', 'KO', N'%Ốc Vũ%'), (N'海鮮', N'Japanese', N'audio/ja/ocvu.mp3', 'JA', N'%Ốc Vũ%'),
+(N'Bún cá', N'Tiếng Việt', N'audio/vi/ditubunca.mp3', 'VI', N'%Dì Tư%'), (N'Fish Noodle', N'English', N'audio/en/ditubunca.mp3', 'EN', N'%Dì Tư%'), (N'鱼粉', N'Chinese', N'audio/zh/ditubunca.mp3', 'ZH', N'%Dì Tư%'), (N'생선 국수', N'Korean', N'audio/ko/ditubunca.mp3', 'KO', N'%Dì Tư%'), (N'魚の麺', N'Japanese', N'audio/ja/ditubunca.mp3', 'JA', N'%Dì Tư%'),
+(N'Ốc Thảo 123', N'Tiếng Việt', N'audio/vi/octhao123.mp3', 'VI', N'%Ốc Thảo 123%'), (N'Seafood Paradise', N'English', N'audio/en/octhao123.mp3', 'EN', N'%Ốc Thảo 123%'), (N'海鲜天堂', N'Chinese', N'audio/zh/octhao123.mp3', 'ZH', N'%Ốc Thảo 123%'), (N'해산물 천국', N'Korean', N'audio/ko/octhao123.mp3', 'KO', N'%Ốc Thảo 123%'), (N'海鮮の楽園', N'Japanese', N'audio/ja/octhao123.mp3', 'JA', N'%Ốc Thảo 123%'),
+(N'Sushi KO', N'Tiếng Việt', N'audio/vi/sushiko.mp3', 'VI', N'%Sushi KO%'), (N'Sushi KO', N'English', N'audio/en/sushiko.mp3', 'EN', N'%Sushi KO%'), (N'寿司KO', N'Chinese', N'audio/zh/sushiko.mp3', 'ZH', N'%Sushi KO%'), (N'스시 KO', N'Korean', N'audio/ko/sushiko.mp3', 'KO', N'%Sushi KO%'), (N'Sushi KO', N'Japanese', N'audio/ja/sushiko.mp3', 'JA', N'%Sushi KO%'),
+(N'Chilli', N'Tiếng Việt', N'audio/vi/chilli.mp3', 'VI', N'%Chilli%'), (N'Chilli Grill', N'English', N'audio/en/chilli.mp3', 'EN', N'%Chilli%'), (N'红辣椒烧烤', N'Chinese', N'audio/zh/chilli.mp3', 'ZH', N'%Chilli%'), (N'칠리 그릴', N'Korean', N'audio/ko/chilli.mp3', 'KO', N'%Chilli%'), (N'Chilliグリル', N'Japanese', N'audio/ja/chilli.mp3', 'JA', N'%Chilli%'),
+(N'Ốc Đào 2', N'Tiếng Việt', N'audio/vi/ocdao.mp3', 'VI', N'%Ốc Đào%'), (N'Oc Dao 2', N'English', N'audio/en/ocdao.mp3', 'EN', N'%Ốc Đào%'), (N'奥道2号', N'Chinese', N'audio/zh/ocdao.mp3', 'ZH', N'%Ốc Đào%'), (N'옥 다오 2', N'Korean', N'audio/ko/ocdao.mp3', 'KO', N'%Ốc Đào%'), (N'Oc Dao 2', N'Japanese', N'audio/ja/ocdao.mp3', 'JA', N'%Ốc Đào%'),
+(N'Ốc Thảo 383', N'Tiếng Việt', N'audio/vi/octhao383.mp3', 'VI', N'%Ốc Thảo 383%'), (N'Oc Thao 383', N'English', N'audio/en/octhao383.mp3', 'EN', N'%Ốc Thảo 383%'), (N'奥草383', N'Chinese', N'audio/zh/octhao383.mp3', 'ZH', N'%Ốc Thảo 383%'), (N'옥 타오 383', N'Korean', N'audio/ko/octhao383.mp3', 'KO', N'%Ốc Thảo 383%'), (N'Oc Thao 383', N'Japanese', N'audio/ja/octhao383.mp3', 'JA', N'%Ốc Thảo 383%'),
+(N'Ốc Oanh', N'Tiếng Việt', N'audio/vi/ocoanh.mp3', 'VI', N'%Ốc Oanh%'), (N'Oc Oanh', N'English', N'audio/en/ocoanh.mp3', 'EN', N'%Ốc Oanh%'), (N'奥安海鲜', N'Chinese', N'audio/zh/ocoanh.mp3', 'ZH', N'%Ốc Oanh%'), (N'옥 오안', N'Korean', N'audio/ko/ocoanh.mp3', 'KO', N'%Ốc Oanh%'), (N'Oc Oanh', N'Japanese', N'audio/ja/ocoanh.mp3', 'JA', N'%Ốc Oanh%');
 
--- Quán 2: Dê Chung
-(N'Lẩu dê', N'Tiếng Việt', N'Dê Chung nổi tiếng với món lẩu dê thơm ngon đặc trưng.', 'VN', N'%Dê Chung%'),
-(N'Goat Hotpot', N'English', N'De Chung is famous for its aromatic goat hotpot.', 'EN', N'%Dê Chung%'),
-(N'山羊火锅', N'Chinese', N'德忠以其香气铺鼻的山羊火锅而闻名。', 'ZH', N'%Dê Chung%'),
-(N'염소 전골', N'Korean', N'드충은 향긋한 염소 전골로 유명합니다.', 'KO', N'%Dê Chung%'),
-(N'ヤギ鍋', N'Japanese', N'Dê Chungは香り豊かなヤギ鍋で有名です。', 'JA', N'%Dê Chung%'),
 
--- Quán 3: Ốc Vũ 37
-(N'Hải sản', N'Tiếng Việt', N'Ốc Vũ 37 là quán ốc chuẩn địa phương, nổi tiếng với món ốc len xào dừa.', 'VN', N'%Ốc Vũ%'),
-(N'Seafood', N'English', N'Oc Vu 37 is an authentic local restaurant, famous for stir-fried snails.', 'EN', N'%Ốc Vũ%'),
-(N'海鲜', N'Chinese', N'吴氏37号是正宗的当地餐厅，以椰子炒蜗牛而闻名。', 'ZH', N'%Ốc Vũ%'),
-(N'해산물', N'Korean', N'옥 부 37은 정통 로컬 식당으로 코코넛 볶음 달팽이 요리가 유명합니다.', 'KO', N'%Ốc Vũ%'),
-(N'海鮮', N'Japanese', N'Oc Vu 37は地元の本格的な店で、大理石のカタツムリのココナッツ炒めが有名です。', 'JA', N'%Ốc Vũ%'),
+-- Nạp dữ liệu món ăn đặc trưng cho từng quán
+INSERT INTO MenuItems(PoiId, DishName, Price, ImageSource, IsRecommended) VALUES
+-- 1. Cổng chào (Thường bán đồ ăn vặt nhẹ xung quanh)
+(1, N'Bánh tráng nướng', '25.000đ', 'banh_trang.jpg', 1),
+(1, N'Trà dâu tằm', '20.000đ', 'tra_dau.jpg', 1),
 
--- Quán 4: Bún cá Dì Tư
-(N'Bún cá', N'Tiếng Việt', N'Bún cá Châu Đốc Dì Tư mang hương vị miền Tây đặc trưng.', 'VN', N'%Dì Tư%'),
-(N'Fish Noodle', N'English', N'Di Tu Fish Noodle brings authentic Mekong Delta flavors.', 'EN', N'%Dì Tư%'),
-(N'鱼粉', N'Chinese', N'迪思阿姨鱼粉带来来自水乡的正宗湄公河三角洲风味。', 'ZH', N'%Dì Tư%'),
-(N'생선 국수', N'Korean', N'디 뜨어 생선 국수는 메콩 델타 지역의 정통 맛을 선사합니다.', 'KO', N'%Dì Tư%'),
-(N'魚の麺', N'Japanese', N'Di Tu 魚の麺は、水辺の地域からの本格的なメコンデルタの味を届けます。', 'JA', N'%Dì Tư%'),
+-- 2. Dê Chung (Chuyên các món dê)
+(2, N'Lẩu dê gia truyền', '250.000đ', 'lau_de.jpg', 1),
+(2, N'Dê nướng tảng', '180.000đ', 'de_nuong.jpg', 1),
+(2, N'Vú dê nướng chao', '150.000đ', 'vu_de.jpg', 0),
 
--- Quán 5: Ốc Thảo 123
-(N'Ốc Thảo 123', N'Tiếng Việt', N'Ốc Thảo 123 là thiên đường hải sản đa dạng nhất phố ẩm thực này.', 'VN', N'%Ốc Thảo 123%'),
-(N'Seafood Paradise', N'English', N'Oc Thao 123 is the most diverse seafood paradise.', 'EN', N'%Ốc Thảo 123%'),
-(N'海鲜天堂', N'Chinese', N'奥草123是这条美食街上品种最丰富的海鲜天堂。', 'ZH', N'%Ốc Thảo 123%'),
-(N'해산물 천국', N'Korean', N'옥 타오 123은 이 음식 거리에서 가장 다양한 해산물 천국입니다.', 'KO', N'%Ốc Thảo 123%'),
-(N'海鮮の楽園', N'Japanese', N'Oc Thao 123は、この美食街で最も多様な海鮮の楽園です。', 'JA', N'%Ốc Thảo 123%'),
+-- 3. Ốc Vũ 37 (Ốc local Quận 4)
+(3, N'Ốc len xào dừa', '60.000đ', 'oc_len.jpg', 1),
+(3, N'Càng ghẹ rang muối tuyết', '120.000đ', 'cang_ghe.jpg', 1),
+(3, N'Sò lông nướng mỡ hành', '50.000đ', 'so_long.jpg', 0),
 
--- Quán 6: Sushi KO
-(N'Sushi KO', N'Tiếng Việt', N'Sushi KO phục vụ các món Nhật Bản sáng tạo với mức giá bình dân.', 'VN', N'%Sushi KO%'),
-(N'Sushi KO', N'English', N'Sushi KO serves creative Japanese dishes at affordable prices.', 'EN', N'%Sushi KO%'),
-(N'寿司KO', N'Chinese', N'Sushi KO 以非常实惠的价格提供创意的日本料理。', 'ZH', N'%Sushi KO%'),
-(N'스시 KO', N'Korean', N'스시 KO는 매우 저렴한 가격에 창의적인 일본 요리를 제공합니다.', 'KO', N'%Sushi KO%'),
-(N'Sushi KO', N'Japanese', N'Sushi KOは、リーズナブルな価格で創作日本料理を提供しています。', 'JA', N'%Sushi KO%'),
+-- 4. Bún cá Châu Đốc Dì Tư (Đặc sản miền Tây)
+(4, N'Bún cá Châu Đốc đặc biệt', '45.000đ', 'bun_ca.jpg', 1),
+(4, N'Bún mắm cốt miền Tây', '55.000đ', 'bun_mam.jpg', 1),
+(4, N'Đầu cá lóc hấp', '40.000đ', 'dau_ca.jpg', 0),
 
--- Quán 7: Chilli Lẩu Nướng
-(N'Chilli', N'Tiếng Việt', N'Chilli Lẩu Nướng phục vụ thực đơn tự chọn đa dạng giá rẻ.', 'VN', N'%Chilli%'),
-(N'Chilli Grill', N'English', N'Chilli Hotpot and Grill serves a diverse buffet.', 'EN', N'%Chilli%'),
-(N'红辣椒烧烤', N'Chinese', N'红辣椒火锅烧烤提供多样的自助餐。', 'ZH', N'%Chilli%'),
-(N'칠리 그릴', N'Korean', N'칠리 훠궈와 그릴은 다양한 뷔페를 제공합니다.', 'KO', N'%Chilli%'),
-(N'Chilliグリル', N'Japanese', N'Chilli鍋とグリルは、多様なビュッフェを提供しています。', 'JA', N'%Chilli%'),
+-- 5. Ốc Thảo 123 (Menu đa dạng)
+(5, N'Ốc hương rang muối', '90.000đ', 'oc_huong.jpg', 1),
+(5, N'Hàu nướng phô mai Pháp', '35.000đ/con', 'hau_phomai.jpg', 1),
+(5, N'Cháo hải sản nồi đất', '80.000đ', 'chao_haisan.jpg', 0),
 
--- Quán 8: Ốc Đào 2
-(N'Ốc Đào 2', N'Tiếng Việt', N'Ốc Đào 2 đặc biệt nổi tiếng với công thức sốt trứng muối độc quyền.', 'VN', N'%Ốc Đào%'),
-(N'Oc Dao 2', N'English', N'Oc Dao 2 is famous for its exclusive salted egg sauce recipe.', 'EN', N'%Ốc Đào%'),
-(N'奥道2号', N'Chinese', N'奥道2号因其独家咸蛋酱配方 mà đặc biệt闻名。', 'ZH', N'%Ốc Đào%'),
-(N'옥 다오 2', N'Korean', N'옥 다오 2는 독점적인 소금 달걀 소스 레시피로 유명합니다.', 'KO', N'%Ốc Đào%'),
-(N'Oc Dao 2', N'Japanese', N'Oc Dao 2は、独占的な塩卵ソースのレシピで有名です。', 'JA', N'%Ốc Đào%'),
+-- 6. Sushi KO (Đồ Nhật bình dân)
+(6, N'Sashimi cá hồi tươi', '120.000đ', 'sashimi.jpg', 1),
+(6, N'Cơm cuộn lươn Nhật', '95.000đ', 'sushi_luon.jpg', 1),
+(6, N'Mỳ Udon hải sản', '75.000đ', 'udon.jpg', 0),
 
--- Quán 9: Ốc Thảo 383
-(N'Ốc Thảo 383', N'Tiếng Việt', N'Ốc Thảo 383 có không gian rộng rãi phù hợp bữa tiệc đông người.', 'VN', N'%Ốc Thảo 383%'),
-(N'Oc Thao 383', N'English', N'Oc Thao 383 has a spacious setting for large parties.', 'EN', N'%Ốc Thảo 383%'),
-(N'奥草383', N'Chinese', N'奥草383空间宽敞，适合举行大型海鲜派对。', 'ZH', N'%Ốc Thảo 383%'),
-(N'옥 타오 383', N'Korean', N'옥 타오 383은 대규모 해산물 파티에 적합합니다.', 'KO', N'%Ốc Thảo 383%'),
-(N'Oc Thao 383', N'Japanese', N'Oc Thao 383は、大人数での海鮮パーティーに適しています。', 'JA', N'%Ốc Thảo 383%'),
+-- 7. Chilli Lẩu Nướng 232 (Buffet/Alacarte nướng)
+(7, N'Lẩu Thái chua cay', '199.000đ', 'lau_thai.jpg', 1),
+(7, N'Ba chỉ bò Mỹ sốt Chilli', '89.000đ', 'bo_nuong.jpg', 1),
+(7, N'Tôm càng nướng mọi', '150.000đ', 'tom_nuong.jpg', 0),
 
--- Quán 10: Ốc Oanh 534
-(N'Ốc Oanh', N'Tiếng Việt', N'Ốc Oanh vinh dự nhận giải thưởng Michelin Bib Gourmand.', 'VN', N'%Ốc Oanh%'),
-(N'Oc Oanh', N'English', N'Oc Oanh is honored to receive the Michelin Bib Gourmand award.', 'EN', N'%Ốc Oanh%'),
-(N'奥安海鲜', N'Chinese', N'奥安荣获米其林必比登推介。', 'ZH', N'%Ốc Oanh%'),
-(N'옥 오안', N'Korean', N'옥 오안은 미슐랭 빕 구르망상을 수상했습니다.', 'KO', N'%Ốc Oanh%'),
-(N'Oc Oanh', N'Japanese', N'Oc Oanhは、ミシュラン・ビブグルマンを受賞しました。', 'JA', N'%Ốc Oanh%');
+-- 8. Ốc Đào 2 (Nổi tiếng sốt trứng muối)
+(8, N'Ốc móng tay xào rau muống', '70.000đ', 'oc_mongtay.jpg', 1),
+(8, N'Ốc dừa xào bơ cay', '65.000đ', 'oc_dua.jpg', 1),
+(8, N'Răng mực xào bơ tỏi', '80.000đ', 'rang_muc.jpg', 0),
 
--- THỰC HIỆN ĐẨY VÀO BẢNG CHÍNH VÀ TỰ DÒ ID
+-- 9. Ốc Thảo 383 (Không gian tiệc tùng)
+(9, N'Nghêu hấp sả', '55.000đ', 'ngheu_hap.jpg', 1),
+(9, N'Mỳ xào ốc móng tay', '75.000đ', 'my_xao.jpg', 1),
+(9, N'Cơm chiên hải sản', '85.000đ', 'com_chien.jpg', 0),
+
+-- 10. Ốc Oanh 534 (Michelin Bib Gourmand)
+(10, N'Ốc hương sốt trứng muối', '150.000đ', 'oc_huong_tm.jpg', 1),
+(10, N'Càng cúm núm rang muối', '110.000đ', 'cang_cum.jpg', 1),
+(10, N'Ốc tỏi nướng mỡ hành', '55.000đ/con', 'oc_toi.jpg', 0);
+GO
+
 INSERT INTO Audios (AudioName, [Description], FilePath, [Language], PoiId)
-SELECT T.AName, T.ADesc, T.APath, T.ALang, P.PoiId
-FROM #TempAudio T
-JOIN POIs P ON P.Name LIKE T.SearchName;
-
--- Xóa bảng tạm
+SELECT T.AName, T.ADesc, T.APath, T.ALang, P.PoiId FROM #TempAudio T JOIN POIs P ON P.Name LIKE T.SearchName;
 DROP TABLE #TempAudio;
+GO
 
--- Kiểm tra lại
-SELECT a.AudioName, p.Name AS TenQuan, p.OwnerUsername FROM Audios a JOIN POIs p ON a.PoiId = p.PoiId;
+-- 7. NẠP NHẬT KÝ MẪU (Đã chuẩn hóa VI)
+INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, AccessTime) VALUES 
+(1, N'Listen', 'VI', 'iPhone 15', GETDATE()), (10, N'Listen', 'EN', 'Android', GETDATE());
+GO
+
+-- Kiểm tra lại (Phải ra 50 Audios và 10 POIs)
+SELECT COUNT(*) AS [So Luong Audio] FROM Audios;
+SELECT COUNT(*) AS [So Luong Quan An] FROM POIs;

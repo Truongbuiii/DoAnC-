@@ -250,7 +250,7 @@ namespace AdminWeb.Controllers
                 t.TotalTime,
                 t.ImageSource,
                 PoiIdsRaw = string.Join(",", details.Where(d => d.TourId == t.TourId).OrderBy(d => d.Order).Select(d => d.PoiId))
-            });
+            }); 
             return Json(result);
         }
     }

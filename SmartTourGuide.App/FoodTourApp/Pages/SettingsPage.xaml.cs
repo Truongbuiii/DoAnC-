@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.Messaging; // Thêm using này
+using FoodTourApp.Models;
 using FoodTourApp.Services;
 
 namespace FoodTourApp.Pages;
@@ -56,9 +58,12 @@ public partial class SettingsPage : ContentPage
         Lang.Set(code);
         ApplyLanguage();
 
-        // Cập nhật tab titles ngay lập tức
+        // 1. Cập nhật tab titles ngay lập tức
         if (Shell.Current is AppShell appShell)
             appShell.ApplyLanguage();
+
+        // 2. BẮN TÍN HIỆU ĐỔI NGÔN NGỮ TOÀN APP
+        WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(code));
     }
 
     private void OnAutoNarrateToggled(object sender, ToggledEventArgs e)

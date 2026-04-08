@@ -25,8 +25,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddSingleton<GeofenceService>();
         builder.Services.AddSingleton<NarrationService>();
+        builder.Services.AddSingleton<TranslationService>();
+        builder.Services.AddSingleton<ApiSyncService>();
         builder.Services.AddTransient<MapPage>();
-
+        builder.Services.AddSingleton<App>();
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
