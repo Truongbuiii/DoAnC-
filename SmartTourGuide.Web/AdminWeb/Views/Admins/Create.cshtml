@@ -11,16 +11,17 @@
                     <form asp-action="Create">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tên đăng nhập (Username)</label>
-                            <input asp-for="Username" class="form-control" placeholder="Ví dụ: ocvu37" required />
+                            <input asp-for="Username" class="form-control" placeholder="" required />
                             <small class="text-muted">Tên này dùng để gán quyền trong mục Quản lý POI</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Mật khẩu</label>
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu..." required />
-                        </div>
+    <label class="form-label fw-bold">Mật khẩu</label>
+    <input asp-for="Password" type="text" class="form-control" placeholder="Nhập mật khẩu..." />
+    <span asp-validation-for="Password" class="text-danger"></span>
+</div>
                         <div class="mb-4">
                             <label class="form-label fw-bold">Tên chủ quán</label>
-                            <input asp-for="FullName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                            <input asp-for="FullName" class="form-control" placeholder="" />
                         </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success">Xác nhận tạo tài khoản</button>

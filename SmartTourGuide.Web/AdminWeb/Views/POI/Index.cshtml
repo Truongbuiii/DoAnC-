@@ -1,4 +1,5 @@
-﻿    @model List<AdminWeb.Models.POI>
+﻿ 
+ @model List<AdminWeb.Models.POI>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -287,11 +288,11 @@
         </div>
     </div>
 
-    @functions {
+   @functions {
         public string GetBadgeColor(string? category)
         {
             if (string.IsNullOrEmpty(category)) return "bg-light text-secondary border";
-        
+            
             return category switch
             {
                 "Hải sản" or "Quán ốc" => "bg-danger-subtle text-danger border border-danger-subtle",
@@ -303,12 +304,31 @@
             };
         }
     }
-    @section Scripts {
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // 1. Popup thông báo (Dùng cho cả Đăng nhập, Thêm, Sửa, Xóa)
+        var rawMessage = `@Html.Raw(TempData["SuccessMessage"])`;
+
+        if (rawMessage && rawMessage.trim() !== "") {
+            Swal.fire({
+                title: 'Thành công!',
+                text: rawMessage,
+                icon: 'success',
+                timer: 4000, 
+                timerProgressBar: true,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true
+            });
+        }
+
+        // 2. Hàm xác nhận xóa địa điểm
         function confirmDelete(id, name) {
             Swal.fire({
-                title: 'Xóa địa điểm này?',
-                text: "Bạn có chắc muốn xóa quán: " + name + "? Dữ liệu sẽ không thể khôi phục!",
+                title: 'Xác nhận xóa?',
+                html: `Bạn có chắc muốn xóa quán: <b>${name}</b>?<br><span class="text-danger small">Dữ liệu sẽ không thể khôi phục!</span>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e74a3b',
@@ -317,7 +337,6 @@
                 cancelButtonText: 'Hủy'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Chuyển hướng đến Action Delete trong Controller
                     window.location.href = '@Url.Action("Delete", "POI")/' + id;
                 }
             })

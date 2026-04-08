@@ -24,19 +24,16 @@ namespace AdminWeb.Controllers
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
-
-            // 1. Khởi tạo truy vấn gốc
             var query = _context.POIs.AsNoTracking().AsQueryable();
 
-            // 2. --- PHÂN QUYỀN DỮ LIỆU TẠI ĐÂY ---
-            // Nếu tài khoản KHÔNG PHẢI là admin thì chỉ lọc ra những quán do mình làm chủ
+            // Nếu KHÔNG PHẢI Admin (là Chủ quán), chỉ hiện quán của họ
             if (!User.IsInRole("Admin"))
             {
                 string currentUserName = User.Identity.Name;
                 query = query.Where(p => p.OwnerUsername == currentUserName);
             }
+            // Nếu là Admin, sẽ thấy toàn bộ quán và tên chủ sở hữu
 
-            // 3. Xử lý tìm kiếm (nếu có)
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(s => s.Name.Contains(searchString));
@@ -46,18 +43,18 @@ namespace AdminWeb.Controllers
             return View(model);
         }
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(string? owner)
         {
-            // Lấy danh sách các tài khoản chủ quán để đổ vào Dropdown
-            // Chỉ lấy những người không phải là 'admin'
             var owners = await _context.Admins
-                .Where(a => a.Username != "admin")
+                .Where(a => a.Role == "Owner")
                 .Select(a => a.Username)
                 .ToListAsync();
 
-            ViewBag.OwnerList = new SelectList(owners);
+            // SỬA DÒNG NÀY: Khai báo rõ ràng SelectList kèm giá trị mặc định 'owner'
+            ViewBag.OwnerList = new SelectList(owners, owner);
 
-            return View();
+            var model = new POI { OwnerUsername = owner };
+            return View(model);
         }
 
         // 3. XỬ LÝ LƯU THÊM MỚI
@@ -65,20 +62,22 @@ namespace AdminWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
         {
-            // Xóa validation của các field không còn dùng
-            ModelState.Remove("DescriptionEn");
-            ModelState.Remove("DescriptionZh");
-            ModelState.Remove("DescriptionKo");
-            ModelState.Remove("DescriptionJa");
+            // Trong hàm [HttpPost] Create
+            var exists = await _context.POIs.AnyAsync(p => p.Name == poi.Name && p.OwnerUsername == poi.OwnerUsername);
+            if (exists)
+            {
+                ModelState.AddModelError("Name", "Địa điểm này đã tồn tại trong hệ thống!");
+                return View(poi);
+            }
+            // 1. Chỉ xóa validation của các field thực sự không dùng đến
             ModelState.Remove("Audios");
-            ModelState.Remove("OwnerUsername");
-
+            // ModelState.Remove("OwnerUsername"); <-- PHẢI BỎ DÒNG NÀY ĐỂ NHẬN DỮ LIỆU CHỦ QUÁN
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Xử lý lưu File ảnh vào wwwroot/images
+                    // 2. Xử lý lưu File ảnh
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
@@ -92,15 +91,26 @@ namespace AdminWeb.Controllers
                         }
                         poi.ImageSource = fileName;
                     }
+
+                    // 3. Lưu vào DB (Lúc này poi.OwnerUsername đã mang giá trị Tài chọn từ Dropdown)
                     _context.POIs.Add(poi);
                     await _context.SaveChangesAsync();
+                    // THÊM DÒNG NÀY:
+                    TempData["SuccessMessage"] = "Chúc mừng! Bạn đã thêm địa điểm '" + poi.Name + "' thành công.";
+
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi rồi ơi: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi lưu dữ liệu: " + ex.Message);
                 }
             }
+
+            // 4. Nếu có lỗi xảy ra (ModelState không hợp lệ), phải nạp lại danh sách Owner
+            // để cái Dropdown trên giao diện không bị trống trơn khi trang load lại.
+            var owners = await _context.Admins.Where(a => a.Username != "admin").Select(a => a.Username).ToListAsync();
+            ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
+
             return View(poi);
         }
 
@@ -169,16 +179,20 @@ namespace AdminWeb.Controllers
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
 
-            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
+            // Kiểm tra quyền (Admin hoặc đúng chủ sở hữu)
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity?.Name)
             {
                 return Forbid();
             }
 
             _context.POIs.Remove(poi);
             await _context.SaveChangesAsync();
+
+            // --- THÊM DÒNG THÔNG BÁO Ở ĐÂY ---
+            TempData["SuccessMessage"] = $"Đã xóa địa điểm '{poi.Name}' thành công!";
+
             return RedirectToAction(nameof(Index));
         }
-
         // ============================================================
         // API ENDPOINTS CHO MOBILE APP
         // ============================================================

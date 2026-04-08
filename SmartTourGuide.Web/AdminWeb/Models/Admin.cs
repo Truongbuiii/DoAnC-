@@ -1,15 +1,21 @@
-﻿namespace AdminWeb.Models
+﻿using System.ComponentModel.DataAnnotations; // Phải có dòng này để dùng [Required]
+
+namespace AdminWeb.Models
 {
     public class Admin
     {
-        // Phải khớp với tên cột AdminId trong SQL (Primary Key)
+        [Key]
         public int AdminId { get; set; }
 
-        public string Username { get; set; }
+        [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
+        public string Username { get; set; } = string.Empty;
 
-        public string Password { get; set; }
+        [Required(ErrorMessage = "Mật khẩu không được để trống")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
 
         public string? FullName { get; set; }
+
         public string Role { get; set; } = "Owner";
     }
 }
