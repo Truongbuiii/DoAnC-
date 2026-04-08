@@ -33,11 +33,10 @@ namespace AdminWeb.Controllers
             if (user != null)
             {
                 var claims = new List<Claim> {
-                    new Claim(ClaimTypes.Name, user.Username!),
-                    new Claim("FullName", user.FullName ?? ""),
-                    // Lấy Role từ DB để phân quyền Admin/Owner
-                    new Claim(ClaimTypes.Role, user.Role ?? "Owner")
-                };
+            new Claim(ClaimTypes.Name, user.Username!),
+            new Claim("FullName", user.FullName ?? ""),
+            new Claim(ClaimTypes.Role, user.Role ?? "Owner")
+        };
 
                 var claimsIdentity = new ClaimsIdentity(claims, "MyCookieAuth");
                 var authProperties = new AuthenticationProperties
@@ -47,6 +46,10 @@ namespace AdminWeb.Controllers
                 };
 
                 await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(claimsIdentity), authProperties);
+
+                // --- THÊM DÒNG NÀY Ở ĐÂY ---
+                TempData["SuccessMessage"] = $"Chào mừng {user.Username} đã đăng nhập thành công!";
+                // ---------------------------
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {

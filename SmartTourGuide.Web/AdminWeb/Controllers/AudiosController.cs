@@ -150,19 +150,26 @@ namespace AdminWeb.Controllers
         }
 
         // 7. XÓA (GET)
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null) return NotFound();
+            var admin = await _context.Admins.FindAsync(id);
+            if (admin == null) return NotFound();
 
-            var audio = await _context.Audios
-                .Include(a => a.Poi)
-                .FirstOrDefaultAsync(m => m.AudioId == id);
+            // Bảo vệ tài khoản admin tổng không cho xóa
+            if (admin.Username == "admin")
+            {
+                TempData["ErrorMessage"] = "Không thể xóa tài khoản Admin hệ thống!";
+                return RedirectToAction(nameof(Index));
+            }
 
-            if (audio == null) return NotFound();
+            _context.Admins.Remove(admin);
+            await _context.SaveChangesAsync();
 
-            return View(audio);
+            // --- THÊM DÒNG THÔNG BÁO Ở ĐÂY ---
+            TempData["SuccessMessage"] = $"Đã xóa tài khoản '{admin.Username}' thành công!";
+
+            return RedirectToAction(nameof(Index));
         }
-
         // 8. XÓA (POST)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

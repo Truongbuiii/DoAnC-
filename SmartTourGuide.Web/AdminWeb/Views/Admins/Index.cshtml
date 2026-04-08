@@ -44,12 +44,12 @@
                                                 <i class="fas fa-edit"></i> Sửa
                                             </a>
 
-                                            @* NÚT XÓA *@
-                                            <a asp-action="Delete" asp-route-id="@item.AdminId" 
-                                               class="btn btn-outline-danger btn-sm border-0" 
-                                               onclick="return confirm('Bạn có chắc chắn muốn xóa chủ quán này không?')">
-                                                <i class="fas fa-trash-alt"></i> Xóa
-                                            </a>
+                                           @* NÚT XÓA ĐÃ SỬA *@
+<button type="button" 
+        class="btn btn-outline-danger btn-sm border-0" 
+        onclick="confirmDeleteAdmin('@item.AdminId', '@item.Username')">
+    <i class="fas fa-trash-alt"></i> Xóa
+</button>
                                         </div>
                                     } else {
                                         <small class="text-muted fst-italic">Hệ thống</small>
@@ -63,3 +63,46 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 1. Popup hiện thông báo "Xóa thành công" hoặc "Lỗi"
+        var successMsg = `@Html.Raw(TempData["SuccessMessage"])`;
+        var errorMsg = `@Html.Raw(TempData["ErrorMessage"])`;
+
+        if (successMsg && successMsg.trim() !== "") {
+            Swal.fire({
+                title: 'Thành công!',
+                text: successMsg,
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true
+            });
+        }
+        
+        if (errorMsg && errorMsg.trim() !== "") {
+            Swal.fire({ title: 'Lỗi!', text: errorMsg, icon: 'error' });
+        }
+
+        // 2. Hàm popup "Hỏi trước khi xóa"
+        function confirmDeleteAdmin(id, user) {
+            Swal.fire({
+                title: 'Xác nhận xóa tài khoản?',
+                html: `Bạn có chắc muốn xóa <b>${user}</b>?<br><span class="text-danger">Dữ liệu tài khoản sẽ bị mất vĩnh viễn!</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74a3b',
+                cancelButtonColor: '#858796',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gọi đến Action Delete trong AdminsController
+                    window.location.href = '@Url.Action("Delete", "Admins")/' + id;
+                }
+            })
+        }
+    </script>
+}

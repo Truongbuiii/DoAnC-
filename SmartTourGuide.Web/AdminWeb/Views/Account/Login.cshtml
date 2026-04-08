@@ -1,5 +1,5 @@
-﻿@{ 
-    Layout = null; 
+﻿@{
+    Layout = null;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -7,172 +7,283 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đăng nhập - Smart Tour</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body {
-            background-color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            color: #0f172a;
-        }
-        .login-wrapper {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-        .brand-icon {
-            width: 48px;
-            height: 48px;
-            background: #0f172a;
-            color: white;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin: 0 auto 16px;
-            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
-        }
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 8px;
-        }
-        .form-control {
-            border-radius: 8px;
-            padding: 12px 14px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.95rem;
-            color: #0f172a;
-            transition: all 0.2s ease;
-            box-shadow: none !important;
-        }
-        .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-        }
-        
-        /* Tinh chỉnh riêng cho ô Password có nút Mắt */
-        .input-pwd .form-control {
-            border-right: none;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-        /* Viền sáng lên cùng lúc cả ô chữ và ô mắt khi click */
-        .input-pwd:focus-within .form-control,
-        .input-pwd:focus-within .input-group-text {
-            border-color: #3b82f6;
-        }
-        .input-pwd .input-group-text {
-            background: transparent;
-            border: 1px solid #cbd5e1;
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-login {
-            background-color: #0f172a;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            width: 100%;
-            font-size: 0.95rem;
-            transition: 0.2s;
-            margin-top: 15px;
-        }
-        .btn-login:hover {
-            background-color: #1e293b;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-        }
-        .footer-text {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 25px;
-        }
+        :root {
+    --primary-dark: #0f172a;
+    --accent-blue: #38bdf8;
+    --bg-light: #f8fafc;
+}
+
+body, html {
+    height: 100vh;
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow: hidden; /* Chặn thanh cuộn tuyệt đối */
+}
+
+.split-layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* PANEL TRÁI: Nhỏ gọn, làm nền */
+.left-panel {
+    flex: 0.45; 
+    background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), 
+                url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.brand-icon {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+    color: var(--accent-blue);
+    filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.3));
+}
+
+/* PANEL PHẢI: Form to rõ, căn chỉnh lại */
+.right-panel {
+    flex: 1.55; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-light);
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 540px; 
+    background: white;
+    padding: 40px 55px; /* Giảm padding dọc một chút cho gọn */
+    border-radius: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px; /* Giảm margin nhãn */
+}
+
+/* Căn chỉnh lại các ô Input cho gọn */
+.form-group-custom {
+    margin-bottom: 20px; /* Giảm khoảng cách giữa các ô */
+}
+
+.form-control {
+    border-radius: 12px;
+    padding: 12px 18px; /* Giảm padding input cho thanh thoát */
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.btn-login {
+    background-color: var(--primary-dark);
+    color: white;
+    padding: 14px; /* Nút gọn hơn */
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    width: 100%;
+    border: none;
+    margin-top: 10px; /* Giảm margin trên nút */
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background-color: #1e293b;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+}
+
+/* CĂN CHỈNH KHỐI HỖ TRỢ BQL GỌN GÀNGh HƠN */
+.contact-card {
+    background-color: #fcfdfe; /* Màu nền nhẹ hơn */
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 20px; /* Giảm padding để khối gọn gàng */
+    margin-top: 30px; /* Tăng khoảng cách margin-top để phân tách form */
+}
+
+.support-header {
+    font-size: 0.7rem; /* Giảm cỡ chữ tiêu đề hỗ trợ */
+    font-weight: 800;
+    color: #94a3b8; /* Màu chữ tiêu đề nhạt hơn */
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.support-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+    margin-left: 10px;
+}
+
+.contact-text-header {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.5; /* Giảm line-height cho gọn text */
+    margin-bottom: 15px; /* Giảm margin */
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px; /* Giảm khoảng cách gap */
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--primary-dark);
+    font-size: 0.8rem; /* Giảm cỡ chữ liên hệ */
+    font-weight: 700;
+    transition: color 0.2s;
+}
+
+.contact-item i {
+    color: #3b82f6;
+    margin-right: 8px; /* Giảm margin icon */
+    font-size: 0.9rem;
+}
+
+.email-section {
+    grid-column: span 2;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 10px; /* Giảm padding */
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Giảm gap email */
+}
+
+@@media (max-width: 992px) {
+    .left-panel { display: none; }
+    body { overflow: auto; }
+    .login-box { box-shadow: none; padding: 20px; }
+}
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="text-center mb-4">
+
+    <div class="split-layout">
+        <div class="left-panel">
             <div class="brand-icon">
-                <i class="bi bi-hdd-network-fill"></i>
+                <i class="bi bi-geo-alt-fill"></i>
             </div>
-            <h3 class="fw-bold mb-1" style="letter-spacing: -0.5px;">Smart Tour</h3>
-            <p class="text-muted small">Đăng nhập để truy cập trang quản trị</p>
+            <h1 class="fw-bold mb-2" style="letter-spacing: -1px;">Smart Tour</h1>
+            <p class="small text-light opacity-75">Hệ thống quản trị Phố Vĩnh Khánh</p>
         </div>
 
-        <div class="login-card">
-            @if (ViewBag.Error != null) {
-                <div class="alert alert-danger p-2 text-center small border-0 mb-4 rounded-2" style="background-color: #fef2f2; color: #dc2626;">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> @ViewBag.Error
-                </div>
-            }
-
-            <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" method="post">
-                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-
-                <div class="mb-4">
-                    <label class="form-label">Tài khoản</label>
-                    <input type="text" name="username" class="form-control" placeholder="Tên đăng nhập" required autocomplete="off">
+        <div class="right-panel">
+            <div class="login-box">
+                <div class="mb-5">
+                    <h2 class="fw-bold text-dark mb-1">Đăng nhập</h2>
+                    <p class="text-muted small">Vui lòng nhập thông tin để truy cập hệ thống.</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Mật khẩu</label>
-                    <div class="input-group input-pwd">
-                        <input type="password" name="password" id="pwdInput" class="form-control" placeholder="••••••••" required>
-                        <span class="input-group-text" id="togglePwd">
-                            <i class="bi bi-eye-slash" id="eyeIcon"></i>
-                        </span>
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <div class="mb-4">
+                        <label class="form-label">Tài khoản</label>
+                        <input type="text" name="username" class="form-control" placeholder="Nhập username" required autocomplete="off">
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="form-label">Mật khẩu</label>
+                            <a href="#" class="text-decoration-none fw-bold" style="font-size: 0.8rem; color: #3b82f6;" data-bs-toggle="modal" data-bs-target="#forgotPwdModal">Quên mật khẩu?</a>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" name="password" id="pwdInput" class="form-control" style="border-right:none; border-radius: 14px 0 0 14px;" placeholder="••••••••" required>
+                            <span class="input-group-text" id="togglePwd" style="background:#fcfdfe; border-left:none; border-radius: 0 14px 14px 0; cursor:pointer; color:#94a3b8;">
+                                <i class="bi bi-eye-slash" id="eyeIcon"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input type="checkbox" class="form-check-input" name="rememberMe" id="chkRemember">
+                        <label class="form-check-label text-muted small" for="chkRemember">Ghi nhớ đăng nhập</label>
+                    </div>
+
+                    <button type="submit" class="btn-login">Đăng nhập hệ thống</button>
+                </form>
+
+                <div class="contact-card">
+                    <div class="support-header">Hỗ trợ chủ quán</div>
+                    
+                    <p class="contact-text-header">
+                        Hệ thống không cho phép đăng ký tự do. Vui lòng liên hệ <strong>Ban Quản Lý Phố Ẩm Thực Vĩnh Khánh</strong> để xác minh và cấp phát tài khoản chính chủ:
+                    </p>
+                    
+                    <div class="contact-grid">
+                        <a href="tel:0369349873" class="contact-item"><i class="bi bi-telephone-fill"></i> 0369.349.873</a>
+                        <a href="tel:0962217069" class="contact-item"><i class="bi bi-telephone-fill"></i> 0962.217.069</a>
+                        
+                        <div class="email-section">
+                            <a href="mailto:anhtram1401@gmail.com" class="contact-item"><i class="bi bi-envelope-at-fill"></i> anhtram1401@gmail.com</a>
+                            <a href="mailto:ductruongbui05@gmail.com" class="contact-item"><i class="bi bi-envelope-at-fill"></i> ductruongbui05@gmail.com</a>
+                        </div>
                     </div>
                 </div>
-
-                <button type="submit" class="btn-login">
-                    Đăng nhập
-                </button>
-            </form>
-        </div>
-        
-        <div class="footer-text">
-            &copy; 2026 Smart Tour Guide System
+            </div>
         </div>
     </div>
 
+    <div class="modal fade" id="forgotPwdModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-shield-lock-fill text-primary fs-1 mb-2"></i>
+                    <h6 class="fw-bold">Bạn quên mật khẩu?</h6>
+                    <p class="text-muted small mb-4">Vui lòng liên hệ trực tiếp Admin qua hotline <strong>0369.349.873</strong> để được hỗ trợ reset.</p>
+                    <button type="button" class="btn btn-dark w-100 btn-sm rounded-3" data-bs-dismiss="modal">Đã hiểu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('togglePwd').addEventListener('click', function () {
             var pwdInput = document.getElementById('pwdInput');
             var eyeIcon = document.getElementById('eyeIcon');
-            
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
                 eyeIcon.classList.remove('bi-eye-slash');
                 eyeIcon.classList.add('bi-eye');
-                eyeIcon.style.color = '#3b82f6'; // Mắt sáng lên màu xanh
+                eyeIcon.style.color = '#3b82f6';
             } else {
                 pwdInput.type = 'password';
                 eyeIcon.classList.remove('bi-eye');
                 eyeIcon.classList.add('bi-eye-slash');
-                eyeIcon.style.color = ''; // Mắt tắt đi
+                eyeIcon.style.color = '';
             }
         });
     </script>

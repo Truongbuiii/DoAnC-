@@ -24,12 +24,14 @@ namespace AdminWeb.Controllers
             ViewData["CurrentFilter"] = searchString;
             var query = _context.POIs.AsNoTracking().AsQueryable();
 
-            // Nếu không phải Admin thì chỉ thấy quán của mình
+            // 2. --- PHÂN QUYỀN DỮ LIỆU TẠI ĐÂY ---
+            // Nếu tài khoản KHÔNG PHẢI là admin thì chỉ lọc ra những quán do mình làm chủ
             if (!User.IsInRole("Admin"))
             {
                 string currentUserName = User.Identity.Name;
                 query = query.Where(p => p.OwnerUsername == currentUserName);
             }
+            // Nếu là Admin, sẽ thấy toàn bộ quán và tên chủ sở hữu
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -40,14 +42,15 @@ namespace AdminWeb.Controllers
         }
 
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(string? owner)
         {
             var owners = await _context.Admins
-                .Where(a => a.Username != "admin")
+                .Where(a => a.Role == "Owner")
                 .Select(a => a.Username)
                 .ToListAsync();
 
             ViewBag.OwnerList = new SelectList(owners);
+
             return View();
         }
 
@@ -56,27 +59,20 @@ namespace AdminWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
         {
-            // Gán giá trị mặc định để tránh lỗi "The value '' is invalid"
-            if (poi.Latitude == null) poi.Latitude = 10.761858;
-            if (poi.Longitude == null) poi.Longitude = 106.702236;
-            if (poi.TriggerRadius == null) poi.TriggerRadius = 30;
-
-            // Nếu là chủ quán tạo, tự gán tên mình làm Owner
-            if (!User.IsInRole("Admin")) poi.OwnerUsername = User.Identity.Name;
-
-            // Loại bỏ các trường không có trong Form Create
-            ModelState.Remove("OwnerUsername");
-            ModelState.Remove("ImageSource");
-            ModelState.Remove("Audios");
+            // Xóa validation của các field không còn dùng
             ModelState.Remove("DescriptionEn");
             ModelState.Remove("DescriptionZh");
             ModelState.Remove("DescriptionKo");
             ModelState.Remove("DescriptionJa");
+            ModelState.Remove("Audios");
+            ModelState.Remove("OwnerUsername");
+
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Xử lý lưu File ảnh vào wwwroot/images
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
@@ -91,20 +87,18 @@ namespace AdminWeb.Controllers
                         }
                         poi.ImageSource = fileName;
                     }
-
                     _context.POIs.Add(poi);
                     await _context.SaveChangesAsync();
+                    // THÊM DÒNG NÀY:
+                    TempData["SuccessMessage"] = "Chúc mừng! Bạn đã thêm địa điểm '" + poi.Name + "' thành công.";
+
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi lưu: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi rồi ơi: " + ex.Message);
                 }
             }
-
-            // Nạp lại Dropdown nếu lỗi
-            var owners = await _context.Admins.Select(a => a.Username).ToListAsync();
-            ViewBag.OwnerList = new SelectList(owners);
             return View(poi);
         }
 
@@ -172,13 +166,19 @@ namespace AdminWeb.Controllers
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
 
-            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name) return Forbid();
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
+            {
+                return Forbid();
+            }
 
             _context.POIs.Remove(poi);
             await _context.SaveChangesAsync();
+
+            // --- THÊM DÒNG THÔNG BÁO Ở ĐÂY ---
+            TempData["SuccessMessage"] = $"Đã xóa địa điểm '{poi.Name}' thành công!";
+
             return RedirectToAction(nameof(Index));
         }
-
         // ============================================================
         // API ENDPOINTS (DÙNG CHO MOBILE APP)
         // ============================================================
