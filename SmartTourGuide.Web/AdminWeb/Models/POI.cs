@@ -16,7 +16,6 @@ namespace AdminWeb.Models
 
         public string? Category { get; set; }
 
-        // SỬA TẠI ĐÂY: Thêm dấu ? để không bị lỗi "The value '' is invalid"
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public double? TriggerRadius { get; set; }
@@ -24,7 +23,12 @@ namespace AdminWeb.Models
         public string? ImageSource { get; set; }
         public string? OwnerUsername { get; set; }
 
+        // BỔ SUNG CÁC CỘT NÀY ĐỂ HẾT LỖI CS1061
         public string? DescriptionVi { get; set; }
+        public string? DescriptionEn { get; set; }
+        public string? DescriptionZh { get; set; }
+        public string? DescriptionKo { get; set; }
+        public string? DescriptionJa { get; set; }
 
         public virtual ICollection<Audio>? Audios { get; set; }
     }

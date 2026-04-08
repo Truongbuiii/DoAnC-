@@ -4,7 +4,7 @@ using AdminWeb.Data;
 using AdminWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.Rendering; // Thêm dòng này để dùng SelectList
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AdminWeb.Controllers
 {
@@ -18,71 +18,70 @@ namespace AdminWeb.Controllers
             _context = context;
         }
 
-        // ============================================================
-        // 1. TRANG DANH SÁCH + TÌM KIẾM
-        // ============================================================
+        // 1. TRANG DANH SÁCH + TÌM KIẾM + PHÂN QUYỀN
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
-
-            // 1. Khởi tạo truy vấn gốc
             var query = _context.POIs.AsNoTracking().AsQueryable();
 
-            // 2. --- PHÂN QUYỀN DỮ LIỆU TẠI ĐÂY ---
-            // Nếu tài khoản KHÔNG PHẢI là admin thì chỉ lọc ra những quán do mình làm chủ
+            // Nếu không phải Admin thì chỉ thấy quán của mình
             if (!User.IsInRole("Admin"))
             {
                 string currentUserName = User.Identity.Name;
                 query = query.Where(p => p.OwnerUsername == currentUserName);
             }
 
-            // 3. Xử lý tìm kiếm (nếu có)
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(s => s.Name.Contains(searchString));
             }
 
-            var model = await query.ToListAsync();
-            return View(model);
+            return View(await query.ToListAsync());
         }
+
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
         public async Task<IActionResult> Create()
         {
-            // Lấy danh sách các tài khoản chủ quán để đổ vào Dropdown
-            // Chỉ lấy những người không phải là 'admin'
             var owners = await _context.Admins
                 .Where(a => a.Username != "admin")
                 .Select(a => a.Username)
                 .ToListAsync();
 
             ViewBag.OwnerList = new SelectList(owners);
-
             return View();
         }
 
-        // 3. XỬ LÝ LƯU THÊM MỚI
+        // 3. XỬ LÝ LƯU THÊM MỚI (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
         {
-            // Xóa validation của các field không còn dùng
+            // Gán giá trị mặc định để tránh lỗi "The value '' is invalid"
+            if (poi.Latitude == null) poi.Latitude = 10.761858;
+            if (poi.Longitude == null) poi.Longitude = 106.702236;
+            if (poi.TriggerRadius == null) poi.TriggerRadius = 30;
+
+            // Nếu là chủ quán tạo, tự gán tên mình làm Owner
+            if (!User.IsInRole("Admin")) poi.OwnerUsername = User.Identity.Name;
+
+            // Loại bỏ các trường không có trong Form Create
+            ModelState.Remove("OwnerUsername");
+            ModelState.Remove("ImageSource");
+            ModelState.Remove("Audios");
             ModelState.Remove("DescriptionEn");
             ModelState.Remove("DescriptionZh");
             ModelState.Remove("DescriptionKo");
             ModelState.Remove("DescriptionJa");
-            ModelState.Remove("Audios");
-            ModelState.Remove("OwnerUsername");
-
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Xử lý lưu File ảnh vào wwwroot/images
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
                         if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
                         string path = Path.Combine(uploadDir, fileName);
 
@@ -92,15 +91,20 @@ namespace AdminWeb.Controllers
                         }
                         poi.ImageSource = fileName;
                     }
+
                     _context.POIs.Add(poi);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi rồi ơi: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi lưu: " + ex.Message);
                 }
             }
+
+            // Nạp lại Dropdown nếu lỗi
+            var owners = await _context.Admins.Select(a => a.Username).ToListAsync();
+            ViewBag.OwnerList = new SelectList(owners);
             return View(poi);
         }
 
@@ -110,19 +114,14 @@ namespace AdminWeb.Controllers
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
 
-            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
-            {
-                return Forbid();
-            }
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name) return Forbid();
 
-            // Gửi danh sách chủ quán qua để Admin có thể đổi chủ cho quán này
             var owners = await _context.Admins
                 .Where(a => a.Username != "admin")
                 .Select(a => a.Username)
                 .ToListAsync();
 
             ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
-
             return View(poi);
         }
 
@@ -132,6 +131,10 @@ namespace AdminWeb.Controllers
         public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile)
         {
             if (id != poi.PoiId) return NotFound();
+
+            // Xóa validation cho các trường tự động xử lý
+            ModelState.Remove("ImageSource");
+            ModelState.Remove("Audios");
 
             if (ModelState.IsValid)
             {
@@ -147,17 +150,17 @@ namespace AdminWeb.Controllers
                     }
                     else
                     {
-                        // Giữ lại tên ảnh cũ nếu không upload ảnh mới
+                        // Giữ lại ảnh cũ nếu không đổi
                         _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
                     }
+
                     _context.Update(poi);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (!_context.POIs.Any(e => e.PoiId == poi.PoiId)) return NotFound();
-                    else throw;
+                    ModelState.AddModelError("", "Lỗi sửa: " + ex.Message);
                 }
             }
             return View(poi);
@@ -169,10 +172,7 @@ namespace AdminWeb.Controllers
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
 
-            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name)
-            {
-                return Forbid();
-            }
+            if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name) return Forbid();
 
             _context.POIs.Remove(poi);
             await _context.SaveChangesAsync();
@@ -180,10 +180,10 @@ namespace AdminWeb.Controllers
         }
 
         // ============================================================
-        // API ENDPOINTS CHO MOBILE APP
+        // API ENDPOINTS (DÙNG CHO MOBILE APP)
         // ============================================================
 
-        // API 1: GET /api/v1/pois
+        // API 1: Lấy toàn bộ POI kèm đầy đủ bản dịch
         [AllowAnonymous]
         [HttpGet("/api/v1/pois")]
         public async Task<IActionResult> GetPoisApi()
@@ -197,31 +197,26 @@ namespace AdminWeb.Controllers
                 p.Longitude,
                 p.TriggerRadius,
                 p.ImageSource,
-                p.DescriptionVi  // chỉ trả về tiếng Việt
+                p.DescriptionVi,
+                p.DescriptionEn, // Trả về đủ 4 thứ tiếng để Mobile không bị NULL
+                p.DescriptionZh,
+                p.DescriptionKo,
+                p.DescriptionJa
             }).ToListAsync();
             return Json(pois);
         }
 
-        // API 2: GET /api/v1/audios/{poiId}?lang={langCode}
         [AllowAnonymous]
         [HttpGet("/api/v1/audios/{poiId}")]
-        public async Task<IActionResult> GetAudioApi(int poiId, string lang = "VN")
+        public async Task<IActionResult> GetAudioApi(int poiId, string lang = "VI")
         {
             var audio = await _context.Audios
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.PoiId == poiId && a.Language == lang);
             if (audio == null) return NotFound();
-            return Json(new
-            {
-                audio.AudioId,
-                audio.AudioName,
-                audio.FilePath,
-                audio.Language,
-                audio.PoiId
-            });
+            return Json(new { audio.AudioId, audio.AudioName, audio.FilePath, audio.Language, audio.PoiId });
         }
 
-        // API 3: POST /api/v1/analytics/sync
         [AllowAnonymous]
         [HttpPost("/api/v1/analytics/sync")]
         public async Task<IActionResult> SyncAnalyticsApi([FromBody] List<ActivityLogDto> logs)
@@ -241,32 +236,25 @@ namespace AdminWeb.Controllers
             await _context.SaveChangesAsync();
             return Json(new { success = true, synced = logs.Count });
         }
-        // API 4: GET /api/v1/tours
+
         [AllowAnonymous]
         [HttpGet("/api/v1/tours")]
         public async Task<IActionResult> GetToursApi()
         {
             var tours = await _context.Tours.AsNoTracking().ToListAsync();
             var details = await _context.TourDetails.AsNoTracking().ToListAsync();
-
-            var result = tours.Select(t => new
-            {
-                TourId = t.TourId,
-                TourName = t.TourName,
-                Description = t.Description,
-                TotalTime = t.TotalTime,
-                ImageSource = t.ImageSource,
-                PoiIdsRaw = string.Join(",", details
-                    .Where(d => d.TourId == t.TourId)
-                    .OrderBy(d => d.Order)
-                    .Select(d => d.PoiId))
+            var result = tours.Select(t => new {
+                t.TourId,
+                t.TourName,
+                t.Description,
+                t.TotalTime,
+                t.ImageSource,
+                PoiIdsRaw = string.Join(",", details.Where(d => d.TourId == t.TourId).OrderBy(d => d.Order).Select(d => d.PoiId))
             });
-
             return Json(result);
         }
     }
 
-    // DTO cho Analytics Sync
     public class ActivityLogDto
     {
         public int PoiId { get; set; }
@@ -275,7 +263,4 @@ namespace AdminWeb.Controllers
         public string DeviceType { get; set; } = "Android";
         public DateTime AccessTime { get; set; }
     }
-
-
-
 }
