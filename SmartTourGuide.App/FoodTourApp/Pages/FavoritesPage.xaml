@@ -31,24 +31,29 @@
                             <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.06"/>
                         </Border.Shadow>
                         <Grid ColumnDefinitions="Auto,*,Auto" Padding="14" ColumnSpacing="12">
-                            <Border Grid.Column="0" BackgroundColor="#FFF7ED"
-                                    StrokeShape="RoundRectangle 10"
-                                    WidthRequest="44" HeightRequest="44">
-                                <Label Text="📍" FontSize="22"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"/>
-                            </Border>
+
+                            <!-- ĐỔI TỪ ICON → ẢNH THẬT -->
+                            <Image Grid.Column="0"
+           Source="{Binding FullImageUrl}"
+           Aspect="AspectFill"
+           HeightRequest="56"
+           WidthRequest="56">
+                                <Image.Clip>
+                                    <RoundRectangleGeometry CornerRadius="10" Rect="0,0,56,56"/>
+                                </Image.Clip>
+                            </Image>
+
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
                                 <Label Text="{Binding Name}" FontSize="15"
-                                       FontAttributes="Bold" TextColor="#111827"/>
+               FontAttributes="Bold" TextColor="#111827"/>
                                 <Label Text="{Binding Category}" FontSize="12" TextColor="#F97316"/>
                             </VerticalStackLayout>
                             <Button Grid.Column="2" Text="🗑️" FontSize="18"
-                                    BackgroundColor="Transparent" TextColor="#EF4444"
-                                    Clicked="OnRemoveFavorite"
-                                    CommandParameter="{Binding PoiId}"
-                                    VerticalOptions="Center"
-                                    WidthRequest="44" HeightRequest="44"/>
+            BackgroundColor="Transparent" TextColor="#EF4444"
+            Clicked="OnRemoveFavorite"
+            CommandParameter="{Binding PoiId}"
+            VerticalOptions="Center"
+            WidthRequest="44" HeightRequest="44"/>
                         </Grid>
                     </Border>
                 </DataTemplate>

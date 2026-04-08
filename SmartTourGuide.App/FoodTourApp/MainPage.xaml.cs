@@ -8,7 +8,7 @@ namespace FoodTourApp;
 public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
-    private bool _isFirstLoad = true;
+    private static bool _hasShownLanguagePicker = false; // static → chỉ hỏi 1 lần duy nhất
 
     public MainPage()
     {
@@ -19,11 +19,14 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        if (_isFirstLoad && !Preferences.ContainsKey("AppLanguage"))
+        // Chỉ hỏi lần đầu tiên cài app (chưa có ngôn ngữ trong Preferences)
+        if (!_hasShownLanguagePicker && !Preferences.ContainsKey("AppLanguage"))
         {
-            await Task.Delay(300);
+            _hasShownLanguagePicker = true;
+            await Task.Delay(500); // chờ UI render xong
+
             string action = await DisplayActionSheet(
-                Lang.Get("select_language"),
+                "Chọn ngôn ngữ thuyết minh",
                 null, null,
                 "🇻🇳 Tiếng Việt",
                 "🇺🇸 English",
@@ -39,11 +42,15 @@ public partial class MainPage : ContentPage
                 "🇯🇵 日本語" => "ja-JP",
                 _ => "vi-VN"
             };
+
             Preferences.Set("AppLanguage", lang);
             Lang.Set(lang);
+
+            // Cập nhật tab titles ngay sau khi chọn ngôn ngữ
+            if (Shell.Current is AppShell appShell)
+                appShell.ApplyLanguage();
         }
 
-        _isFirstLoad = false;
         ApplyLanguage();
         await LoadDashboard();
     }
@@ -61,6 +68,21 @@ public partial class MainPage : ContentPage
     }
 
     private async Task LoadDashboard()
+    {
+        var apiSync = new ApiSyncService(_dbService);
+        _ = Task.Run(async () =>
+        {
+            await apiSync.SyncPoisAsync();
+            await apiSync.SyncToursAsync();
+            await apiSync.SyncLogsAsync();
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await LoadData());
+        });
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
     {
         var allPois = await _dbService.GetPOIsAsync();
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
