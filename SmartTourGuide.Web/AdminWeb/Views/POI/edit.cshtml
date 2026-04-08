@@ -1,24 +1,19 @@
 ﻿@model AdminWeb.Models.POI
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-    /* CSS nội bộ của Tài (Giữ nguyên) */
     .edit-container { background-color: #f8f9fa; padding: 30px; border-radius: 20px; }
     .card-custom { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); background: #fff; margin-bottom: 25px; }
     .header-gold { background: linear-gradient(45deg, #f6c23e, #f4b619); color: #fff; padding: 20px; border-radius: 15px 15px 0 0; }
-    
     .form-label-custom { font-weight: 700; color: #4e73df; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; display: block; }
     .form-control-custom { border-radius: 10px; border: 1px solid #d1d3e2; padding: 12px; transition: 0.3s; width: 100%; }
     .form-control-custom:focus { border-color: #f6c23e; box-shadow: 0 0 8px rgba(246, 194, 62, 0.2); outline: none; }
-    
     .img-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; border: 3px solid #f8f9fc; }
-    
     .btn-update { background: #f6c23e; color: #fff; font-weight: 700; border: none; padding: 15px 40px; border-radius: 12px; transition: 0.3s; width: 100%; }
     .btn-update:hover { background: #e0ac1f; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(246, 194, 62, 0.3); }
     .btn-back { color: #858796; text-decoration: none; font-weight: 600; transition: 0.2s; display: block; text-align: center; margin-top: 15px; }
     .btn-back:hover { color: #4e73df; }
-
-    /* --- CSS THÊM MỚI CHO TABS NGÔN NGỮ CHUẨN SAAS --- */
     .nav-tabs-custom { border-bottom: 2px solid #eaecf4; margin-bottom: 0; }
     .nav-tabs-custom .nav-link { color: #858796; font-weight: 600; border: none; border-bottom: 3px solid transparent; padding: 12px 20px; transition: 0.2s; }
     .nav-tabs-custom .nav-link:hover { color: #f6c23e; border-bottom-color: #fce8b2; }
@@ -42,6 +37,7 @@
             <input type="hidden" asp-for="PoiId" />
             <input type="hidden" asp-for="ImageSource" />
 
+            <!-- ROW 1: Thuyết minh + Hình ảnh/Phân quyền -->
             <div class="row">
                 <div class="col-lg-8">
                     <div class="card-custom p-4">
@@ -55,41 +51,31 @@
                         </div>
 
                         <ul class="nav nav-tabs nav-tabs-custom" id="langTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="vn-tab" data-bs-toggle="tab" data-bs-target="#vn" type="button" role="tab">🇻🇳 Tiếng Việt</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="en-tab" data-bs-toggle="tab" data-bs-target="#en" type="button" role="tab">🇬🇧 English</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="zh-tab" data-bs-toggle="tab" data-bs-target="#zh" type="button" role="tab">🇨🇳 中文</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="ko-tab" data-bs-toggle="tab" data-bs-target="#ko" type="button" role="tab">🇰🇷 한국어</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="ja-tab" data-bs-toggle="tab" data-bs-target="#ja" type="button" role="tab">🇯🇵 日本語</button>
-                            </li>
+                            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#vn" type="button">🇻🇳 Tiếng Việt</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#en" type="button">🇬🇧 English</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zh" type="button">🇨🇳 中文</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ko" type="button">🇰🇷 한국어</button></li>
+                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ja" type="button">🇯🇵 日本語</button></li>
                         </ul>
 
                         <div class="tab-content tab-content-custom mb-2" id="langTabsContent">
-                            <div class="tab-pane fade show active" id="vn" role="tabpanel">
+                            <div class="tab-pane fade show active" id="vn">
                                 <label class="form-label-custom text-danger">Kịch bản Tiếng Việt (VN)</label>
                                 <textarea asp-for="DescriptionVi" class="form-control-custom" rows="5" placeholder="Nhập nội dung thuyết minh tiếng Việt..."></textarea>
                             </div>
-                            <div class="tab-pane fade" id="en" role="tabpanel">
+                            <div class="tab-pane fade" id="en">
                                 <label class="form-label-custom text-primary">English Script (EN)</label>
                                 <textarea asp-for="DescriptionEn" class="form-control-custom" rows="5" placeholder="Enter English script..."></textarea>
                             </div>
-                            <div class="tab-pane fade" id="zh" role="tabpanel">
+                            <div class="tab-pane fade" id="zh">
                                 <label class="form-label-custom text-danger">中文 (ZH)</label>
                                 <textarea asp-for="DescriptionZh" class="form-control-custom" rows="5" placeholder="输入中文内容..."></textarea>
                             </div>
-                            <div class="tab-pane fade" id="ko" role="tabpanel">
+                            <div class="tab-pane fade" id="ko">
                                 <label class="form-label-custom text-info">한국어 (KO)</label>
                                 <textarea asp-for="DescriptionKo" class="form-control-custom" rows="5" placeholder="한국어 스크립트 입력..."></textarea>
                             </div>
-                            <div class="tab-pane fade" id="ja" role="tabpanel">
+                            <div class="tab-pane fade" id="ja">
                                 <label class="form-label-custom text-secondary">日本語 (JA)</label>
                                 <textarea asp-for="DescriptionJa" class="form-control-custom" rows="5" placeholder="日本語のスクリプトを入力してください..."></textarea>
                             </div>
@@ -138,31 +124,85 @@
                             </select>
                         </div>
                     </div>
-
-                    <div class="card-custom p-4">
-                        <label class="form-label-custom"><i class="bi bi-geo-alt-fill me-2"></i>Vị trí (GPS)</label>
-                        <div class="mb-3">
-                            <small class="text-muted">Vĩ độ (Latitude)</small>
-                            <input asp-for="Latitude" class="form-control-custom font-monospace" required />
-                        </div>
-                        <div class="mb-3">
-                            <small class="text-muted">Kinh độ (Longitude)</small>
-                            <input asp-for="Longitude" class="form-control-custom font-monospace" required />
-                        </div>
-                        <div class="mb-0">
-                            <small class="text-muted text-danger fw-bold">Bán kính kích hoạt (m)</small>
-                            <input asp-for="TriggerRadius" class="form-control-custom" />
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-update shadow">
-                        <i class="bi bi-floppy-fill me-2"></i>Lưu thay đổi
-                    </button>
-                    <a asp-action="Index" class="btn-back">
-                        <i class="bi bi-arrow-left me-1"></i>Hủy bỏ & Quay lại
-                    </a>
                 </div>
             </div>
+
+            <!-- ROW 2: GPS MAP PICKER - FULL WIDTH -->
+            <div class="card-custom p-4">
+                <label class="form-label-custom">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Vị trí GPS — Click hoặc kéo marker để chọn tọa độ
+                </label>
+                <div id="map-picker" style="height:450px;border-radius:10px;margin-bottom:16px;border:1px solid #d1d3e2;width:100%;"></div>
+                <small class="text-muted d-block mb-3">
+                    <i class="bi bi-info-circle"></i> Click trên bản đồ hoặc kéo marker để cập nhật tọa độ
+                </small>
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted fw-bold">Vĩ độ (Latitude)</small>
+                        <input asp-for="Latitude" id="lat-input" class="form-control-custom font-monospace" required />
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted fw-bold">Kinh độ (Longitude)</small>
+                        <input asp-for="Longitude" id="lon-input" class="form-control-custom font-monospace" required />
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted text-danger fw-bold">Bán kính kích hoạt (m)</small>
+                        <input asp-for="TriggerRadius" class="form-control-custom" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- NÚT LƯU -->
+            <button type="submit" class="btn-update shadow mt-2">
+                <i class="bi bi-floppy-fill me-2"></i>Lưu thay đổi
+            </button>
+            <a asp-action="Index" class="btn-back">
+                <i class="bi bi-arrow-left me-1"></i>Hủy bỏ & Quay lại
+            </a>
+
         </form>
     </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var initLat = parseFloat(document.getElementById('lat-input').value) || 10.760719;
+    var initLon = parseFloat(document.getElementById('lon-input').value) || 106.703297;
+
+    var map = L.map('map-picker').setView([initLat, initLon], 17);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    var marker = L.marker([initLat, initLon], { draggable: true }).addTo(map);
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateInputs(e.latlng.lat, e.latlng.lng);
+    });
+
+    marker.on('dragend', function(e) {
+        var pos = marker.getLatLng();
+        updateInputs(pos.lat, pos.lng);
+    });
+
+    document.getElementById('lat-input').addEventListener('change', moveMarker);
+    document.getElementById('lon-input').addEventListener('change', moveMarker);
+
+    function updateInputs(lat, lng) {
+        document.getElementById('lat-input').value = lat.toFixed(6);
+        document.getElementById('lon-input').value = lng.toFixed(6);
+    }
+
+    function moveMarker() {
+        var lat = parseFloat(document.getElementById('lat-input').value);
+        var lon = parseFloat(document.getElementById('lon-input').value);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            marker.setLatLng([lat, lon]);
+            map.setView([lat, lon], 17);
+        }
+    }
+</script>
