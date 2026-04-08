@@ -10,83 +10,43 @@
     .card-header-custom { background-color: #4e73df; color: white; border-radius: 16px 16px 0 0 !important; padding: 20px; }
     .form-label { font-weight: 600; color: #4a5568; font-size: 0.9rem; margin-bottom: 8px; display: block; }
     .form-control, .form-select { border-radius: 10px; border: 1px solid #e2e8f0; padding: 12px 15px; transition: 0.3s; }
-    .form-control:focus { border-color: #4e73df; box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1); }
     .lang-section { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #edf2f7; }
-    .lang-title { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 15px; }
     .btn-save { background: #4e73df; color: white; border-radius: 10px; padding: 12px 30px; font-weight: 700; border: none; transition: 0.3s; cursor: pointer; }
     .btn-save:hover { background: #2e59d9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(78, 115, 223, 0.3); }
-    .btn-cancel { border-radius: 10px; padding: 12px 30px; font-weight: 600; text-decoration: none; color: #718096; transition: 0.3s; }
-    .btn-cancel:hover { color: #2d3748; background: #edf2f7; }
 </style>
 
 <div class="container form-container">
     <div class="card card-custom">
         <div class="card-header-custom">
-            <h4 class="mb-0 fw-bold text-white">
-                <i class="bi bi-plus-circle-fill me-2"></i>Thêm Điểm Thuyết Minh Mới
-            </h4>
+            <h4 class="mb-0 fw-bold text-white"><i class="bi bi-plus-circle-fill me-2"></i>Thêm Điểm Thuyết Minh Mới</h4>
         </div>
 
         <div class="card-body p-4 p-md-5">
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger mb-4 p-3 border rounded-3 bg-light shadow-sm" style="list-style-type: none;"></div>
 
-                <!-- Tên + Phân loại -->
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div class="row mb-4">
                     <div class="col-md-7">
                         <label class="form-label">Tên địa điểm (Chính)</label>
-                        <input asp-for="Name" class="form-control form-control-lg"
-                               placeholder="Ví dụ: Ốc Oanh 534..." required />
+                        <input asp-for="Name" class="form-control form-control-lg" placeholder="Ví dụ: Ốc Oanh 534..." required />
                     </div>
                     <div class="col-md-5">
                         <label class="form-label">Phân loại quán</label>
-                        <select asp-for="Category" class="form-select form-control-lg">
+                        <select asp-for="Category" class="form-select form-control-lg" required>
                             <option value="">-- Chọn danh mục --</option>
                             <option value="Quán ốc">Quán ốc</option>
                             <option value="Lẩu dê">Lẩu dê</option>
                             <option value="Hải sản">Hải sản</option>
-                            <option value="Lẩu nướng">Lẩu nướng</option>
-                            <option value="Ăn vặt">Ăn vặt</option>
-                            <option value="Đồ Nhật">Đồ Nhật</option>
-                            <option value="Bún cá">Bún cá</option>
                             <option value="Điểm tham quan">Điểm tham quan</option>
                         </select>
                     </div>
                 </div>
 
-                <hr class="my-4" style="opacity: 0.1;">
-
-                <!-- Thuyết minh đa ngôn ngữ -->
                 <div class="lang-section mb-4 shadow-sm">
-                    <div class="lang-title">
-                        <i class="bi bi-translate me-2"></i>Nội dung thuyết minh (Multilingual)
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-danger">Tiếng Việt (VN)</label>
-                            <textarea asp-for="DescriptionVi" class="form-control" rows="3"
-                                      placeholder="Chào mừng bạn đến với..."></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-primary">Tiếng Anh (EN)</label>
-                            <textarea asp-for="DescriptionEn" class="form-control" rows="3"
-                                      placeholder="Welcome to..."></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tiếng Trung (ZH)</label>
-                            <textarea asp-for="DescriptionZh" class="form-control" rows="2"></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tiếng Hàn (KO)</label>
-                            <textarea asp-for="DescriptionKo" class="form-control" rows="2"></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tiếng Nhật (JA)</label>
-                            <textarea asp-for="DescriptionJa" class="form-control" rows="2"></textarea>
-                        </div>
-                    </div>
+                    <label class="form-label text-primary fw-bold">Nội dung thuyết minh (Tiếng Việt)</label>
+                    <textarea asp-for="DescriptionVi" class="form-control" rows="5" placeholder="Nhập mô tả quán..."></textarea>
                 </div>
 
-                <!-- Hình ảnh -->
                 <div class="row mb-4">
                     <div class="col-md-12">
                         <label class="form-label">Hình ảnh quán</label>
@@ -97,46 +57,28 @@
                     </div>
                 </div>
 
-                <!-- GPS MAP PICKER - FULL WIDTH -->
                 <div class="lang-section mb-4 shadow-sm">
-                    <div class="lang-title">
-                        <i class="bi bi-geo-alt-fill me-2"></i>Vị trí GPS — Click hoặc kéo marker để chọn tọa độ
-                    </div>
-                    <div id="map-picker" style="height:400px;border-radius:10px;margin-bottom:16px;border:1px solid #e2e8f0;width:100%;"></div>
-                    <small class="text-muted d-block mb-3">
-                        <i class="bi bi-info-circle"></i> Click trên bản đồ hoặc kéo marker để cập nhật tọa độ tự động
-                    </small>
+                    <div id="map-picker" style="height:350px;border-radius:10px;margin-bottom:16px;border:1px solid #e2e8f0;"></div>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Vĩ độ (Latitude)</label>
-                            <input asp-for="Latitude" id="lat-input" class="form-control font-monospace"
-                                   placeholder="10.760719" required />
+                            <input asp-for="Latitude" id="lat-input" class="form-control font-monospace" required />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Kinh độ (Longitude)</label>
-                            <input asp-for="Longitude" id="lon-input" class="form-control font-monospace"
-                                   placeholder="106.703297" required />
+                            <input asp-for="Longitude" id="lon-input" class="form-control font-monospace" required />
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Bán kính kích hoạt</label>
-                            <div class="input-group">
-                                <input asp-for="TriggerRadius" class="form-control" placeholder="35" />
-                                <span class="input-group-text">m</span>
-                            </div>
+                            <label class="form-label">Bán kính kích hoạt (m)</label>
+                            <input asp-for="TriggerRadius" class="form-control" placeholder="35" />
                         </div>
                     </div>
                 </div>
 
-                <!-- Nút lưu -->
                 <div class="d-flex align-items-center justify-content-between pt-4 border-top">
-                    <a asp-action="Index" class="btn-cancel">
-                        <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
-                    </a>
-                    <button type="submit" class="btn-save shadow">
-                        <i class="bi bi-check-lg me-2"></i>Lưu địa điểm
-                    </button>
+                    <a asp-action="Index" class="btn-cancel text-decoration-none text-muted"> <i class="bi bi-arrow-left me-2"></i>Quay lại </a>
+                    <button type="submit" class="btn-save shadow"> <i class="bi bi-check-lg me-2"></i>Lưu địa điểm </button>
                 </div>
-
             </form>
         </div>
     </div>
@@ -144,43 +86,14 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    var initLat = 10.761858;
-    var initLon = 106.702236;
-
+    var initLat = 10.761858; var initLon = 106.702236;
     var map = L.map('map-picker').setView([initLat, initLon], 17);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
-
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
     var marker = L.marker([initLat, initLon], { draggable: true }).addTo(map);
-
-    map.on('click', function(e) {
-        marker.setLatLng(e.latlng);
-        updateInputs(e.latlng.lat, e.latlng.lng);
-    });
-
-    marker.on('dragend', function(e) {
-        var pos = marker.getLatLng();
-        updateInputs(pos.lat, pos.lng);
-    });
-
-    document.getElementById('lat-input').addEventListener('change', moveMarker);
-    document.getElementById('lon-input').addEventListener('change', moveMarker);
-
-    function updateInputs(lat, lng) {
-        document.getElementById('lat-input').value = lat.toFixed(6);
-        document.getElementById('lon-input').value = lng.toFixed(6);
-    }
-
-    function moveMarker() {
-        var lat = parseFloat(document.getElementById('lat-input').value);
-        var lon = parseFloat(document.getElementById('lon-input').value);
-        if (!isNaN(lat) && !isNaN(lon)) {
-            marker.setLatLng([lat, lon]);
-            map.setView([lat, lon], 17);
-        }
+    map.on('click', function(e) { marker.setLatLng(e.latlng); updateInputs(e.latlng.lat, e.latlng.lng); });
+    marker.on('dragend', function(e) { var pos = marker.getLatLng(); updateInputs(pos.lat, pos.lng); });
+    function updateInputs(lat, lng) { 
+        document.getElementById('lat-input').value = lat.toFixed(6); 
+        document.getElementById('lon-input').value = lng.toFixed(6); 
     }
 </script>

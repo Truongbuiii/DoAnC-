@@ -229,19 +229,21 @@
                                          onerror="this.src='/images/default.jpg';" />
                                 </td>
 
-                                <td class="px-3">
-                                    <div class="poi-name mb-1">@poi.Name</div>
-                                    <div class="description-box">
-                                        <div class="d-flex align-items-start mb-2">
-                                            <span class="lang-badge bg-danger text-white">VN</span>
-                                            <div class="description-text">@poi.DescriptionVi</div>
-                                        </div>
-                                        <div class="d-flex align-items-start">
-                                            <span class="lang-badge bg-primary text-white">EN</span>
-                                            <div class="description-text italic">@poi.DescriptionEn</div>
-                                        </div>
-                                    </div>
-                                </td>
+                            <td class="px-3">
+    <div class="poi-name mb-1">@poi.Name</div>
+    <div class="description-box">
+        <div class="d-flex align-items-start mb-2">
+            <span class="lang-badge bg-danger text-white">VN</span>
+            <div class="description-text">@poi.DescriptionVi</div>
+        </div>
+        <div class="d-flex align-items-start">
+            <span class="lang-badge bg-success text-white">AUTO</span>
+            <div class="description-text text-muted fst-italic">
+                App tự động dịch sang 4 ngôn ngữ
+            </div>
+        </div>
+    </div>
+</td>
 
                                 <td class="text-center hide-mobile">
                                     <div class="category-badge @GetBadgeColor(poi.Category)">

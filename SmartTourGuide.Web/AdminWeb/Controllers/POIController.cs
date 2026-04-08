@@ -65,6 +65,15 @@ namespace AdminWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(POI poi, IFormFile? imageFile)
         {
+            // Xóa validation của các field không còn dùng
+            ModelState.Remove("DescriptionEn");
+            ModelState.Remove("DescriptionZh");
+            ModelState.Remove("DescriptionKo");
+            ModelState.Remove("DescriptionJa");
+            ModelState.Remove("Audios");
+            ModelState.Remove("OwnerUsername");
+
+
             if (ModelState.IsValid)
             {
                 try
@@ -89,7 +98,7 @@ namespace AdminWeb.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Lỗi rồi Tài ơi: " + ex.Message);
+                    ModelState.AddModelError("", "Lỗi rồi ơi: " + ex.Message);
                 }
             }
             return View(poi);
@@ -188,11 +197,7 @@ namespace AdminWeb.Controllers
                 p.Longitude,
                 p.TriggerRadius,
                 p.ImageSource,
-                p.DescriptionVi,
-                p.DescriptionEn,
-                p.DescriptionZh,
-                p.DescriptionKo,
-                p.DescriptionJa
+                p.DescriptionVi  // chỉ trả về tiếng Việt
             }).ToListAsync();
             return Json(pois);
         }

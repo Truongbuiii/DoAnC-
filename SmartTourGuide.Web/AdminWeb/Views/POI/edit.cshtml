@@ -40,48 +40,25 @@
             <!-- ROW 1: Thuyết minh + Hình ảnh/Phân quyền -->
             <div class="row">
                 <div class="col-lg-8">
-                    <div class="card-custom p-4">
-                        <div class="mb-4">
-                            <label class="form-label-custom">Tên địa điểm (Chính)</label>
-                            <input asp-for="Name" class="form-control-custom fs-5 fw-bold text-primary" required placeholder="Nhập tên quán..." />
-                        </div>
+                  <div class="card-custom p-4">
+    <div class="mb-4">
+        <label class="form-label-custom">Tên địa điểm (Chính)</label>
+        <input asp-for="Name" class="form-control-custom fs-5 fw-bold text-primary" required placeholder="Nhập tên quán..." />
+    </div>
 
-                        <div class="border-bottom pb-2 mb-3">
-                            <h5 class="fw-bold text-secondary mb-0"><i class="bi bi-translate me-2"></i>Thuyết minh đa ngôn ngữ</h5>
-                        </div>
+    <div class="border-bottom pb-2 mb-3">
+        <h5 class="fw-bold text-secondary mb-0"><i class="bi bi-translate me-2"></i>Thuyết minh</h5>
+    </div>
 
-                        <ul class="nav nav-tabs nav-tabs-custom" id="langTabs" role="tablist">
-                            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#vn" type="button">🇻🇳 Tiếng Việt</button></li>
-                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#en" type="button">🇬🇧 English</button></li>
-                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zh" type="button">🇨🇳 中文</button></li>
-                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ko" type="button">🇰🇷 한국어</button></li>
-                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ja" type="button">🇯🇵 日本語</button></li>
-                        </ul>
-
-                        <div class="tab-content tab-content-custom mb-2" id="langTabsContent">
-                            <div class="tab-pane fade show active" id="vn">
-                                <label class="form-label-custom text-danger">Kịch bản Tiếng Việt (VN)</label>
-                                <textarea asp-for="DescriptionVi" class="form-control-custom" rows="5" placeholder="Nhập nội dung thuyết minh tiếng Việt..."></textarea>
-                            </div>
-                            <div class="tab-pane fade" id="en">
-                                <label class="form-label-custom text-primary">English Script (EN)</label>
-                                <textarea asp-for="DescriptionEn" class="form-control-custom" rows="5" placeholder="Enter English script..."></textarea>
-                            </div>
-                            <div class="tab-pane fade" id="zh">
-                                <label class="form-label-custom text-danger">中文 (ZH)</label>
-                                <textarea asp-for="DescriptionZh" class="form-control-custom" rows="5" placeholder="输入中文内容..."></textarea>
-                            </div>
-                            <div class="tab-pane fade" id="ko">
-                                <label class="form-label-custom text-info">한국어 (KO)</label>
-                                <textarea asp-for="DescriptionKo" class="form-control-custom" rows="5" placeholder="한국어 스크립트 입력..."></textarea>
-                            </div>
-                            <div class="tab-pane fade" id="ja">
-                                <label class="form-label-custom text-secondary">日本語 (JA)</label>
-                                <textarea asp-for="DescriptionJa" class="form-control-custom" rows="5" placeholder="日本語のスクリプトを入力してください..."></textarea>
-                            </div>
-                        </div>
-                        <small class="text-muted fst-italic"><i class="bi bi-info-circle"></i> Khuyến nghị: Độ dài kịch bản dưới 500 từ để tối ưu thời gian phát Audio.</small>
-                    </div>
+    <div class="mb-3">
+        <label class="form-label-custom text-danger">Nội dung thuyết minh (Tiếng Việt)</label>
+        <textarea asp-for="DescriptionVi" id="desc-vi" class="form-control-custom" rows="6"
+                  placeholder="Nhập nội dung thuyết minh tiếng Việt..."></textarea>
+        <small class="text-muted fst-italic">
+            <i class="bi bi-info-circle"></i> App sẽ tự động dịch sang 4 ngôn ngữ khi hiển thị cho du khách.
+        </small>
+    </div>
+</div>
                 </div>
 
                 <div class="col-lg-4">
