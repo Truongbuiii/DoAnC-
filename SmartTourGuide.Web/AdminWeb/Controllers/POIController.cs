@@ -235,7 +235,6 @@ namespace AdminWeb.Controllers
             });
         }
 
-        // API 3: POST /api/v1/analytics/sync
         [AllowAnonymous]
         [HttpPost("/api/v1/analytics/sync")]
         public async Task<IActionResult> SyncAnalyticsApi([FromBody] List<ActivityLogDto> logs)
