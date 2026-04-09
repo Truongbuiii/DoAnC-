@@ -11,6 +11,7 @@ namespace FoodTourApp.Services
     /// </summary>
     public class NarrationService
     {
+        private readonly Dictionary<string, DateTime> _lastPlayedTimes = new();
         // Hàng chờ thuyết minh
         private readonly ConcurrentQueue<NarrationItem> _queue = new();
 
@@ -49,21 +50,32 @@ namespace FoodTourApp.Services
         /// <summary>
         /// Thêm vào hàng chờ và phát
         /// </summary>
-        public async Task QueueAndPlayAsync(string id, string text, int priority = 0)
+        public async Task QueueAndPlayAsync(string id, string text, bool isUrgent = false)
         {
-            if (_currentPlayingId == id && _isPlaying)
+            // 1. Chống trùng lặp (Sửa lỗi CS0103)
+            if (_lastPlayedTimes.TryGetValue(id, out var lastTime) &&
+                (DateTime.Now - lastTime).TotalSeconds < 30)
                 return;
 
+            if (isUrgent)
+            {
+                await PlayImmediateAsync(id, text);
+                _lastPlayedTimes[id] = DateTime.Now;
+                return;
+            }
+
+            // 2. Sửa lỗi CS8635 & CS0747 (Thay dấu ... bằng code thật)
             var item = new NarrationItem
             {
                 Id = id,
                 Text = text,
-                Priority = priority,
+                Priority = isUrgent ? 10 : 0, // Gán giá trị thật thay vì để ...
                 Type = NarrationType.TTS,
                 LanguageCode = _currentLanguage
             };
 
             _queue.Enqueue(item);
+            _lastPlayedTimes[id] = DateTime.Now; // Lưu lại vết phát
             await ProcessQueueAsync();
         }
 

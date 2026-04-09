@@ -342,6 +342,16 @@ public partial class MapPage : ContentPage
 
             var logResult = await apiSync.SyncLogsAsync();
             System.Diagnostics.Debug.WriteLine($"=== SYNC LOGS: {logResult}");
+
+            // Dịch ngầm
+            await _dbService.TranslateAndCachePoisAsync();
+
+            // Reload POI sau khi dịch xong
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                _allPoisFromDb = await _dbService.GetPOIsAsync();
+                RefreshListView();
+            });
         });
 
         _geofenceService.CooldownMinutes = Preferences.Get("CooldownMinutes", 5);
@@ -418,6 +428,31 @@ public partial class MapPage : ContentPage
         }
     }
 
+    private async Task TranslateAllPoisAsync()
+    {
+        try
+        {
+            var pois = await _dbService.GetPOIsAsync();
+            var translator = new FoodTourApp.Services.TranslationService();
+            int count = 0;
+
+            foreach (var poi in pois)
+            {
+                // Chỉ dịch nếu chưa có cache
+                if (string.IsNullOrEmpty(poi.DescriptionEn))
+                {
+                    await translator.TranslatePoiAsync(poi);
+                    await _dbService.SavePOIAsync(poi);
+                    count++;
+                }
+            }
+            System.Diagnostics.Debug.WriteLine($"=== TRANSLATED: {count} POIs");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== TRANSLATE FAIL: {ex.Message}");
+        }
+    }
     private void LoadDefaultMap()
     {
         var html = new HtmlWebViewSource();
