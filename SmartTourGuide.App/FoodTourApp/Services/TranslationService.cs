@@ -55,22 +55,26 @@ namespace FoodTourApp.Services
             }
         }
 
-        // Hàm này dùng để dịch toàn bộ 4 thứ tiếng cho 1 quán
-        public async Task TranslatePoiAsync(POI poi)
+        // Dịch nhiều ngôn ngữ cho 1 POI nhưng KHÔNG gán vào model.
+        // Trả về dictionary mapping mã ngôn ngữ -> chuỗi đã dịch (hoặc null nếu thất bại).
+        public async Task<Dictionary<string, string?>> TranslatePoiAsync(POI poi)
         {
-            if (string.IsNullOrEmpty(poi.DescriptionVi)) return;
+            var translations = new Dictionary<string, string?>();
+            if (poi == null || string.IsNullOrEmpty(poi.DescriptionVi)) return translations;
 
             // Dịch lần lượt và nghỉ 1.5s để tránh lỗi 429 (Too Many Requests)
-            poi.DescriptionEn = await TranslateAsync(poi.DescriptionVi, "en");
+            translations["en"] = await TranslateAsync(poi.DescriptionVi, "en");
             await Task.Delay(1500);
 
-            poi.DescriptionZh = await TranslateAsync(poi.DescriptionVi, "zh");
+            translations["zh"] = await TranslateAsync(poi.DescriptionVi, "zh");
             await Task.Delay(1500);
 
-            poi.DescriptionKo = await TranslateAsync(poi.DescriptionVi, "ko");
+            translations["ko"] = await TranslateAsync(poi.DescriptionVi, "ko");
             await Task.Delay(1500);
 
-            poi.DescriptionJa = await TranslateAsync(poi.DescriptionVi, "ja");
+            translations["ja"] = await TranslateAsync(poi.DescriptionVi, "ja");
+
+            return translations;
         }
     }
 }

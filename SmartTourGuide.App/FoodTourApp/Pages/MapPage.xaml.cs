@@ -2,6 +2,9 @@
 using FoodTourApp.Models;
 using FoodTourApp.Services;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.ApplicationModel;
+using System.Globalization;
+
 
 #if ANDROID
 using Android.Content;
@@ -25,7 +28,6 @@ public partial class MapPage : ContentPage
     private double _lastUserLon = 0;
     private bool _hasUserLocation = false;
 
-    private readonly string[] _languageCodes = { "vi-VN", "en-US", "zh-CN", "ko-KR", "ja-JP" };
     private string _currentLanguage = "vi-VN";
 
 #if ANDROID
@@ -43,6 +45,7 @@ public partial class MapPage : ContentPage
         _geofenceService.CooldownMinutes = 1;
         _geofenceService.DebounceSeconds = 1;
 
+        // Đăng ký sự kiện Narration
         _narrationService.OnNarrationStarted += (s, e) =>
         {
             MainThread.BeginInvokeOnMainThread(() =>
@@ -61,6 +64,35 @@ public partial class MapPage : ContentPage
         PoisListView.ItemsSource = _poiListForDisplay;
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
     }
+
+    // --- CÁC HÀM TIỆN ÍCH (HELPER METHODS) ---
+
+    private static bool IsVietnamese(string culture)
+    {
+        if (string.IsNullOrEmpty(culture)) return false;
+        return culture.ToLower().StartsWith("vi");
+    }
+
+    private static string GetShortLangCode(string culture)
+    {
+        if (string.IsNullOrEmpty(culture)) return string.Empty;
+        culture = culture.ToLower();
+        if (culture.StartsWith("en")) return "en";
+        if (culture.StartsWith("ja")) return "ja";
+        if (culture.StartsWith("ko")) return "ko";
+        if (culture.StartsWith("zh")) return "zh";
+        return string.Empty;
+    }
+
+    private string GetLanguageFlag(string code) => code switch
+    {
+        "vi-VN" => "🇻🇳",
+        "en-US" => "🇺🇸",
+        "zh-CN" => "🇨🇳",
+        "ko-KR" => "🇰🇷",
+        "ja-JP" => "🇯🇵",
+        _ => "🌐"
+    };
 
     private void ApplyLanguage()
     {
@@ -81,6 +113,8 @@ public partial class MapPage : ContentPage
         }
     }
 
+    // --- XỬ LÝ ÂM THANH ---
+
     private void SpeakText(string text)
     {
 #if ANDROID
@@ -96,116 +130,100 @@ public partial class MapPage : ContentPage
 #endif
     }
 
-    private string GetLanguageFlag(string code) => code switch
-    {
-        "vi-VN" => "🇻🇳",
-        "en-US" => "🇺🇸",
-        "zh-CN" => "🇨🇳",
-        "ko-KR" => "🇰🇷",
-        "ja-JP" => "🇯🇵",
-        _ => "🌐"
-    };
+    // --- XỬ LÝ BẢN ĐỒ (WEBVIEW) ---
 
     private string GenerateMapHtml(double centerLat, double centerLon, List<POI> allPois, int highlightPoiId = -1)
     {
+        // 1. Xử lý Markers (Dùng nội suy chuỗi cẩn thận)
         var markersJs = string.Join("\n", allPois.Select(p =>
         {
-            string lat = p.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string lon = p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string lat = p.Latitude.ToString(CultureInfo.InvariantCulture);
+            string lon = p.Longitude.ToString(CultureInfo.InvariantCulture);
             string name = p.Name.Replace("'", "\\'");
             string cat = p.Category.Replace("'", "\\'");
-
             bool isHighlight = p.PoiId == highlightPoiId;
-            string iconColor = isHighlight ? "orange" : "green";
-            string iconSize = isHighlight ? "40" : "30";
+            string color = isHighlight ? "#ff9800" : "#4caf50";
+            int size = isHighlight ? 36 : 28;
 
             return $@"
         var icon_{p.PoiId} = L.divIcon({{
-            className: '',
-            html: '<div style=""width:{iconSize}px;height:{iconSize}px;background:{iconColor};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3)""></div>',
-            iconSize: [{iconSize},{iconSize}],
-            iconAnchor: [{int.Parse(iconSize) / 2},{int.Parse(iconSize)}]
+            className: 'custom-div-icon',
+            html: '<div style=""width:{size}px;height:{size}px;background:{color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)""></div>',
+            iconSize: [{size}, {size}],
+            iconAnchor: [{size / 2}, {size}]
         }});
-        var marker_{p.PoiId} = L.marker([{lat},{lon}], {{icon: icon_{p.PoiId}}})
-            .bindPopup('<b>{name}</b><br/><i>{cat}</i>{(isHighlight ? "<br/>📍 Gần nhất!" : "")}')
+        var marker_{p.PoiId} = L.marker([{lat}, {lon}], {{ icon: icon_{p.PoiId} }})
+            .bindPopup('<b>{name}</b><br/>{cat}')
             .on('click', function() {{ window.location.href = 'poi://{p.PoiId}'; }});
         {(isHighlight ? $"marker_{p.PoiId}.openPopup();" : "")}
         markerCluster.addLayer(marker_{p.PoiId});";
         }));
 
-        string latStr = centerLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        string lonStr = centerLon.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        // 2. Tọa độ trung tâm
+        string cLat = centerLat.ToString(CultureInfo.InvariantCulture);
+        string cLon = centerLon.ToString(CultureInfo.InvariantCulture);
 
-        return $@"
+        // 3. Khối HTML (Dùng @ nhưng KHÔNG dùng $ để tránh lỗi dấu ngoặc của Leaflet/CSS)
+        string htmlTemplate = @"
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
     <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>
     <link rel='stylesheet' href='https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css'/>
     <link rel='stylesheet' href='https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css'/>
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script src='https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'></script>
-    <style>* {{margin:0;padding:0}} #map {{height:100vh;width:100vw}}</style>
+    <style>
+        body, html, #map { height: 100%; width: 100%; margin: 0; padding: 0; }
+        .custom-div-icon { background: none; border: none; }
+    </style>
 </head>
 <body>
     <div id='map'></div>
     <script>
-        var map = L.map('map').setView([{latStr},{lonStr}], 17);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+        var map = L.map('map', { zoomControl: false }).setView([CENTER_LAT, CENTER_LON], 17);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
-        }}).addTo(map);
+        }).addTo(map);
+        
+        var markerCluster = L.markerClusterGroup();
+        MARKERS_HERE
+        map.addLayer(markerCluster);
 
-        var markerCluster = L.markerClusterGroup({{
-            maxClusterRadius: 50,
-            disableClusteringAtZoom: 18,
-            spiderfyOnMaxZoom: true
-        }});
-
-        {markersJs}
-        markerCluster.addTo(map);
-
-        var userMarker = null;
-        var userCircle = null;
-
-        function setUserLocation(lat, lng, accuracy) {{
-            if (userMarker) {{
+        var userMarker = null, userCircle = null;
+        function setUserLocation(lat, lng, acc) {
+            if (userMarker) {
                 userMarker.setLatLng([lat, lng]);
-                userCircle.setLatLng([lat, lng]);
-                userCircle.setRadius(accuracy);
-            }} else {{
-                userMarker = L.circleMarker([lat, lng], {{
-                    radius: 10,
-                    fillColor: '#4A90E2',
-                    color: 'white',
-                    weight: 3,
-                    fillOpacity: 1
-                }}).addTo(map).bindPopup('📍 You');
-
-                userCircle = L.circle([lat, lng], {{
-                    radius: accuracy,
-                    color: '#4A90E2',
-                    fillColor: '#4A90E2',
-                    fillOpacity: 0.1,
-                    weight: 1
-                }}).addTo(map);
-            }}
-        }}
+                userCircle.setLatLng([lat, lng]).setRadius(acc);
+            } else {
+                userMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#2196f3', color: 'white', weight: 2, fillOpacity: 1 }).addTo(map);
+                userCircle = L.circle([lat, lng], { radius: acc, color: '#2196f3', weight: 1, fillOpacity: 0.1 }).addTo(map);
+            }
+        }
     </script>
 </body>
 </html>";
+
+        // 4. Thay thế các placeholder bằng dữ liệu thật (Cực kỳ an toàn, không lo lỗi cú pháp C#)
+        return htmlTemplate.Replace("CENTER_LAT", cLat)
+                            .Replace("CENTER_LON", cLon)
+                            .Replace("MARKERS_HERE", markersJs);
     }
 
     private async Task DrawBlueDotAfterLoad(double lat, double lon)
     {
         await Task.Delay(800);
-        string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string latStr = lat.ToString(CultureInfo.InvariantCulture);
+        string lonStr = lon.ToString(CultureInfo.InvariantCulture);
         MainThread.BeginInvokeOnMainThread(() =>
             MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)"));
     }
+
+    // --- ĐỊNH VỊ VÀ GEOFENCING ---
 
     private void StartTrackingLocation()
     {
@@ -232,7 +250,7 @@ public partial class MapPage : ContentPage
     }
 
 #if ANDROID
-    private async void OnLocationUpdated(object? sender, Microsoft.Maui.Devices.Sensors.Location location)
+    private async void OnLocationUpdated(object? sender, Location location)
     {
         await CheckAndNarrate(location.Latitude, location.Longitude);
     }
@@ -248,8 +266,8 @@ public partial class MapPage : ContentPage
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string latStr = lat.ToString(CultureInfo.InvariantCulture);
+            string lonStr = lon.ToString(CultureInfo.InvariantCulture);
             MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
 
             RefreshListView();
@@ -274,9 +292,23 @@ public partial class MapPage : ContentPage
 
             if (result.ShouldNarrate && result.PoiToNarrate != null)
             {
-                SpeakText(result.PoiToNarrate.GetDescription(_currentLanguage));
-                _ = _dbService.LogActivityAsync(
-                    result.PoiToNarrate.PoiId, "AutoTrigger", _currentLanguage);
+                _ = Task.Run(async () =>
+                {
+                    var poi = result.PoiToNarrate;
+                    string textToSpeak;
+                    if (IsVietnamese(_currentLanguage)) textToSpeak = poi.DescriptionVi;
+                    else
+                    {
+                        var translator = new TranslationService();
+                        var shortCode = GetShortLangCode(_currentLanguage);
+                        var translated = await translator.TranslateAsync(poi.DescriptionVi, shortCode);
+                        textToSpeak = string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() => SpeakText(textToSpeak));
+                });
+
+                _ = _dbService.LogActivityAsync(result.PoiToNarrate.PoiId, "AutoTrigger", _currentLanguage);
             }
         });
     }
@@ -323,6 +355,8 @@ public partial class MapPage : ContentPage
         }
     }
 
+    // --- VÒNG ĐỜI TRANG (LIFECYCLE) ---
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -334,28 +368,17 @@ public partial class MapPage : ContentPage
         var apiSync = new ApiSyncService(_dbService);
         _ = Task.Run(async () =>
         {
-            var syncResult = await apiSync.SyncPoisAsync();
-            System.Diagnostics.Debug.WriteLine($"=== SYNC POI: {syncResult}");
-
-            var tourResult = await apiSync.SyncToursAsync();
-            System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS: {tourResult}");
-
-            var logResult = await apiSync.SyncLogsAsync();
-            System.Diagnostics.Debug.WriteLine($"=== SYNC LOGS: {logResult}");
-
-            // Dịch ngầm
+            await apiSync.SyncPoisAsync();
+            await apiSync.SyncToursAsync();
+            await apiSync.SyncLogsAsync();
             await _dbService.TranslateAndCachePoisAsync();
 
-            // Reload POI sau khi dịch xong
             MainThread.BeginInvokeOnMainThread(async () =>
             {
-                _allPoisFromDb = await _dbService.GetPOIsAsync();
+                _allPoisFromDb = (await _dbService.GetPOIsAsync()).ToList();
                 RefreshListView();
             });
         });
-
-        _geofenceService.CooldownMinutes = Preferences.Get("CooldownMinutes", 5);
-        _geofenceService.DefaultRadius = Preferences.Get("TriggerRadius", 0);
 
 #if ANDROID
         _androidTts = new AndroidTtsService();
@@ -368,32 +391,8 @@ public partial class MapPage : ContentPage
         _allPoisFromDb = pois.ToList();
         RefreshListView();
 
-        string tourPoiIds = Preferences.Get("TourPoiIds", "");
-        if (!string.IsNullOrEmpty(tourPoiIds))
-        {
-            Preferences.Remove("TourPoiIds");
-            var ids = tourPoiIds.Split(',').Select(int.Parse).ToList();
-            var tourPois = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
-            if (tourPois.Any())
-            {
-                var html = new HtmlWebViewSource();
-                html.Html = GenerateMapHtml(tourPois.First().Latitude, tourPois.First().Longitude, tourPois);
-                MapWebView.Source = html;
-                MapLoading.IsVisible = false;
-                StartTrackingLocation();
-                return;
-            }
-        }
-
-        int highlightId = Preferences.Get("HighlightPoiId", -1);
-        if (highlightId > 0)
-        {
-            Preferences.Remove("HighlightPoiId");
-            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
-            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
-            StartTrackingLocation();
-            return;
-        }
+        // Xử lý Tour hoặc Highlight từ Preferences
+        if (HandlePreferences()) return;
 
         var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
@@ -407,14 +406,8 @@ public partial class MapPage : ContentPage
                     _lastUserLat = location.Latitude;
                     _lastUserLon = location.Longitude;
                     _hasUserLocation = true;
-                    var html = new HtmlWebViewSource();
-                    html.Html = GenerateMapHtml(location.Latitude, location.Longitude, _allPoisFromDb);
-                    MapWebView.Source = html;
-                    MapLoading.IsVisible = false;
-                    await Task.Delay(1000);
-                    string latStr = location.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    string lonStr = location.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+                    UpdateInterface(location.Latitude, location.Longitude);
+                    await DrawBlueDotAfterLoad(location.Latitude, location.Longitude);
                 }
                 else LoadDefaultMap();
             }
@@ -428,31 +421,34 @@ public partial class MapPage : ContentPage
         }
     }
 
-    private async Task TranslateAllPoisAsync()
+    private bool HandlePreferences()
     {
-        try
+        string tourPoiIds = Preferences.Get("TourPoiIds", "");
+        if (!string.IsNullOrEmpty(tourPoiIds))
         {
-            var pois = await _dbService.GetPOIsAsync();
-            var translator = new FoodTourApp.Services.TranslationService();
-            int count = 0;
-
-            foreach (var poi in pois)
+            Preferences.Remove("TourPoiIds");
+            var ids = tourPoiIds.Split(',').Select(int.Parse).ToList();
+            var tourPois = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
+            if (tourPois.Any())
             {
-                // Chỉ dịch nếu chưa có cache
-                if (string.IsNullOrEmpty(poi.DescriptionEn))
-                {
-                    await translator.TranslatePoiAsync(poi);
-                    await _dbService.SavePOIAsync(poi);
-                    count++;
-                }
+                UpdateInterface(tourPois.First().Latitude, tourPois.First().Longitude, tourPois.First());
+                StartTrackingLocation();
+                return true;
             }
-            System.Diagnostics.Debug.WriteLine($"=== TRANSLATED: {count} POIs");
         }
-        catch (Exception ex)
+
+        int highlightId = Preferences.Get("HighlightPoiId", -1);
+        if (highlightId > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"=== TRANSLATE FAIL: {ex.Message}");
+            Preferences.Remove("HighlightPoiId");
+            var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == highlightId);
+            if (poi != null) UpdateInterface(poi.Latitude, poi.Longitude, poi);
+            StartTrackingLocation();
+            return true;
         }
+        return false;
     }
+
     private void LoadDefaultMap()
     {
         var html = new HtmlWebViewSource();
@@ -466,9 +462,29 @@ public partial class MapPage : ContentPage
         base.OnDisappearing();
         StopSpeaking();
         MapWebView.Navigating -= OnMapWebViewNavigating;
+        StopTrackingLocation();
     }
 
-    private void OnMapWebViewNavigating(object? sender, WebNavigatingEventArgs e)
+    // --- SỰ KIỆN TƯƠNG TÁC (UI EVENTS) ---
+
+    // Hàm mới để xử lý thuyết minh (Narration)
+    private void PlayPoiNarration(POI poi)
+    {
+        _ = Task.Run(async () =>
+        {
+            string text = poi.DescriptionVi;
+            if (!IsVietnamese(_currentLanguage))
+            {
+                var translator = new TranslationService();
+                var translated = await translator.TranslateAsync(poi.DescriptionVi, GetShortLangCode(_currentLanguage));
+                text = string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
+            }
+            MainThread.BeginInvokeOnMainThread(() => SpeakText(text));
+        });
+    }
+
+    // Cập nhật lại hàm OnMapWebViewNavigating
+    private async void OnMapWebViewNavigating(object? sender, WebNavigatingEventArgs e)
     {
         if (!e.Url.StartsWith("poi://")) return;
         e.Cancel = true;
@@ -477,19 +493,10 @@ public partial class MapPage : ContentPage
         var poi = _allPoisFromDb.FirstOrDefault(p => p.PoiId == poiId);
         if (poi == null) return;
 
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            _currentDisplayedPoi = poi;
-            PoiCard.IsVisible = true;
-            CurrentPoiName.Text = poi.Name;
-            CategoryLabel.Text = poi.Category.ToUpper();
-            PoiImage.Source = poi.FullImageUrl;
-            StatusLabel.Text = Lang.Get("map_selected");
-            BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId)
-                ? Lang.Get("map_favorited") : Lang.Get("map_favorite");
-            MapLoading.IsVisible = false;
-            SpeakText(poi.GetDescription(_currentLanguage));
-        });
+        MainThread.BeginInvokeOnMainThread(() => UpdateInterface(poi.Latitude, poi.Longitude, poi));
+
+        // Gọi hàm thuyết minh
+        PlayPoiNarration(poi);
     }
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
@@ -498,107 +505,79 @@ public partial class MapPage : ContentPage
         if (string.IsNullOrEmpty(keyword))
         {
             SuggestionBorder.IsVisible = false;
-            SuggestionList.ItemsSource = null;
             RefreshListView();
             return;
         }
 
         var suggestions = _allPoisFromDb
-            .Where(p => p.Name.ToLower().Contains(keyword) ||
-                        p.Category.ToLower().Contains(keyword))
+            .Where(p => p.Name.ToLower().Contains(keyword) || p.Category.ToLower().Contains(keyword))
             .Take(5).ToList();
 
-        if (suggestions.Any())
-        {
-            SuggestionList.ItemsSource = suggestions;
-            SuggestionBorder.IsVisible = true;
-        }
-        else
-        {
-            SuggestionBorder.IsVisible = false;
-        }
-
+        SuggestionList.ItemsSource = suggestions;
+        SuggestionBorder.IsVisible = suggestions.Any();
         RefreshListView();
     }
 
-    private void OnSuggestionSelected(object sender, SelectionChangedEventArgs e)
+    private async void OnSuggestionSelected(object sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is not POI selected) return;
 
         SuggestionBorder.IsVisible = false;
-        SuggestionList.SelectedItem = null;
         SearchEntry.Text = selected.Name;
+        UpdateInterface(selected.Latitude, selected.Longitude, selected);
 
-        _currentDisplayedPoi = selected;
-        PoiCard.IsVisible = true;
-        CurrentPoiName.Text = selected.Name;
-        CategoryLabel.Text = selected.Category.ToUpper();
-        PoiImage.Source = selected.FullImageUrl;
-        StatusLabel.Text = "🔍";
-        BtnFavorite.Text = FavoritesPage.IsFavorite(selected.PoiId)
-            ? Lang.Get("map_favorited") : Lang.Get("map_favorite");
-
-        string latStr = selected.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        string lonStr = selected.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        MapWebView.Eval($"map.setView([{latStr},{lonStr}], 18)");
-
-        SpeakText(selected.GetDescription(_currentLanguage));
+        _ = Task.Run(async () =>
+        {
+            string text = selected.DescriptionVi;
+            if (!IsVietnamese(_currentLanguage))
+            {
+                var translated = await new TranslationService().TranslateAsync(selected.DescriptionVi, GetShortLangCode(_currentLanguage));
+                text = string.IsNullOrEmpty(translated) ? selected.DescriptionVi : translated;
+            }
+            MainThread.BeginInvokeOnMainThread(() => SpeakText(text));
+        });
         SearchEntry.Unfocus();
     }
 
     private void OnPoiSelected(object sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is not POI selectedPoi) return;
-        _currentDisplayedPoi = selectedPoi;
         UpdateInterface(selectedPoi.Latitude, selectedPoi.Longitude, selectedPoi);
-        SpeakText(selectedPoi.GetDescription(_currentLanguage));
     }
 
     private void OnToggleFavorite(object sender, EventArgs e)
     {
         if (_currentDisplayedPoi == null) return;
         if (FavoritesPage.IsFavorite(_currentDisplayedPoi.PoiId))
-        {
             FavoritesPage.RemoveFavorite(_currentDisplayedPoi.PoiId);
-            BtnFavorite.Text = Lang.Get("map_favorite");
-        }
         else
-        {
             FavoritesPage.AddFavorite(_currentDisplayedPoi.PoiId);
-            BtnFavorite.Text = Lang.Get("map_favorited");
-        }
+
+        BtnFavorite.Text = FavoritesPage.IsFavorite(_currentDisplayedPoi.PoiId) ? Lang.Get("map_favorited") : Lang.Get("map_favorite");
     }
 
     private async void OnNavigateClicked(object sender, EventArgs e)
     {
-        if (_currentDisplayedPoi == null)
-        {
-            await DisplayAlertAsync(Lang.Get("btn_ok"), "Chưa có địa điểm nào được chọn!", Lang.Get("btn_ok"));
-            return;
-        }
+        if (_currentDisplayedPoi == null) return;
         try
         {
-            var location = new Location(_currentDisplayedPoi.Latitude, _currentDisplayedPoi.Longitude);
-            var options = new MapLaunchOptions { Name = _currentDisplayedPoi.Name, NavigationMode = NavigationMode.Walking };
-            await Map.Default.OpenAsync(location, options);
+            await Map.Default.OpenAsync(new Location(_currentDisplayedPoi.Latitude, _currentDisplayedPoi.Longitude),
+                new MapLaunchOptions { Name = _currentDisplayedPoi.Name, NavigationMode = NavigationMode.Walking });
         }
         catch
         {
-            string latStr = _currentDisplayedPoi.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string lonStr = _currentDisplayedPoi.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            await Launcher.OpenAsync($"https://www.google.com/maps/dir/?api=1&destination={latStr},{lonStr}&travelmode=walking");
+            await Launcher.OpenAsync($"http://maps.google.com/?daddr={_currentDisplayedPoi.Latitude},{_currentDisplayedPoi.Longitude}&travelmode=walking");
         }
     }
 
-    private async void OnReplayClicked(object sender, EventArgs e)
+    private void OnReplayClicked(object sender, EventArgs e)
     {
-        if (_currentDisplayedPoi == null)
-        {
-            await DisplayAlertAsync(Lang.Get("btn_ok"), "Chưa có địa điểm nào được chọn!", Lang.Get("btn_ok"));
-            return;
-        }
+        if (_currentDisplayedPoi == null) return;
+
         _geofenceService.ResetPoi(_currentDisplayedPoi.PoiId);
-        SpeakText(_currentDisplayedPoi.GetDescription(_currentLanguage));
+
+        // Đã FIX: Không gọi sự kiện giả lập nữa mà gọi trực tiếp hàm thuyết minh
+        PlayPoiNarration(_currentDisplayedPoi);
     }
 
     private async void OnDetailClicked(object sender, EventArgs e)

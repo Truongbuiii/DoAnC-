@@ -12,7 +12,7 @@ namespace FoodTourApp.Pages;
 public partial class PoiDetailPage : ContentPage
 {
     private readonly POI _poi;
-    private string _currentLanguage;
+    private string _currentLanguage = "vi-VN";
     private readonly DatabaseService _dbService = new DatabaseService();
 
     // --- LỖI 1: CẦN KHAI BÁO BIẾN NÀY ĐỂ BINDING VÀO XAML ---
@@ -36,10 +36,16 @@ public partial class PoiDetailPage : ContentPage
                 Lang.Load();
 
                 var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
-                if (freshPoi != null)
+                var displayPoi = freshPoi ?? _poi;
+                BindingContext = displayPoi;
+
+                // Always display Vietnamese first, then try to translate if needed
+                DetailDescription.Text = displayPoi.DescriptionVi;
+                if (!IsVietnamese(_currentLanguage))
                 {
-                    BindingContext = freshPoi;
-                    DetailDescription.Text = freshPoi.GetDescription(_currentLanguage);
+                    var translated = await GetDisplayDescriptionAsync(displayPoi);
+                    if (!string.IsNullOrEmpty(translated))
+                        DetailDescription.Text = translated;
                 }
 
                 ApplyLanguage();
@@ -92,13 +98,15 @@ public partial class PoiDetailPage : ContentPage
         // 2. HIỆN MÓN ĂN (QUAN TRỌNG: PHẢI GỌI Ở ĐÂY)
         await LoadMenuData();
 
-        // 3. Hiện nội dung mô tả
-        DetailDescription.Text = displayPoi.GetDescription(_currentLanguage);
+        // 3. Hiện nội dung mô tả: luôn lấy DescriptionVi làm gốc
+        DetailDescription.Text = displayPoi.DescriptionVi;
 
-        // 4. Kiểm tra dịch tự động
-        if (IsTranslationMissing(displayPoi, _currentLanguage))
+        // 4. Nếu ngôn ngữ hệ thống không phải tiếng Việt thì thực hiện dịch on-demand
+        if (!IsVietnamese(_currentLanguage))
         {
-            await HandleTranslationAsync(displayPoi);
+            var translated = await GetDisplayDescriptionAsync(displayPoi);
+            if (!string.IsNullOrEmpty(translated))
+                DetailDescription.Text = translated;
         }
 
         ApplyLanguage();
@@ -110,21 +118,26 @@ public partial class PoiDetailPage : ContentPage
 #endif
     }
 
-    // Tách riêng logic dịch cho sạch code
-    private async Task HandleTranslationAsync(POI poi)
+    // Trả về chuỗi hiển thị (dịch nếu cần). Không ghi vào model.
+    private async Task<string?> GetDisplayDescriptionAsync(POI poi)
     {
+        if (poi == null || string.IsNullOrEmpty(poi.DescriptionVi)) return null;
+
+        var shortCode = GetShortLangCode(_currentLanguage);
+        if (string.IsNullOrEmpty(shortCode) || shortCode == "vi") return poi.DescriptionVi;
+
         try
         {
             TranslationLoader.IsVisible = true;
             TranslationLoader.IsRunning = true;
 
             var translator = new TranslationService();
-            await Task.Run(async () => await translator.TranslatePoiAsync(poi));
-            await _dbService.SavePOIAsync(poi);
-
-            MainThread.BeginInvokeOnMainThread(() => {
-                DetailDescription.Text = poi.GetDescription(_currentLanguage);
-            });
+            var translated = await translator.TranslateAsync(poi.DescriptionVi, shortCode);
+            return string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
+        }
+        catch
+        {
+            return poi.DescriptionVi;
         }
         finally
         {
@@ -133,17 +146,21 @@ public partial class PoiDetailPage : ContentPage
         }
     }
 
-    private bool IsTranslationMissing(POI p, string lang)
+    private static bool IsVietnamese(string culture)
     {
-        return lang switch
-        {
-            "vi-VN" => false,
-            "en-US" => string.IsNullOrEmpty(p.DescriptionEn),
-            "ja-JP" => string.IsNullOrEmpty(p.DescriptionJa),
-            "ko-KR" => string.IsNullOrEmpty(p.DescriptionKo),
-            "zh-CN" => string.IsNullOrEmpty(p.DescriptionZh),
-            _ => true
-        };
+        if (string.IsNullOrEmpty(culture)) return false;
+        return culture.ToLower().StartsWith("vi");
+    }
+
+    private static string GetShortLangCode(string culture)
+    {
+        if (string.IsNullOrEmpty(culture)) return string.Empty;
+        culture = culture.ToLower();
+        if (culture.StartsWith("en")) return "en";
+        if (culture.StartsWith("ja")) return "ja";
+        if (culture.StartsWith("ko")) return "ko";
+        if (culture.StartsWith("zh")) return "zh";
+        return string.Empty;
     }
 
     // --- CÁC HÀM SỰ KIỆN GIỮ NGUYÊN ---
@@ -185,7 +202,17 @@ public partial class PoiDetailPage : ContentPage
     private async void OnSpeakClicked(object sender, EventArgs e)
     {
         var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
-        string text = (freshPoi ?? _poi).GetDescription(_currentLanguage);
+        var displayPoi = freshPoi ?? _poi;
+
+        string text;
+        if (IsVietnamese(_currentLanguage))
+        {
+            text = displayPoi.DescriptionVi;
+        }
+        else
+        {
+            text = await GetDisplayDescriptionAsync(displayPoi) ?? displayPoi.DescriptionVi;
+        }
 #if ANDROID
         _androidTts?.SetLanguage(_currentLanguage);
         _androidTts?.Speak(text);

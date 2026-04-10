@@ -93,7 +93,15 @@ public partial class QRPage : ContentPage
                     var tts = new FoodTourApp.Platforms.Android.AndroidTtsService();
                     await tts.InitializeAsync();
                     tts.SetLanguage(lang);
-                    tts.Speak(poi.GetDescription(lang));
+                    if (lang.ToLower().StartsWith("vi"))
+                        tts.Speak(poi.DescriptionVi);
+                    else
+                    {
+                        var translator = new TranslationService();
+                        var shortCode = lang.Split('-')[0];
+                        var translated = await translator.TranslateAsync(poi.DescriptionVi, shortCode);
+                        tts.Speak(string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated);
+                    }
 #endif
 
                     await Navigation.PushAsync(new PoiDetailPage(poi));

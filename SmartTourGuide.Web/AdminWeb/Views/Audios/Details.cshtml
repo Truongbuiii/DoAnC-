@@ -111,12 +111,7 @@
                     </div>
                 </div>
 
-                <span class="meta-label">Ngôn ngữ kịch bản</span>
-                <div class="meta-value">
-                    <span class="lang-badge @GetLangClass(Model.Language)">
-                        @(Model.Language ?? "N/A")
-                    </span>
-                </div>
+                <!-- Language display removed: system uses single language now -->
 
                 <span class="meta-label mt-4 pt-4 border-top">Mã định danh (ID)</span>
                 <div class="meta-value text-muted font-monospace">
@@ -127,19 +122,4 @@
     </div>
 </div>
 
-@functions {
-    // Hàm C# hỗ trợ tự động tô màu cho thẻ Ngôn ngữ (Giống bên trang Index)
-    public string GetLangClass(string lang)
-    {
-        if (string.IsNullOrEmpty(lang)) return "lang-ja";
-        return lang.ToUpper() switch
-        {
-            "VN" => "lang-vn",
-            "EN" => "lang-en",
-            "ZH" => "lang-zh",
-            "KO" => "lang-ko",
-            "JA" => "lang-ja",
-            _ => "lang-ja"
-        };
-    }
-}
+@* Language helper removed *@

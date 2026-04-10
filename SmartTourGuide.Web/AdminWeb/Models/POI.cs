@@ -25,10 +25,6 @@ namespace AdminWeb.Models
 
         // BỔ SUNG CÁC CỘT NÀY ĐỂ HẾT LỖI CS1061
         public string? DescriptionVi { get; set; }
-        public string? DescriptionEn { get; set; }
-        public string? DescriptionZh { get; set; }
-        public string? DescriptionKo { get; set; }
-        public string? DescriptionJa { get; set; }
 
         public virtual ICollection<Audio>? Audios { get; set; }
     }

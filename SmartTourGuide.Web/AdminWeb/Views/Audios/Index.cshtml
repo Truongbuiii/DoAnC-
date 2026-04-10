@@ -108,88 +108,77 @@
 
     <div class="audio-container">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-               <thead>
-                    <tr>
-                        <th style="width: 20%;">TIÊU ĐỀ & MÔ TẢ</th>
-                        <th class="text-center" style="width: 10%;">NGÔN NGỮ</th>
-                        <th style="width: 40%;">NỘI DUNG KỊCH BẢN (TEXT)</th>
-                        <th style="width: 20%;">THUỘC ĐỊA ĐIỂM (POI)</th>
-                        <th class="text-center" style="width: 10%;">THAO TÁC</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
+           <table class="table table-hover align-middle mb-0">
+    <thead class="text-white" style="background-color: #4e73df;">
+        <tr>
+            <th width="20%">TIÊU ĐỀ & MÔ TẢ</th>
+            <th width="35%">NỘI DUNG KỊCH BẢN (TEXT)</th>
+            <th width="15%">LOẠI ÂM THANH</th>
+            <th width="20%">THUỘC ĐỊA ĐIỂM (POI)</th>
+            <th width="10%">THAO TÁC</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <h6 class="mb-1 fw-bold text-dark">@item.AudioName</h6>
+                    <small class="text-muted">@item.Description</small>
+                </td>
+                
+                <td>
+                    @if (!string.IsNullOrEmpty(item.Script))
                     {
-                        <tr>
-                            <td class="px-3">
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">@item.AudioName</div>
-                                @if(!string.IsNullOrEmpty(item.Description)){
-                                    <small class="text-muted d-block mt-1">@item.Description</small>
-                                }
-                            </td>
-                            
-                            <td class="text-center">
-                                <span class="lang-badge @GetLangClass(item.Language)">
-                                    @(item.Language ?? "N/A")
-                                </span>
-                            </td>
-                            
-                            <td class="px-3">
-                                @if (!string.IsNullOrEmpty(item.Script))
-                                {
-                                    <div class="script-box border p-2 rounded bg-light">
-                                        @item.Script
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-light text-secondary border fst-italic">Chưa có nội dung</span>
-                                }
-                            </td>
-                            
-                            <td class="px-3">
-                                <div class="d-inline-flex align-items-center bg-light border px-2 py-1 rounded">
-                                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>
-                                    <span class="fw-bold text-dark" style="font-size: 0.85rem;">@(item.Poi?.Name ?? "Chưa gắn POI")</span>
-                                </div>
-                            </td>
-                            
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a class="action-btn btn-edit shadow-sm" asp-action="Edit" asp-route-id="@item.AudioId" title="Sửa">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <button type="button" class="action-btn btn-delete shadow-sm" 
-                                            onclick="confirmDelete('@item.AudioId', '@item.AudioName')" title="Xóa">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <div class="border rounded p-2 bg-light text-secondary" style="max-height: 80px; overflow-y: auto; font-size: 0.9rem;">
+                            @item.Script
+                        </div>
                     }
-                </tbody>
-            </table>
+                    else
+                    {
+                        <span class="text-muted fst-italic">Không có kịch bản chữ</span>
+                    }
+                </td>
+
+                <td>
+                    @if (!string.IsNullOrEmpty(item.AudioFilePath))
+                    {
+                        <span class="badge bg-success"><i class="bi bi-file-music me-1"></i> File MP3</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary"><i class="bi bi-robot me-1"></i> AI (TTS)</span>
+                    }
+                </td>
+
+                <td>
+                    @if (item.Poi != null)
+                    {
+                        <span class="badge border text-dark" style="background-color: #f8f9fc;">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> @item.Poi.Name
+                        </span>
+                    }
+                </td>
+
+                <td>
+                    <div class="btn-group shadow-sm">
+                        <a asp-action="Edit" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-danger" title="Xóa">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
         </div>
     </div>
 </div>
 
-@functions {
-    // Hàm C# hỗ trợ tự động tô màu cho thẻ Ngôn ngữ
-    public string GetLangClass(string lang)
-    {
-        if (string.IsNullOrEmpty(lang)) return "lang-ja";
-        return lang.ToUpper() switch
-        {
-            "VN" => "lang-vn",
-            "EN" => "lang-en",
-            "ZH" => "lang-zh",
-            "KO" => "lang-ko",
-            "JA" => "lang-ja",
-            _ => "lang-ja"
-        };
-    }
-}
+@* Language helper removed (system uses single language) *@
 
 @section Scripts {
     <script>

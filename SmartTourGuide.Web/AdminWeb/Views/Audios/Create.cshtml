@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <form asp-action="Create">
+    <form asp-action="Create" enctype="multipart/form-data">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="row">
@@ -58,7 +58,7 @@
 
                     <div class="mb-3">
                         <label class="form-label-custom text-danger"><i class="bi bi-body-text me-1"></i>Nội dung Kịch bản (Sẽ được AI đọc)</label>
-                        <textarea asp-for="Script" class="form-control-custom" rows="8" placeholder="Nhập nội dung văn bản để App tự động đọc thành tiếng..." required></textarea>
+                        <textarea asp-for="Script" class="form-control-custom" rows="8" placeholder="Nhập nội dung văn bản tiếng Việt để App tự động đọc thành tiếng..." required></textarea>
                         <span asp-validation-for="Script" class="text-danger small mt-1 d-block"></span>
                         <div class="text-muted mt-2" style="font-size: 0.8rem; font-style: italic;">
                             <i class="bi bi-info-circle me-1"></i> Mẹo: Nhập đúng chính tả, ngắt nghỉ dấu câu rõ ràng để giọng đọc AI mượt mà nhất.
@@ -77,37 +77,51 @@
                         
                         <div class="mb-4">
                             <label asp-for="PoiId" class="form-label-custom text-success"><i class="bi bi-geo-alt-fill me-1"></i>Thuộc Địa điểm</label>
-                            <select asp-for="PoiId" class="form-control-custom border-success" asp-items="ViewBag.PoiId" required>
-                                <option value="">-- Chọn địa điểm gắn Audio --</option>
-                            </select>
+                            
+                            @* --- LOGIC KIỂM TRA DROPDOWN RỖNG --- *@
+                            @if (ViewBag.PoiId != null && ((SelectList)ViewBag.PoiId).Any())
+                            {
+                                <select asp-for="PoiId" class="form-control-custom border-success" asp-items="ViewBag.PoiId" required>
+                                    <option value="">-- Chọn địa điểm gắn Audio --</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <select class="form-control-custom border-danger" disabled>
+                                    <option>-- Không còn quán ăn nào trống --</option>
+                                </select>
+                                <div class="alert alert-warning mt-2 py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 8px;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> 
+                                    Tất cả địa điểm của bạn đều đã có kịch bản. Để thay đổi, vui lòng vào danh sách và chọn <strong>Chỉnh sửa</strong>.
+                                </div>
+                            }
                             <span asp-validation-for="PoiId" class="text-danger small mt-1 d-block"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="Language" class="form-label-custom text-warning"><i class="bi bi-translate me-1"></i>Ngôn ngữ đọc</label>
-                            <select asp-for="Language" class="form-control-custom" required>
-                                <option value="VN">🇻🇳 Tiếng Việt (VN)</option>
-                                <option value="EN">🇬🇧 Tiếng Anh (EN)</option>
-                                <option value="ZH">🇨🇳 Tiếng Trung (ZH)</option>
-                                <option value="KO">🇰🇷 Tiếng Hàn (KO)</option>
-                                <option value="JA">🇯🇵 Tiếng Nhật (JA)</option>
-                            </select>
-                            <span asp-validation-for="Language" class="text-danger small mt-1 d-block"></span>
                         </div>
 
                     <div class="mb-4">
                         <label class="form-label-custom text-secondary"><i class="bi bi-file-earmark-music me-1"></i>Upload file âm thanh (tuỳ chọn)</label>
-                        <input type="file" name="audioFile" class="form-control-custom" />
+                        <input type="file" name="audioFile" class="form-control-custom" accept="audio/*" />
                         <div class="text-muted mt-2" style="font-size: 0.8rem;">Nếu upload file thì hệ thống sẽ dùng file này thay vì TTS.</div>
                     </div>
 
                     </div>
                 </div>
 
-                <button type="submit" class="btn-create shadow">
-                    <i class="bi bi-plus-circle-fill me-2"></i>TẠO MỚI KỊCH BẢN
-                </button>
-                <a asp-action="Index" class="btn-back">
+                @* --- LOGIC VÔ HIỆU HÓA NÚT BẤM --- *@
+                @if (ViewBag.PoiId != null && ((SelectList)ViewBag.PoiId).Any())
+                {
+                    <button type="submit" class="btn-create shadow w-100 py-3">
+                        <i class="bi bi-plus-circle-fill me-2"></i>TẠO MỚI KỊCH BẢN
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary shadow w-100 py-3 disabled" style="cursor: not-allowed; opacity: 0.7; border-radius: 12px; font-weight: 700;">
+                        <i class="bi bi-slash-circle me-2"></i>KHÔNG THỂ TẠO MỚI
+                    </button>
+                }
+
+                <a asp-action="Index" class="btn-back mt-3 d-block text-center text-decoration-none fw-bold text-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Hủy bỏ & Quay lại
                 </a>
             </div>

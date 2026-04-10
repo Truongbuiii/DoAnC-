@@ -37,43 +37,9 @@ namespace FoodTourApp.Services
         // ==========================================
         public async Task TranslateAndCachePoisAsync()
         {
+            // API hiện tại chỉ cung cấp DescriptionVi. Không thực hiện cache bản dịch tự động.
             await Init();
-
-            // Sửa lại: Nếu THIẾU TIẾNG NHẬT thì mới dịch (vì tiếng Anh Duy đã nạp sẵn rồi)
-            var pois = await _database.Table<POI>()
-                .Where(p => p.DescriptionJa == null || p.DescriptionJa == "" || p.DescriptionJa.Contains("..."))
-                .ToListAsync();
-
-            if (!pois.Any())
-            {
-                Debug.WriteLine("=== KHÔNG CÓ POI MỚI CẦN DỊCH ===");
-                return;
-            }
-
-            Debug.WriteLine($"=== TIẾN HÀNH DỊCH {pois.Count} QUÁN ĂN ===");
-            var translator = new TranslationService();
-
-            foreach (var poi in pois)
-            {
-                try
-                {
-                    // Thực hiện dịch tuần tự từng quán
-                    await translator.TranslatePoiAsync(poi);
-
-                    // Lưu ngay bản dịch vào SQLite để không bị mất nếu văng App
-                    await _database.UpdateAsync(poi);
-
-                    Debug.WriteLine($"=== HOÀN TẤT DỊCH: {poi.Name}");
-
-                    // Nghỉ 1.2 giây để "né" bộ quét bot của MyMemory/Google
-                    await Task.Delay(1200);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"=== LỖI DỊCH TẠI {poi.Name}: {ex.Message}");
-                }
-            }
-            Debug.WriteLine("=== ĐÃ HOÀN TẤT TOÀN BỘ BẢN DỊCH ===");
+            Debug.WriteLine("=== TranslateAndCachePoisAsync: no-op with current API (only DescriptionVi) ===");
         }
 
         // ==========================================
@@ -90,11 +56,7 @@ namespace FoodTourApp.Services
 
                 if (localPoi != null)
                 {
-                    // 2. MẸO: Nếu server trả về NULL bản dịch, ta giữ lại bản cũ trong máy
-                    serverPoi.DescriptionEn ??= localPoi.DescriptionEn;
-                    serverPoi.DescriptionZh ??= localPoi.DescriptionZh;
-                    serverPoi.DescriptionKo ??= localPoi.DescriptionKo;
-                    serverPoi.DescriptionJa ??= localPoi.DescriptionJa;
+                    // 2. API hiện tại chỉ cung cấp DescriptionVi; không cố gắng merge các trường dịch cũ.
                 }
 
                 // 3. Lúc này mới lưu đè vào SQLite

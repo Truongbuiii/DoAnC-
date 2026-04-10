@@ -198,23 +198,31 @@ namespace AdminWeb.Controllers
                 p.TriggerRadius,
                 p.ImageSource,
                 p.DescriptionVi,
-                p.DescriptionEn, // Trả về đủ 4 thứ tiếng để Mobile không bị NULL
-                p.DescriptionZh,
-                p.DescriptionKo,
-                p.DescriptionJa
             }).ToListAsync();
             return Json(pois);
         }
 
+        // API 2: Lấy Audio của POI (Đã gỡ bỏ Language, trả về Script và AudioFilePath)
         [AllowAnonymous]
         [HttpGet("/api/v1/audios/{poiId}")]
-        public async Task<IActionResult> GetAudioApi(int poiId, string lang = "VI")
+        public async Task<IActionResult> GetAudioApi(int poiId) // Bỏ tham số 'lang' vì giờ chỉ dùng 1 ngôn ngữ gốc
         {
+            // Chỉ cần tìm Audio theo PoiId, không cần check Language nữa
             var audio = await _context.Audios
                 .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.PoiId == poiId && a.Language == lang);
+                .FirstOrDefaultAsync(a => a.PoiId == poiId);
+
             if (audio == null) return NotFound();
-            return Json(new { audio.AudioId, audio.AudioName, audio.FilePath, audio.Language, audio.PoiId });
+
+            // Thay FilePath/Language cũ bằng Script và AudioFilePath mới
+            return Json(new
+            {
+                audio.AudioId,
+                audio.AudioName,
+                audio.Script,           // Dùng để App đọc TTS
+                audio.AudioFilePath,    // Dùng để App phát file mp3 (nếu có)
+                audio.PoiId
+            });
         }
 
         [AllowAnonymous]

@@ -24,7 +24,7 @@ namespace AdminWeb.Models
         // NOTE: Previous column `FilePath` existed in DB schema. Keep property only if needed
         // public string? FilePath { get; set; }
 
-        public string? Language { get; set; }
+        // Language property removed: system uses a single language (Vietnamese) now
 
         // Khóa ngoại trỏ về bảng POIs
         public int PoiId { get; set; }
