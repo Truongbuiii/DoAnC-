@@ -15,7 +15,14 @@ namespace AdminWeb.Models
 
         public string? Description { get; set; }
 
-        public string? FilePath { get; set; }
+        // Text content for Text-to-Speech (the script to be read)
+        public string? Script { get; set; }
+
+        // Optional: stored audio file path when an actual audio file is uploaded
+        public string? AudioFilePath { get; set; }
+
+        // NOTE: Previous column `FilePath` existed in DB schema. Keep property only if needed
+        // public string? FilePath { get; set; }
 
         public string? Language { get; set; }
 

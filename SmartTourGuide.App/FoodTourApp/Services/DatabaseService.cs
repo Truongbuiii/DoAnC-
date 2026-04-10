@@ -167,5 +167,24 @@ namespace FoodTourApp.Services
             System.Diagnostics.Debug.WriteLine($"=== POI {poiId} có {list.Count} món ăn");
             return list;
         }
+
+        // Lưu/đồng bộ danh sách MenuItems lấy từ server vào SQLite
+        public async Task SaveMenuItemsFromServerAsync(List<MenuItemModel> items)
+        {
+            await Init();
+            foreach (var item in items)
+            {
+                try
+                {
+                    // InsertOrReplaceAsync sẽ upsert dựa trên khóa chính (MenuId)
+                    await _database.InsertOrReplaceAsync(item);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"=== LỖI LƯU MENU ITEM (MenuId={item?.MenuId}): {ex.Message}");
+                }
+            }
+            Debug.WriteLine($"=== ĐÃ LƯU {items?.Count ?? 0} MENU ITEMS TỪ SERVER");
+        }
     }
 }

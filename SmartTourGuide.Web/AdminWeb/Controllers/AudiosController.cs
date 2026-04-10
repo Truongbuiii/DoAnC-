@@ -106,7 +106,6 @@ namespace AdminWeb.Controllers
 
             var audio = await _context.Audios.FindAsync(id);
             if (audio == null) return NotFound();
-
             ViewBag.PoiId = new SelectList(_context.POIs, "PoiId", "Name", audio.PoiId);
             return View(audio);
         }
@@ -127,7 +126,7 @@ namespace AdminWeb.Controllers
                 {
                     await audioFile.CopyToAsync(stream);
                 }
-                audio.FilePath = "/uploads/" + fileName;
+                audio.AudioFilePath = "/uploads/" + fileName;
             }
 
             ModelState.Remove("Poi");
@@ -149,26 +148,18 @@ namespace AdminWeb.Controllers
             return View(audio);
         }
 
-        // 7. XÓA (GET)
-        public async Task<IActionResult> Delete(int id)
+        // 7. XÓA (GET) - Hiển thị trang xác nhận xóa cho Audio
+        public async Task<IActionResult> Delete(int? id)
         {
-            var admin = await _context.Admins.FindAsync(id);
-            if (admin == null) return NotFound();
+            if (id == null) return NotFound();
 
-            // Bảo vệ tài khoản admin tổng không cho xóa
-            if (admin.Username == "admin")
-            {
-                TempData["ErrorMessage"] = "Không thể xóa tài khoản Admin hệ thống!";
-                return RedirectToAction(nameof(Index));
-            }
+            var audio = await _context.Audios
+                .Include(a => a.Poi)
+                .FirstOrDefaultAsync(a => a.AudioId == id.Value);
 
-            _context.Admins.Remove(admin);
-            await _context.SaveChangesAsync();
+            if (audio == null) return NotFound();
 
-            // --- THÊM DÒNG THÔNG BÁO Ở ĐÂY ---
-            TempData["SuccessMessage"] = $"Đã xóa tài khoản '{admin.Username}' thành công!";
-
-            return RedirectToAction(nameof(Index));
+            return View(audio);
         }
         // 8. XÓA (POST)
         [HttpPost, ActionName("Delete")]
@@ -179,9 +170,9 @@ namespace AdminWeb.Controllers
             if (audio != null)
             {
                 // Xóa file vật lý trong thư mục uploads để đỡ nặng máy (nếu cần)
-                if (!string.IsNullOrEmpty(audio.FilePath))
+                if (!string.IsNullOrEmpty(audio.AudioFilePath))
                 {
-                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", audio.FilePath.TrimStart('/'));
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", audio.AudioFilePath.TrimStart('/'));
                     if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
                 }
 

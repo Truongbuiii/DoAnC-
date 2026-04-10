@@ -70,10 +70,14 @@
                             <span class="info-label">Nội dung sẽ bị mất (Text-to-Speech)</span>
                             <div class="script-box mt-2">
                                 <i class="bi bi-quote fs-5 text-danger opacity-50 me-1"></i>
-                                @if (!string.IsNullOrEmpty(Model.FilePath))
-                                {
-                                    @Model.FilePath
-                                }
+                            @if (!string.IsNullOrEmpty(Model.Script))
+                            {
+                                @Model.Script
+                            }
+                            else if (!string.IsNullOrEmpty(Model.AudioFilePath))
+                            {
+                                <a href="@Model.AudioFilePath" target="_blank">Mở file âm thanh</a>
+                            }
                                 else
                                 {
                                     <span class="text-muted">Không có nội dung.</span>

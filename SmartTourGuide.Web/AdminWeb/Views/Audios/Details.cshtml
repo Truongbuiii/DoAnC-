@@ -81,10 +81,15 @@
 
                 <span class="meta-label text-primary mb-2"><i class="bi bi-soundwave me-1"></i> Nội dung kịch bản (Text-to-Speech)</span>
                 <div class="script-box">
-                    @if (!string.IsNullOrEmpty(Model.FilePath))
+                    @if (!string.IsNullOrEmpty(Model.Script))
                     {
                         <i class="bi bi-quote fs-3 text-secondary opacity-50 me-2"></i>
-                        @Model.FilePath
+                        @Model.Script
+                    }
+                    else if (!string.IsNullOrEmpty(Model.AudioFilePath))
+                    {
+                        <i class="bi bi-file-earmark-music fs-3 text-secondary opacity-50 me-2"></i>
+                        <a href="@Model.AudioFilePath" target="_blank">Mở file âm thanh</a>
                     }
                     else
                     {

@@ -11,6 +11,7 @@ namespace AdminWeb.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Audio> Audios { get; set; }
+        public DbSet<MenuItem> MenuItems { get; set; }
 
         // --- THÊM DÒNG NÀY (BƯỚC 2.1) ---
         public DbSet<Admin> Admins { get; set; }
@@ -27,6 +28,14 @@ namespace AdminWeb.Data
                 entity.ToTable("Admins"); // Khớp với tên bảng dbo.Admins trong SSMS
                 entity.HasKey(e => e.AdminId);
                 entity.Property(e => e.AdminId).HasColumnName("AdminId");
+            });
+
+            // Cấu hình bảng MenuItems
+            modelBuilder.Entity<MenuItem>(entity =>
+            {
+                entity.ToTable("MenuItems");
+                entity.HasKey(e => e.MenuId);
+                entity.Property(e => e.MenuId).HasColumnName("MenuId");
             });
 
             // Cấu hình bảng POIs

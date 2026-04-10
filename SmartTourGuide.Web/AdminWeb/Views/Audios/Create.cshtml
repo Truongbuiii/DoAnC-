@@ -58,8 +58,8 @@
 
                     <div class="mb-3">
                         <label class="form-label-custom text-danger"><i class="bi bi-body-text me-1"></i>Nội dung Kịch bản (Sẽ được AI đọc)</label>
-                        <textarea asp-for="FilePath" class="form-control-custom" rows="8" placeholder="Nhập nội dung văn bản để App tự động đọc thành tiếng..." required></textarea>
-                        <span asp-validation-for="FilePath" class="text-danger small mt-1 d-block"></span>
+                        <textarea asp-for="Script" class="form-control-custom" rows="8" placeholder="Nhập nội dung văn bản để App tự động đọc thành tiếng..." required></textarea>
+                        <span asp-validation-for="Script" class="text-danger small mt-1 d-block"></span>
                         <div class="text-muted mt-2" style="font-size: 0.8rem; font-style: italic;">
                             <i class="bi bi-info-circle me-1"></i> Mẹo: Nhập đúng chính tả, ngắt nghỉ dấu câu rõ ràng để giọng đọc AI mượt mà nhất.
                         </div>
@@ -94,6 +94,12 @@
                             </select>
                             <span asp-validation-for="Language" class="text-danger small mt-1 d-block"></span>
                         </div>
+
+                    <div class="mb-4">
+                        <label class="form-label-custom text-secondary"><i class="bi bi-file-earmark-music me-1"></i>Upload file âm thanh (tuỳ chọn)</label>
+                        <input type="file" name="audioFile" class="form-control-custom" />
+                        <div class="text-muted mt-2" style="font-size: 0.8rem;">Nếu upload file thì hệ thống sẽ dùng file này thay vì TTS.</div>
+                    </div>
 
                     </div>
                 </div>

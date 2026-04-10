@@ -74,6 +74,8 @@ public partial class MainPage : ContentPage
         {
             await apiSync.SyncPoisAsync();
             await apiSync.SyncToursAsync();
+                // Đồng bộ menu items từ server về SQLite
+                await apiSync.SyncMenuItemsAsync();
             await apiSync.SyncLogsAsync();
             MainThread.BeginInvokeOnMainThread(async () =>
                 await LoadData());
