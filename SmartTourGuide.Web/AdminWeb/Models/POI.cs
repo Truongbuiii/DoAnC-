@@ -22,6 +22,7 @@ namespace AdminWeb.Models
 
         public string? ImageSource { get; set; }
         public string? OwnerUsername { get; set; }
+        public string Status { get; set; } = "Hoạt động"; // Mặc định là Hoạt động khi tạo mới
 
         // BỔ SUNG CÁC CỘT NÀY ĐỂ HẾT LỖI CS1061
         public string? DescriptionVi { get; set; }

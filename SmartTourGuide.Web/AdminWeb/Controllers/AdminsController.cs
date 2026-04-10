@@ -27,23 +27,30 @@ namespace AdminWeb.Controllers
         public IActionResult Create() => View();
 
         // Xử lý lưu tài khoản
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Admin model)
+       [HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(Admin model)
+{
+    if (ModelState.IsValid)
+    {
+        // 1. Kiểm tra xem Username đã tồn tại chưa
+        bool isExist = await _context.Admins.AnyAsync(a => a.Username == model.Username);
+        
+        if (isExist)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Admins.Add(model);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Đã tạo tài khoản '{model.Username}' thành công. Hãy thêm địa điểm cho chủ quán này!";
-
-                // CHỖ NÀY QUAN TRỌNG: Chuyển hướng kèm theo Username vừa tạo
-                return RedirectToAction("Create", "POI", new { owner = model.Username });
-            }
+            // 2. Nếu tồn tại rồi thì báo lỗi ra giao diện chứ không SaveChanges
+            ModelState.AddModelError("Username", "Tên đăng nhập này đã có người sử dụng!");
             return View(model);
         }
 
+        _context.Admins.Add(model);
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = $"Đã tạo tài khoản '{model.Username}' thành công!";
+        return RedirectToAction("Create", "POI", new { owner = model.Username });
+    }
+    return View(model);
+}
         // Xóa tài khoản (không cho xóa nick admin chính)
         // Xóa tài khoản (không cho xóa nick admin chính)
         public async Task<IActionResult> Delete(int id)
@@ -74,7 +81,16 @@ namespace AdminWeb.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        // GET: Admins/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
 
+            var admin = await _context.Admins.FindAsync(id);
+            if (admin == null) return NotFound();
+
+            return View(admin);
+        }
         // POST: Admins/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]

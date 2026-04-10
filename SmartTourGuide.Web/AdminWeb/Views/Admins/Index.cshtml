@@ -39,10 +39,9 @@
                                     @if(item.Username.ToLower() != "admin") {
                                         <div class="d-flex justify-content-center gap-2">
                                             @* NÚT SỬA MỚI THÊM *@
-                                            <a asp-action="Edit" asp-route-id="@item.AdminId" 
-                                               class="btn btn-outline-primary btn-sm border-0" title="Chỉnh sửa">
-                                                <i class="fas fa-edit"></i> Sửa
-                                            </a>
+                                           <a asp-action="Edit" asp-route-id="@item.AdminId" class="btn btn-outline-primary btn-sm">
+    <i class="fas fa-edit"></i> Sửa
+</a>
 
                                            @* NÚT XÓA ĐÃ SỬA *@
 <button type="button" 

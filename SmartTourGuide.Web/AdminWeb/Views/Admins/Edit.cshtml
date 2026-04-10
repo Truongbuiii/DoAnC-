@@ -8,8 +8,9 @@
                     <h5 class="mb-0">CẬP NHẬT TÀI KHOẢN</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form asp-action="Edit">
-                        <input type="hidden" asp-for="AdminId" />
+                   <form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="AdminId" />
+    <input type="hidden" asp-for="Username" /> <input type="hidden" asp-for="Password" /> 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tên đăng nhập</label>
                             <input asp-for="Username" class="form-control bg-light" readonly />

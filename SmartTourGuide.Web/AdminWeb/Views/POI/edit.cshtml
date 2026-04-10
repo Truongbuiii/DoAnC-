@@ -94,10 +94,14 @@
 
                             <label class="form-label-custom mt-2">Phân loại quán</label>
                             <select asp-for="Category" class="form-control-custom bg-light">
-                                <option value="Quán ốc">Quán ốc</option>
-                                <option value="Lẩu dê">Lẩu dê</option>
-                                <option value="Hải sản">Hải sản</option>
-                                <option value="Điểm tham quan">Điểm tham quan</option>
+                               <form asp-action="Edit" method="post">
+   <option value="Quán ốc">Quán ốc</option>
+    <option value="Hải sản">Hải sản</option>
+    <option value="Lẩu dê">Lẩu dê</option>
+    <option value="Món lẩu">Món lẩu</option>
+    <option value="Đồ Nhật">Đồ Nhật</option>
+    <option value="Ăn vặt">Ăn vặt / Ăn nhẹ</option>
+    <option value="Điểm tham quan">Điểm tham quan</option> </form>
                             </select>
                         </div>
                     </div>

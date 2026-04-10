@@ -1,158 +1,199 @@
-﻿ 
- @model List<AdminWeb.Models.POI>
+﻿@model List<AdminWeb.Models.POI>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <style>
-        /* Áp dụng font Inter toàn trang */
-        body { 
-            background-color: #f4f7f6; 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            -webkit-font-smoothing: antialiased;
-        }
+                <style>
+                    /* Áp dụng font Inter toàn trang */
+                    body { 
+                        background-color: #f4f7f6; 
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                        -webkit-font-smoothing: antialiased;
+                    }
     
-        /* --- GIỮ NGUYÊN PHẦN TIÊU ĐỀ --- */
-        .header-banner {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-left: 6px solid #4e73df;
-            margin-bottom: 25px;
-        }
+                    /* --- GIỮ NGUYÊN PHẦN TIÊU ĐỀ --- */
+                    .header-banner {
+                        background: white;
+                        padding: 25px;
+                        border-radius: 16px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                        border-left: 6px solid #4e73df;
+                        margin-bottom: 25px;
+                    }
 
-        .title-main {
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #2d3748;
-            font-size: 1.5rem;
-        }
+                    .title-main {
+                        font-weight: 800;
+                        letter-spacing: -0.5px;
+                        color: #2d3748;
+                        font-size: 1.5rem;
+                    }
 
-        .title-sub {
-            color: #718096;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+                    .title-sub {
+                        color: #718096;
+                        font-size: 0.9rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
 
-        .poi-count-badge {
-            background: #eef2ff;
-            color: #4e73df;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            border: 1px solid #e0e7ff;
-        }
+                    .poi-count-badge {
+                        background: #eef2ff;
+                        color: #4e73df;
+                        font-weight: 700;
+                        padding: 4px 12px;
+                        border-radius: 20px;
+                        font-size: 0.75rem;
+                        border: 1px solid #e0e7ff;
+                    }
 
-        /* --- GIỮ NGUYÊN NÚT ỚI --- */
-        .btn-create-new {
-            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-            color: white !important;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
-            text-decoration: none;
-        }
+                    /* --- GIỮ NGUYÊN NÚT MỚI --- */
+                    .btn-create-new {
+                        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+                        color: white !important;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+                        text-decoration: none;
+                    }
 
-        .btn-create-new:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(78, 115, 223, 0.4);
-            filter: brightness(1.1);
-        }
+                    .btn-create-new:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(78, 115, 223, 0.4);
+                        filter: brightness(1.1);
+                    }
 
-        /* --- BẢNG VÀ NỘI DUNG (CHỈNH VÁCH NGĂN ĐẬM) --- */
-        .poi-container { 
-            background: white; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-            border: 2px solid #dee2e6; /* Viền ngoài đậm */
-            overflow: hidden;
-        }
+                    /* --- BẢNG VÀ NỘI DUNG (CHỈNH VÁCH NGĂN ĐẬM) --- */
+                    .poi-container { 
+                        background: white; 
+                        border-radius: 20px; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+                        border: 2px solid #dee2e6; /* Viền ngoài đậm */
+                        overflow: hidden;
+                    }
 
-        .table thead th { 
-            background-color: #4e73df; 
-            color: #ffffff; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            font-size: 0.75rem; 
-            padding: 18px;
-            border: 1px solid #3659c2 !important; /* Kẻ ô tiêu đề đậm */
-            letter-spacing: 0.5px;
-        }
+                    .table thead th { 
+                        background-color: #4e73df; 
+                        color: #ffffff; 
+                        font-weight: 700; 
+                        text-transform: uppercase; 
+                        font-size: 0.75rem; 
+                        padding: 18px;
+                        border: 1px solid #3659c2 !important; /* Kẻ ô tiêu đề đậm */
+                        letter-spacing: 0.5px;
+                    }
 
-        /* Kẻ dọc và ngang đậm chia rõ từng ô theo ý Tài */
-        .table td, .table th {
-            border: 1px solid #dee2e6 !important; 
-        }
+                    /* Kẻ dọc và ngang đậm chia rõ từng ô theo ý Tài */
+                    .table td, .table th {
+                        border: 1px solid #dee2e6 !important; 
+                    }
 
-        .poi-row { border-bottom: 1px solid #dee2e6; transition: 0.2s; }
-        .poi-row:hover { background-color: #f8faff !important; }
+                    .poi-row { border-bottom: 1px solid #dee2e6; transition: 0.2s; }
+                   .poi-row:hover { 
+    background-color: transparent !important; 
+}
 
-        .poi-img-circle { 
-            width: 65px; height: 65px; 
-            object-fit: cover; 
-            border-radius: 15px; 
-        }
+                    .poi-img-circle { 
+                        width: 65px; height: 65px; 
+                        object-fit: cover; 
+                        border-radius: 15px; 
+                    }
 
-        .poi-name {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #1a202c;
-        }
+                    .poi-name {
+                        font-weight: 700;
+                        font-size: 1rem;
+                        color: #1a202c;
+                    }
 
-        .geo-text {
-            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #2d3748;
-        }
+                    .geo-text {
+                        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+                        font-weight: 700;
+                        font-size: 0.95rem;
+                        color: #2d3748;
+                    }
 
-       /* THANH CUỘN (SCROLLBAR) - LUÔN HIỆN */
-        .description-box { 
-            max-height: 85px; 
-            overflow-y: scroll; /* Thay 'auto' bằng 'scroll' để ép buộc luôn hiện thanh cuộn */
-            padding-right: 10px; 
-        }   
-        /* Làm đẹp thanh cuộn */
-        .description-box::-webkit-scrollbar { width: 5px; }
-        .description-box::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .description-box::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
-        .description-box::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+                   /* THANH CUỘN (SCROLLBAR) - LUÔN HIỆN */
+                    .description-box { 
+                        max-height: 85px; 
+                        overflow-y: scroll; 
+                        padding-right: 10px; 
+                    }   
+                    /* Làm đẹp thanh cuộn */
+                    .description-box::-webkit-scrollbar { width: 5px; }
+                    .description-box::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+                    .description-box::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+                    .description-box::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
     
-        .description-text {
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #4a5568;
-        }
+                    .description-text {
+                        font-size: 0.85rem;
+                        line-height: 1.5;
+                        color: #4a5568;
+                    }
 
-        .lang-badge { font-size: 0.65rem; font-weight: 900; padding: 2px 4px; border-radius: 4px; margin-right: 8px; }
-        .category-badge { padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 0.75rem; display: inline-block; }
+                    .lang-badge { font-size: 0.65rem; font-weight: 900; padding: 2px 4px; border-radius: 4px; margin-right: 8px; }
+                    .category-badge { padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 0.75rem; display: inline-block; }
 
-        /* GIỮ NGUYÊN MÀU SẮC NÚT BẤM */
-        .action-btn {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #edf2f7;
-            background: white;
-            transition: 0.2s;
-        }
-        .btn-edit { color: #4e73df; }
-        .btn-edit:hover { background: #4e73df; color: white !important; }
-        .btn-delete { color: #e74a3b; }
-        .btn-delete:hover { background: #e74a3b; color: white !important; }
+                    /* GIỮ NGUYÊN MÀU SẮC NÚT BẤM */
+                    .action-btn {
+                        width: 36px; height: 36px;
+                        border-radius: 10px;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #edf2f7;
+                        background: white;
+                        transition: 0.2s;
+                        text-decoration: none;
+                    }
+                    .btn-edit { color: #4e73df; }
+                    .btn-edit:hover { background: #4e73df; color: white !important; }
+                    .btn-delete { color: #e74a3b; }
+                    .btn-delete:hover { background: #e74a3b; color: white !important; }
+                    /* Màu đỏ cho nút Ngưng hoạt động khi hover */
+.status-toggle-btn.text-danger:hover {
+    border-color: #e74a3b;
+    background-color: #fff5f5;
+}
+                 /* Trạng thái bình thường của nút */
+            .status-toggle-btn {
+                padding: 6px 14px; 
+                border-radius: 20px; /* Bo tròn kiểu viên thuốc cho đẹp */
+                font-size: 0.75rem;
+                font-weight: 700; 
+                text-decoration: none; 
+                transition: all 0.25s ease; /* Hiệu ứng mượt mà */
+                display: inline-flex; 
+                align-items: center; 
+                gap: 6px;
+                border: 1px solid transparent;
+                background: #ffffff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bóng đổ cực nhẹ khi chưa rê chuột */
+            }
+
+            /* HIỆU ỨNG KHI RÊ CHUỘT VÀO (HOVER) */
+            .status-toggle-btn:hover {
+                transform: translateY(-2px); /* Nổi nhẹ lên */
+                box-shadow: 0 5px 15px rgba(0,0,0,0.12); /* Hiện bóng đổ rõ hơn khi chọn */
+                filter: brightness(1.05); /* Sáng hơn một chút */
+                z-index: 5;
+            }
+
+            /* Màu sắc riêng khi hover cho từng nút */
+            .status-toggle-btn.text-warning:hover {
+                border-color: #f6c23e;
+                background-color: #fffdf5;
+            }
+
+            .status-toggle-btn.text-success:hover {
+                border-color: #1cc88a;
+                background-color: #f6fffb;
+            }
 
         /* RESPONSIVE - CẤU HÌNH CHO ĐIỆN THOẠI */
         @@media (max-width: 768px) {
@@ -166,6 +207,8 @@
     </style>
 
     <div class="container-fluid py-4 px-4">
+        
+      
     
         <div class="header-banner shadow-sm mb-4">
             <div class="row align-items-center">
@@ -179,7 +222,7 @@
                 
                     <p class="mt-3 text-secondary d-none d-md-block" style="max-width: 700px; font-size: 0.9rem; line-height: 1.6;">
                         Hệ thống hỗ trợ quản lý các <strong>Điểm Thuyết Minh (POI)</strong> đa ngôn ngữ tại khu vực Vĩnh Khánh. 
-                        Dữ liệu bao gồm tọa độ GPS, hình ảnh thực tế và nội dung thuyết minh tự động (TTS) bằng 05 ngôn ngữ nhằm phục vụ khách du lịch quốc tế.
+                        Dữ liệu bao gồm tọa độ GPS, hình ảnh thực tế và nội dung thuyết minh tự động (TTS).
                     </p>
 
                     <div class="title-sub mt-2">
@@ -189,22 +232,20 @@
                 </div>
             
                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-    @* CHỈ HIỆN NÚT THÊM MỚI NẾU LÀ ADMIN *@
-    @if (User.IsInRole("Admin"))
-    {
-        <a class="btn-create-new d-inline-flex shadow" asp-action="Create">
-            <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
-            <span>THÊM QUÁN MỚI</span>
-        </a>
-    }
-    else
-    {
-        @* Nếu là chủ quán, có thể hiện một dòng chữ chào mừng hoặc để trống *@
-        <span class="badge bg-info text-dark p-2">
-            <i class="bi bi-info-circle me-1"></i> Khu vực quản lý của Chủ sở hữu
-        </span>
-    }
-</div>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="btn-create-new d-inline-flex shadow" asp-action="Create">
+                            <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                            <span>THÊM QUÁN MỚI</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="badge bg-info text-dark p-2">
+                            <i class="bi bi-info-circle me-1"></i> Khu vực quản lý của Chủ sở hữu
+                        </span>
+                    }
+                </div>
             </div>
         </div>
 
@@ -214,75 +255,125 @@
                     <thead>
                         <tr>
                             <th class="text-center" style="width: 100px;">Ảnh</th>
-                            <th style="width: 45%;">Địa điểm & Thuyết minh</th>
-                            <th class="hide-mobile">Phân loại</th>
-                            <th>Tọa độ GPS</th>
-                            <th class="text-center">Thao tác</th>
+                            <th style="width: 35%;">Địa điểm & Thuyết minh</th>
+                            <th class="hide-mobile text-center">Phân loại</th>
+                            <th style="width: 200px;" class="text-center">Trạng thái & Điều khiển</th> @* Cột Tình trạng riêng *@
+                            <th class="text-center">Tọa độ GPS</th>
+                            <th class="text-center" style="width: 120px;">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach (var poi in Model)
-                        {
-                            <tr class="poi-row">
-                                <td class="text-center ps-3 pe-3">
-                                    <img src="~/images/@(string.IsNullOrEmpty(poi.ImageSource) ? "default.jpg" : poi.ImageSource)" 
-                                         class="poi-img-circle shadow-sm border" 
-                                         onerror="this.src='/images/default.jpg';" />
-                                </td>
+                   <tbody>
+    @foreach (var poi in Model)
+    {
+        <tr class="poi-row">
+            @* 1. Cột Ảnh *@
+            <td class="text-center ps-3 pe-3">
+                <img src="~/images/@(string.IsNullOrEmpty(poi.ImageSource) ? "default.jpg" : poi.ImageSource)" 
+                     class="poi-img-circle shadow-sm border" 
+                     onerror="this.src='/images/default.jpg';" />
+            </td>
 
-                            <td class="px-3">
-    <div class="poi-name mb-1">@poi.Name</div>
-    <div class="description-box">
-        <div class="d-flex align-items-start mb-2">
-            <span class="lang-badge bg-danger text-white">VN</span>
-            <div class="description-text">@poi.DescriptionVi</div>
-        </div>
-        <div class="d-flex align-items-start">
-            <span class="lang-badge bg-success text-white">AUTO</span>
-            <div class="description-text text-muted fst-italic">
-                App tự động dịch sang 4 ngôn ngữ
-            </div>
-        </div>
-    </div>
-</td>
+            @* 2. Cột Địa điểm *@
+            <td class="px-3">
+                <div class="poi-name mb-1">@poi.Name</div>
+                <div class="description-box">
+                    <div class="d-flex align-items-start mb-2">
+                        <span class="lang-badge bg-danger text-white">VN</span>
+                        <div class="description-text">@poi.DescriptionVi</div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <span class="lang-badge bg-success text-white">AUTO</span>
+                        <div class="description-text text-muted fst-italic">App tự động dịch sang 4 ngôn ngữ</div>
+                    </div>
+                </div>
+            </td>
 
-                                <td class="text-center hide-mobile">
-                                    <div class="category-badge @GetBadgeColor(poi.Category)">
-                                        <i class="bi bi-tag-fill me-1"></i>@(poi.Category ?? "N/A")
-                                    </div>
-                                </td>
+            @* 3. Cột Phân loại *@
+            <td class="text-center hide-mobile">
+                <div class="category-badge @GetBadgeColor(poi.Category)">
+                    <i class="bi bi-tag-fill me-1"></i>@(poi.Category ?? "N/A")
+                </div>
+            </td>
 
-                                <td class="px-3">
-                                    <div class="mb-2">
-                                        <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LAT</span> 
-                                        <span class="geo-text ms-1">@poi.Latitude</span>
-                                    </div>
-                                    <div>
-                                        <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LON</span> 
-                                        <span class="geo-text ms-1">@poi.Longitude</span>
-                                    </div>
-                                    <div class="mt-2 text-muted" style="font-size: 0.7rem; font-weight: 600;">
-                                        <i class="bi bi-broadcast me-1"></i>BK: @poi.TriggerRadius m
-                                    </div>
-                                </td>
-
-                                <td class="text-center pe-3">
-        <div class="d-flex justify-content-center gap-2">
-            <a class="action-btn btn-edit shadow-sm" asp-action="Edit" asp-route-id="@poi.PoiId" title="Sửa">
-                <i class="bi bi-pencil-fill"></i>
-            </a>
-
-            <button type="button" 
-                    class="action-btn btn-delete shadow-sm" 
-                    onclick="confirmDelete('@poi.PoiId', '@poi.Name')" 
-                    title="Xóa">
-                <i class="bi bi-trash-fill"></i>
-            </button>
-        </div>
-    </td>
-                            </tr>
+            @* 4. CỘT TRẠNG THÁI & ĐIỀU KHIỂN (ĐÃ SỬA LỖI DƯ THẺ VÀ LỆCH CỘT) *@
+            <td class="text-center px-3">
+                <div class="mb-2">
+                    @if (poi.Status == "Hoạt động") {
+                        <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">
+                            <i class="bi bi-check-circle-fill me-1"></i> Hoạt động
+                        </span>
+                    } else if (poi.Status == "Tạm ẩn") {
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">
+                            <i class="bi bi-eye-slash-fill me-1"></i> Tạm ẩn
+                        </span>
+                    } else {
+                        <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.7rem;">
+                            <i class="bi bi-x-circle-fill me-1"></i> Ngưng hoạt động
+                        </span>
+                    }
+                </div>
+                
+                <div class="d-flex justify-content-center gap-1">
+                    @if (poi.Status == "Hoạt động") {
+                        <a asp-action="ChangeStatus" asp-route-id="@poi.PoiId" asp-route-status="Tạm ẩn" 
+                           class="status-toggle-btn text-warning shadow-sm">
+                            <i class="bi bi-eye-slash"></i> Ẩn
+                        </a>
+                        
+                        @* CHỈ ADMIN MỚI THẤY NÚT NGƯNG *@
+                        @if (User.IsInRole("Admin")) {
+                            <button type="button" class="status-toggle-btn text-danger shadow-sm" 
+                                    onclick="confirmStopStatus('@poi.PoiId', '@poi.Name')">
+                                <i class="bi bi-x-circle"></i> Ngưng
+                            </button>
                         }
-                    </tbody>
+                    } else {
+                        <a asp-action="ChangeStatus" asp-route-id="@poi.PoiId" asp-route-status="Hoạt động" 
+                           class="status-toggle-btn text-success shadow-sm">
+                            <i class="bi bi-play-circle"></i> Kích hoạt
+                        </a>
+                        
+                        @* Nếu đang tạm ẩn, Admin vẫn có quyền bấm Ngưng *@
+                        @if (User.IsInRole("Admin") && poi.Status == "Tạm ẩn") {
+                            <button type="button" class="status-toggle-btn text-danger shadow-sm" 
+                                    onclick="confirmStopStatus('@poi.PoiId', '@poi.Name')">
+                                <i class="bi bi-x-circle"></i> Ngưng
+                            </button>
+                        }
+                    }
+                </div>
+            </td>
+
+            @* 5. Cột Tọa độ GPS *@
+            <td class="px-3">
+                <div class="mb-1">
+                    <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LAT</span> 
+                    <span class="geo-text ms-1">@poi.Latitude</span>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark border" style="font-size:0.6rem;">LON</span> 
+                    <span class="geo-text ms-1">@poi.Longitude</span>
+                </div>
+                <div class="mt-2 text-muted" style="font-size: 0.7rem; font-weight: 600;">
+                    <i class="bi bi-broadcast me-1"></i>BK: @poi.TriggerRadius m
+                </div>
+            </td>
+
+            @* 6. Cột Thao tác *@
+            <td class="text-center pe-3">
+                <div class="d-flex justify-content-center gap-2">
+                    <a class="action-btn btn-edit shadow-sm" asp-action="Edit" asp-route-id="@poi.PoiId" title="Sửa">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    <button type="button" class="action-btn btn-delete shadow-sm" 
+                            onclick="confirmDelete('@poi.PoiId', '@poi.Name')" title="Xóa">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    }
+</tbody>
                 </table>
             </div>
         </div>
@@ -308,7 +399,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // 1. Popup thông báo (Dùng cho cả Đăng nhập, Thêm, Sửa, Xóa)
+        // 1. Popup thông báo (Dùng SweetAlert2 cho mượt)
         var rawMessage = `@Html.Raw(TempData["SuccessMessage"])`;
 
         if (rawMessage && rawMessage.trim() !== "") {
@@ -316,7 +407,7 @@
                 title: 'Thành công!',
                 text: rawMessage,
                 icon: 'success',
-                timer: 4000, 
+                timer: 3000, 
                 timerProgressBar: true,
                 showConfirmButton: false,
                 position: 'top-end',
@@ -341,5 +432,24 @@
                 }
             })
         }
+        // Hàm xác nhận Ngưng hoạt động dành riêng cho Admin
+    function confirmStopStatus(id, name) {
+        Swal.fire({
+            title: 'Xác nhận ngưng kinh doanh?',
+            html: `Bạn có chắc muốn chuyển <b>${name}</b> sang trạng thái Ngưng hoạt động?<br><small class="text-secondary">Lưu ý: Quán sẽ không còn hiển thị trên App du khách.</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b', // Màu đỏ cho nút đồng ý
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Đồng ý ngưng',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // CHÚ Ý: Chỗ này phải khớp với hàm ChangeStatus trong Controller của Tài
+                // Mình gửi id và trạng thái mới là "Ngưng hoạt động"
+                window.location.href = '@Url.Action("ChangeStatus", "POI")' + '?id=' + id + '&status=Ngưng hoạt động';
+            }
+        })
+    }
     </script>
 }

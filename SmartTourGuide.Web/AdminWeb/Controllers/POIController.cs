@@ -42,16 +42,22 @@ namespace AdminWeb.Controllers
         }
 
         // 2. TRANG THÊM MỚI (GIAO DIỆN)
+        // GET: POI/Create
         public async Task<IActionResult> Create(string? owner)
         {
+            // 1. Lấy lại danh sách các chủ quán từ database để đổ vào dropdown
             var owners = await _context.Admins
                 .Where(a => a.Role == "Owner")
                 .Select(a => a.Username)
                 .ToListAsync();
 
-            ViewBag.OwnerList = new SelectList(owners);
+            // 2. Tạo SelectList và chọn sẵn giá trị 'owner' truyền sang
+            ViewBag.OwnerList = new SelectList(owners, owner);
 
-            return View();
+            // 3. Khởi tạo model với OwnerUsername mặc định
+            var model = new POI { OwnerUsername = owner };
+
+            return View(model);
         }
 
         // 3. XỬ LÝ LƯU THÊM MỚI (POST)
@@ -243,6 +249,25 @@ namespace AdminWeb.Controllers
             }
             await _context.SaveChangesAsync();
             return Json(new { success = true, synced = logs.Count });
+        }
+        // Hàm này sẽ nhận ID của quán và Trạng thái mới mà Tài muốn đổi
+        public async Task<IActionResult> ChangeStatus(int id, string status)
+        {
+            // 1. Tìm quán trong SQL Server
+            var poi = await _context.POIs.FindAsync(id);
+            if (poi == null) return NotFound();
+
+            // 2. Cập nhật trạng thái mới vào cột Status
+            poi.Status = status;
+
+            // 3. Lưu xuống Database
+            await _context.SaveChangesAsync();
+
+            // 4. Bắn một thông báo nhỏ cho người dùng biết đã xong
+            TempData["SuccessMessage"] = $"Đã cập nhật trạng thái '{poi.Name}' thành {status}!";
+
+            // 5. Quay lại trang danh sách để thấy Badge đổi màu
+            return RedirectToAction(nameof(Index));
         }
 
         [AllowAnonymous]
