@@ -23,6 +23,20 @@ namespace FoodTourApp
             Task.Run(async () => await StartInitialSync());
         }
 
+        protected override async void OnSleep()
+        {
+            base.OnSleep();
+            try
+            {
+                var apiSync = new ApiSyncService(new DatabaseService());
+                await apiSync.SyncLogsAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OnSleep sync failed: {ex.Message}");
+            }
+        }
+
         // FIX CS0618: Di chuyển CreateWindow ra ngoài Constructor
         protected override Window CreateWindow(IActivationState? activationState)
         {

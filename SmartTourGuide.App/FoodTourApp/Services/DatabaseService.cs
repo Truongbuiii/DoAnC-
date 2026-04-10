@@ -109,6 +109,27 @@ namespace FoodTourApp.Services
             }
         }
 
+        // Delete logs by ids after they have been successfully sent to server
+        public async Task DeleteLogsByIdsAsync(List<int> logIds)
+        {
+            await Init();
+            foreach (var id in logIds)
+            {
+                try
+                {
+                    var log = await _database!.Table<ActivityLog>().FirstOrDefaultAsync(l => l.LogId == id);
+                    if (log != null)
+                    {
+                        await _database.DeleteAsync(log);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"=== ERROR deleting log {id}: {ex.Message}");
+                }
+            }
+        }
+
         // ==========================================
         // 5. CÁC HÀM TRUY VẤN (GETTERS / SETTERS)
         // ==========================================

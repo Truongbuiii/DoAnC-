@@ -232,7 +232,6 @@ namespace AdminWeb.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("/api/v1/analytics/sync")]
         public async Task<IActionResult> SyncAnalyticsApi([FromBody] List<ActivityLogDto> logs)
         {
             if (logs == null || !logs.Any()) return BadRequest();

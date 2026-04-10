@@ -18,8 +18,7 @@ namespace AdminWeb.Models
 
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
-        public double? TriggerRadius { get; set; }
-
+        public double TriggerRadius { get; set; } = 100;
         public string? ImageSource { get; set; }
         public string? OwnerUsername { get; set; }
         public string Status { get; set; } = "Hoạt động"; // Mặc định là Hoạt động khi tạo mới

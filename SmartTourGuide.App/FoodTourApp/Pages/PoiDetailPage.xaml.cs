@@ -195,6 +195,13 @@ public partial class PoiDetailPage : ContentPage
         _androidTts?.SetLanguage(_currentLanguage);
         _androidTts?.Speak(text);
 #endif
+        // Log activity locally then trigger immediate background sync
+        _ = Task.Run(async () =>
+        {
+            await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
+            var apiSync = new ApiSyncService(new DatabaseService());
+            await apiSync.SyncLogsAsync();
+        });
     }
 
     private async void OnDirectClicked(object sender, EventArgs e)

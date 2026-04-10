@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Text;
-using System.Text.Json; // Dùng thư viện này cho đồng bộ
-using System.Diagnostics; // Để sửa lỗi 'Debug'
+using System.Text.Json;
+using System.Diagnostics;
 using FoodTourApp.Models;
 
 namespace FoodTourApp.Services
@@ -14,10 +14,11 @@ namespace FoodTourApp.Services
         // URL ngrok của bạn
         public const string BaseUrl = "https://tandra-acetylenic-aurelio.ngrok-free.dev";
 
-        // Use a single static HttpClient to avoid socket exhaustion.
+        // CHỈ GIỮ LẠI MỘT KHAI BÁO NÀY (Đã thêm Header bỏ qua cảnh báo của Ngrok)
         private static readonly HttpClient SharedHttpClient = new()
         {
-            Timeout = TimeSpan.FromSeconds(60)
+            Timeout = TimeSpan.FromSeconds(60),
+            DefaultRequestHeaders = { { "ngrok-skip-browser-warning", "true" } }
         };
 
         public ApiSyncService(DatabaseService dbService)
@@ -45,13 +46,13 @@ namespace FoodTourApp.Services
                         }
                     }
                     await _dbService.SavePOIsFromServerAsync(pois);
-                    System.Diagnostics.Debug.WriteLine($"=== SYNC OK: {pois.Count} POIs");
+                    Debug.WriteLine($"=== SYNC OK: {pois.Count} POIs");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== SYNC FAIL: {ex.Message}");
+                Debug.WriteLine($"=== SYNC FAIL: {ex.Message}");
             }
             return false;
         }
@@ -75,40 +76,36 @@ namespace FoodTourApp.Services
                         }
                     }
                     await _dbService.SaveToursFromServerAsync(tours);
-                    System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS OK: {tours.Count}");
+                    Debug.WriteLine($"=== SYNC TOURS OK: {tours.Count}");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== SYNC TOURS FAIL: {ex.Message}");
+                Debug.WriteLine($"=== SYNC TOURS FAIL: {ex.Message}");
             }
             return false;
         }
 
-        // 3. SYNC AUDIOS (KỊCH BẢN TTS) - ĐÃ FIX LỖI
+        // 3. SYNC AUDIOS (KỊCH BẢN TTS)
         public async Task<bool> SyncAudiosAsync()
         {
             try
             {
-                // ĐÃ FIX: Thêm BaseUrl vào phía trước
                 var response = await _httpClient.GetStringAsync($"{BaseUrl}/api/v1/audios/all");
-
-                // ĐÃ FIX: Chuyển sang dùng JsonSerializer (System.Text.Json) cho đồng bộ với cả file
                 var audios = JsonSerializer.Deserialize<List<FoodTourApp.Models.Audio>>(response,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (audios != null && audios.Count > 0)
                 {
                     await _dbService.SaveAudiosFromServerAsync(audios);
-                    System.Diagnostics.Debug.WriteLine($"=== SYNC AUDIO OK: {audios.Count}");
+                    Debug.WriteLine($"=== SYNC AUDIO OK: {audios.Count}");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                // ĐÃ FIX: Dùng System.Diagnostics.Debug để tránh lỗi CS0103
-                System.Diagnostics.Debug.WriteLine($"=== LỖI SYNC AUDIO: {ex.Message}");
+                Debug.WriteLine($"=== LỖI SYNC AUDIO: {ex.Message}");
             }
             return false;
         }
@@ -136,17 +133,19 @@ namespace FoodTourApp.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    await _dbService.MarkLogsAsSyncedAsync(unsynced.Select(l => l.LogId).ToList());
-                    System.Diagnostics.Debug.WriteLine($"=== LOGS SYNCED: {unsynced.Count}");
+                    var ids = unsynced.Select(l => l.LogId).ToList();
+                    // Đánh dấu đã sync và xóa cục bộ để nhẹ máy
+                    await _dbService.MarkLogsAsSyncedAsync(ids);
+                    await _dbService.DeleteLogsByIdsAsync(ids);
+                    Debug.WriteLine($"=== LOGS SYNCED AND DELETED: {unsynced.Count}");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== LOGS FAIL: {ex.Message}");
+                Debug.WriteLine($"=== LOGS FAIL: {ex.Message}");
             }
             return false;
         }
-
     }
 }
