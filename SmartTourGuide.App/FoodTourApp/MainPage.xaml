@@ -7,7 +7,6 @@
     <ScrollView>
         <VerticalStackLayout Spacing="0">
 
-            <!-- HEADER -->
             <Grid HeightRequest="130" BackgroundColor="#1F2937">
                 <Ellipse Fill="#22F97316" WidthRequest="200" HeightRequest="200"
                          HorizontalOptions="End" VerticalOptions="Start"
@@ -22,7 +21,6 @@
                 </VerticalStackLayout>
             </Grid>
 
-            <!-- BANNER -->
             <Border Margin="16,-20,16,0" StrokeShape="RoundRectangle 20" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,8" Radius="20" Opacity="0.2"/>
@@ -50,7 +48,6 @@
                 </Grid>
             </Border>
 
-            <!-- TOUR GỢI Ý -->
             <VerticalStackLayout Padding="16,24,16,0" Spacing="12">
                 <Label x:Name="LblTours" FontSize="17" FontAttributes="Bold" TextColor="#111827"/>
                 <CollectionView x:Name="ToursList" HeightRequest="160"
@@ -76,7 +73,7 @@
                                         </BoxView.Background>
                                     </BoxView>
                                     <VerticalStackLayout VerticalOptions="End" Padding="14,10" Spacing="4">
-                                        <Label Text="{Binding Name}" TextColor="White"
+                                        <Label Text="{Binding DisplayName}" TextColor="White"
                                                FontSize="15" FontAttributes="Bold"/>
                                         <Border BackgroundColor="#F97316"
                                                 StrokeShape="RoundRectangle 6" Padding="6,2">
@@ -90,7 +87,6 @@
                 </CollectionView>
             </VerticalStackLayout>
 
-            <!-- ĐỊA ĐIỂM NỔI BẬT -->
             <VerticalStackLayout Padding="16,24,16,16" Spacing="12">
                 <Label x:Name="LblFeatured" FontSize="17" FontAttributes="Bold" TextColor="#1F2937"/>
                 <CollectionView x:Name="FeaturedPoisList"
@@ -111,12 +107,13 @@
                                     </Image>
                                     <VerticalStackLayout Grid.Column="1" Margin="14,0,0,0"
                                                          VerticalOptions="Center" Spacing="4">
-                                        <Label Text="{Binding Name}" FontAttributes="Bold"
+                                        <Label Text="{Binding DisplayName}" FontAttributes="Bold"
                                                FontSize="15" TextColor="#111827"/>
+
                                         <Border BackgroundColor="#FFF7ED"
                                                 StrokeShape="RoundRectangle 6"
                                                 Padding="8,3" HorizontalOptions="Start">
-                                            <Label Text="{Binding Category}" FontSize="11"
+                                            <Label Text="{Binding DisplayCategory}" FontSize="11"
                                                    TextColor="#F97316" FontAttributes="Bold"/>
                                         </Border>
                                         <Label x:Name="LblLocation" FontSize="11" TextColor="#9CA3AF"/>

@@ -23,7 +23,6 @@ namespace FoodTourApp.Services
             // Đăng ký đầy đủ các bảng của bạn
             await _database.CreateTableAsync<POI>();
             await _database.CreateTableAsync<Itinerary>();
-            await _database.CreateTableAsync<MenuItemModel>();
             await _database.CreateTableAsync<Tour>();
             await _database.CreateTableAsync<ActivityLog>();
 
@@ -125,24 +124,6 @@ namespace FoodTourApp.Services
 
         public async Task<List<ActivityLog>> GetUnSyncedLogsAsync() { await Init(); return await _database!.Table<ActivityLog>().Where(l => l.IsSynced == 0).ToListAsync(); }
 
-        public async Task<List<MenuItemModel>> GetMenuItemsByPoiIdAsync(int poiId)
-        {
-            await Init();
-            var list = await _database!.Table<MenuItemModel>()
-                                      .Where(m => m.PoiId == poiId)
-                                      .ToListAsync();
-            return list;
-        }
-
-        public async Task SaveMenuItemsFromServerAsync(List<MenuItemModel> items)
-        {
-            await Init();
-            if (items == null) return;
-            foreach (var item in items)
-            {
-                try { await _database!.InsertOrReplaceAsync(item); }
-                catch (Exception ex) { Debug.WriteLine($"=== LỖI MENU ITEM: {ex.Message}"); }
-            }
-        }
+        // Menu items feature removed. Methods and table dropped intentionally.
     }
 }

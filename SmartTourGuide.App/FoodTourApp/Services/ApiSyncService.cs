@@ -14,13 +14,16 @@ namespace FoodTourApp.Services
         // URL ngrok của bạn
         public const string BaseUrl = "https://tandra-acetylenic-aurelio.ngrok-free.dev";
 
+        // Use a single static HttpClient to avoid socket exhaustion.
+        private static readonly HttpClient SharedHttpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(60)
+        };
+
         public ApiSyncService(DatabaseService dbService)
         {
             _dbService = dbService;
-            _httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(60)
-            };
+            _httpClient = SharedHttpClient;
         }
 
         // 1. SYNC POI TỪ SERVER VỀ SQLITE
@@ -145,34 +148,5 @@ namespace FoodTourApp.Services
             return false;
         }
 
-        // 5. SYNC MENU ITEMS TỪ SERVER VỀ SQLITE
-        public async Task<bool> SyncMenuItemsAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetStringAsync($"{BaseUrl}/api/v1/menuitems");
-                var items = JsonSerializer.Deserialize<List<MenuItemModel>>(response,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (items != null && items.Count > 0)
-                {
-                    foreach (var it in items)
-                    {
-                        if (!string.IsNullOrEmpty(it.ImageSource) && !it.ImageSource.StartsWith("http"))
-                        {
-                            it.ImageSource = $"{BaseUrl}/images/{it.ImageSource}";
-                        }
-                    }
-                    await _dbService.SaveMenuItemsFromServerAsync(items);
-                    System.Diagnostics.Debug.WriteLine($"=== SYNC MENU OK: {items.Count} items");
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"=== SYNC MENU FAIL: {ex.Message}");
-            }
-            return false;
-        }
     }
 }

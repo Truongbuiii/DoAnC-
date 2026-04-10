@@ -15,5 +15,12 @@ namespace FoodTourApp.Models
         public string TotalTime { get; set; } = string.Empty;
 
         public string ImageSource { get; set; } = string.Empty;
+        private string? _displayName;
+        [Ignore]
+        public string? DisplayName
+        {
+            get => _displayName;
+            set => _displayName = value;
+        }
     }
 }

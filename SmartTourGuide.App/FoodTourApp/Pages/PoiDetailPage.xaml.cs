@@ -1,7 +1,6 @@
 using FoodTourApp.Models;
 using FoodTourApp.Services;
 using CommunityToolkit.Mvvm.Messaging;
-using System.Collections.ObjectModel; // Cần thiết cho ObservableCollection
 
 #if ANDROID
 using FoodTourApp.Platforms.Android;
@@ -14,9 +13,6 @@ public partial class PoiDetailPage : ContentPage
     private readonly POI _poi;
     private string _currentLanguage = "vi-VN";
     private readonly DatabaseService _dbService = new DatabaseService();
-
-    // --- LỖI 1: CẦN KHAI BÁO BIẾN NÀY ĐỂ BINDING VÀO XAML ---
-    public ObservableCollection<MenuItemModel> MenuItems { get; set; } = new();
 
 #if ANDROID
     private AndroidTtsService? _androidTts;
@@ -50,37 +46,9 @@ public partial class PoiDetailPage : ContentPage
 
                 ApplyLanguage();
                 UpdateFavoriteButton();
-                await LoadMenuData(); // Cập nhật lại món ăn nếu cần
+                // No menu to load anymore
             });
         });
-    }
-
-    // --- LỖI 2: HÀM NÀY CẦN ĐƯỢC GỌI TRONG ONAPPEARING ---
-    private async Task LoadMenuData()
-    {
-        try
-        {
-            var items = await _dbService.GetMenuItemsByPoiIdAsync(_poi.PoiId);
-
-            MainThread.BeginInvokeOnMainThread(() => {
-                MenuItems.Clear();
-                foreach (var item in items)
-                {
-                    MenuItems.Add(item);
-                }
-
-                // Gán nguồn dữ liệu cho CollectionView
-                MenuCollectionView.ItemsSource = MenuItems;
-
-                // Hiện/Ẩn tiêu đề "Món ngon phải thử"
-                if (LblMenuTitle != null)
-                    LblMenuTitle.IsVisible = MenuItems.Count > 0;
-            });
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"=== Lỗi load món ăn: {ex.Message}");
-        }
     }
 
     protected override async void OnAppearing()
@@ -95,18 +63,28 @@ public partial class PoiDetailPage : ContentPage
 
         BindingContext = displayPoi; // CẬP NHẬT LẠI ĐỂ HIỆN TÊN QUÁN
 
-        // 2. HIỆN MÓN ĂN (QUAN TRỌNG: PHẢI GỌI Ở ĐÂY)
-        await LoadMenuData();
-
-        // 3. Hiện nội dung mô tả: luôn lấy DescriptionVi làm gốc
+        // 2. Hiện nội dung mô tả: luôn lấy DescriptionVi làm gốc
         DetailDescription.Text = displayPoi.DescriptionVi;
 
-        // 4. Nếu ngôn ngữ hệ thống không phải tiếng Việt thì thực hiện dịch on-demand
+        // Ensure display name/category are set
+        if (string.IsNullOrEmpty(displayPoi.DisplayName)) displayPoi.DisplayName = displayPoi.Name;
+        if (string.IsNullOrEmpty(displayPoi.DisplayCategory)) displayPoi.DisplayCategory = displayPoi.Category;
+
+        // 3. Nếu ngôn ngữ hệ thống không phải tiếng Việt thì thực hiện dịch on-demand
         if (!IsVietnamese(_currentLanguage))
         {
             var translated = await GetDisplayDescriptionAsync(displayPoi);
             if (!string.IsNullOrEmpty(translated))
                 DetailDescription.Text = translated;
+
+            // Also translate display name and category for the detail page
+            var shortCode = GetShortLangCode(_currentLanguage);
+            var translator = new TranslationService();
+            var dn = await translator.TranslateAsync(displayPoi.Name, shortCode);
+            var dc = await translator.TranslateAsync(displayPoi.Category, shortCode);
+            if (!string.IsNullOrEmpty(dn)) displayPoi.DisplayName = dn;
+            if (!string.IsNullOrEmpty(dc)) displayPoi.DisplayCategory = dc;
+            BindingContext = displayPoi;
         }
 
         ApplyLanguage();
@@ -167,7 +145,7 @@ public partial class PoiDetailPage : ContentPage
     private void ApplyLanguage()
     {
         LblIntroTitle.Text = Lang.Get("detail_intro");
-        LblMenuTitle.Text = Lang.Get("detail_menu");
+        // Removed LblMenuTitle since the menu section is gone
         BtnListen.Text = Lang.Get("detail_listen");
         BtnMap.Text = Lang.Get("detail_map");
         BtnNavigate.Text = Lang.Get("detail_navigate");

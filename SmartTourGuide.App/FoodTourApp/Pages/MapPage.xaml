@@ -41,9 +41,9 @@
                                                VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding Name}" FontSize="14"
+                                        <Label Text="{Binding DisplayName}" FontSize="14"
                                                FontAttributes="Bold" TextColor="#111827"/>
-                                        <Label Text="{Binding Category}" FontSize="12" TextColor="#F97316"/>
+                                        <Label Text="{Binding DisplayCategory}" FontSize="12" TextColor="#F97316"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </DataTemplate>

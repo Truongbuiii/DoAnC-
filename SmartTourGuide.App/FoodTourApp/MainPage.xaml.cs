@@ -1,14 +1,17 @@
-﻿using Microsoft.Maui.Controls;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using FoodTourApp.Models;
 using FoodTourApp.Services;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.ApplicationModel;
 
 namespace FoodTourApp;
 
 public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
-    private static bool _hasShownLanguagePicker = false; // static → chỉ hỏi 1 lần duy nhất
+    private static bool _hasShownLanguagePicker = false;
+    private string _currentLanguage = "vi-VN";
 
     public MainPage()
     {
@@ -19,15 +22,15 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        // Chỉ hỏi lần đầu tiên cài app (chưa có ngôn ngữ trong Preferences)
+        // 1. Kiểm tra và chọn ngôn ngữ lần đầu
         if (!_hasShownLanguagePicker && !Preferences.ContainsKey("AppLanguage"))
         {
             _hasShownLanguagePicker = true;
-            await Task.Delay(500); // chờ UI render xong
+            await Task.Delay(500);
 
-            string action = await DisplayActionSheet(
+            string action = await DisplayActionSheetAsync(
                 "Chọn ngôn ngữ thuyết minh",
-                null, null,
+                "Hủy", null,
                 "🇻🇳 Tiếng Việt",
                 "🇺🇸 English",
                 "🇨🇳 中文",
@@ -46,11 +49,11 @@ public partial class MainPage : ContentPage
             Preferences.Set("AppLanguage", lang);
             Lang.Set(lang);
 
-            // Cập nhật tab titles ngay sau khi chọn ngôn ngữ
             if (Shell.Current is AppShell appShell)
                 appShell.ApplyLanguage();
         }
 
+        _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
         await LoadDashboard();
     }
@@ -73,10 +76,10 @@ public partial class MainPage : ContentPage
         _ = Task.Run(async () =>
         {
             await apiSync.SyncPoisAsync();
+            await apiSync.SyncAudiosAsync(); // Đồng bộ kịch bản AI
             await apiSync.SyncToursAsync();
-                // Đồng bộ menu items từ server về SQLite
-                await apiSync.SyncMenuItemsAsync();
             await apiSync.SyncLogsAsync();
+
             MainThread.BeginInvokeOnMainThread(async () =>
                 await LoadData());
         });
@@ -86,10 +89,60 @@ public partial class MainPage : ContentPage
 
     private async Task LoadData()
     {
-        var allPois = await _dbService.GetPOIsAsync();
+        var allPois = (await _dbService.GetPOIsAsync()).ToList();
+        var allTours = (await _dbService.GetItinerariesAsync()).ToList();
+
+        // Gán tên mặc định
+        foreach (var p in allPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
+        foreach (var t in allTours) { t.DisplayName = t.TourName; }
+
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-        var tours = await _dbService.GetItinerariesAsync();
-        ToursList.ItemsSource = new ObservableCollection<Itinerary>(tours);
+        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
+
+        // Dịch thuật AI nếu không phải tiếng Việt (đọc ngôn ngữ từ Preferences mỗi lần để phản ánh thay đổi)
+        var preferredLang = Preferences.Get("AppLanguage", "vi-VN");
+        if (!preferredLang.StartsWith("vi", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var translator = new TranslationService();
+                    string targetLang = GetShortLangCode(preferredLang);
+
+                    foreach (var p in allPois)
+                    {
+                        var dn = await translator.TranslateAsync(p.Name, targetLang);
+                        if (!string.IsNullOrEmpty(dn)) p.DisplayName = dn;
+
+                        var dc = await translator.TranslateAsync(p.Category, targetLang);
+                        if (!string.IsNullOrEmpty(dc)) p.DisplayCategory = dc;
+                    }
+
+                    foreach (var t in allTours)
+                    {
+                        var dt = await translator.TranslateAsync(t.TourName, targetLang);
+                        if (!string.IsNullOrEmpty(dt)) t.DisplayName = dt;
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
+                        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Translation error: {ex.Message}");
+                }
+            });
+        }
+    }
+
+    private string GetShortLangCode(string culture)
+    {
+        if (string.IsNullOrEmpty(culture)) return "vi";
+        return culture.Split('-')[0].ToLower();
     }
 
     private async void OnBannerTapped(object sender, EventArgs e)

@@ -21,6 +21,17 @@ namespace FoodTourApp.Models
         [Ignore]
         public string Duration => TotalTime; // alias cho XAML
 
+        private string? _displayName;
+        [Ignore]
+        public string? DisplayName
+        {
+            get => _displayName;
+            set
+            {
+                _displayName = value;
+            }
+        }
+
         [Ignore]
         public List<int> PoiIds
         {
