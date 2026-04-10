@@ -1,12 +1,14 @@
-﻿using SQLite;
-using FoodTourApp.Models;
+﻿using FoodTourApp.Models;
+using SQLite;
 using System.Diagnostics;
+
+// Tuyệt đối KHÔNG dùng 'using static Android.Provider.MediaStore' ở đây.
 
 namespace FoodTourApp.Services
 {
     public class DatabaseService
     {
-        private SQLiteAsyncConnection _database;
+        private SQLiteAsyncConnection? _database;
 
         // ==========================================
         // 1. KHỞI TẠO DATABASE (MIGRATION)
@@ -18,62 +20,66 @@ namespace FoodTourApp.Services
             var dbPath = Path.Combine(FileSystem.AppDataDirectory, "VinhKhanhTour.db3");
             _database = new SQLiteAsyncConnection(dbPath);
 
+            // Đăng ký đầy đủ các bảng của bạn
             await _database.CreateTableAsync<POI>();
             await _database.CreateTableAsync<Itinerary>();
-            await _database.CreateTableAsync<MenuItemModel>(); // <--- DÒNG NÀY PHẢI CÓ
+            await _database.CreateTableAsync<MenuItemModel>();
             await _database.CreateTableAsync<Tour>();
             await _database.CreateTableAsync<ActivityLog>();
 
-            // XÓA HOẶC COMMENT 2 DÒNG NÀY ĐỂ KHÔNG DÙNG DỮ LIỆU MẪU NỮA
-            // if (await _database.Table<POI>().CountAsync() == 0)
-            //    await _database.InsertAllAsync(GetSeedPOIs());
-
-            // if (await _database.Table<Itinerary>().CountAsync() == 0)
-            //    await _database.InsertAllAsync(GetSampleItineraries());
+            // QUAN TRỌNG: Tạo bảng Audio (dùng tên đầy đủ để tránh trùng MediaStore)
+            await _database.CreateTableAsync<FoodTourApp.Models.Audio>();
         }
 
         // ==========================================
-        // 2. LOGIC DỊCH THUẬT & CACHE (ĐÃ CHUẨN HÓA VI, EN, ZH, KO, JA)
+        // 2. LOGIC DỊCH THUẬT & AUDIO (TTS)
         // ==========================================
         public async Task TranslateAndCachePoisAsync()
         {
-            // API hiện tại chỉ cung cấp DescriptionVi. Không thực hiện cache bản dịch tự động.
             await Init();
             Debug.WriteLine("=== TranslateAndCachePoisAsync: no-op with current API (only DescriptionVi) ===");
         }
 
+        // Đã sửa lỗi trùng tên Audio của Android
+        public async Task<FoodTourApp.Models.Audio?> GetAudioByPoiIdAsync(int poiId)
+        {
+            await Init();
+            // Logic 1-1: Chỉ lấy đúng 1 kịch bản gắn với PoiId này
+            return await _database!.Table<FoodTourApp.Models.Audio>()
+                                   .FirstOrDefaultAsync(a => a.PoiId == poiId);
+        }
+
         // ==========================================
-        // 3. ĐỒNG BỘ DỮ LIỆU TỪ WEB ADMIN SERVER
+        // 3. ĐỒNG BỘ DỮ LIỆU TỪ SERVER
         // ==========================================
         public async Task SavePOIsFromServerAsync(List<POI> pois)
         {
             await Init();
             foreach (var serverPoi in pois)
             {
-                // 1. Tìm xem quán này đã có trong máy chưa
-                var localPoi = await _database.Table<POI>()
-                    .FirstOrDefaultAsync(p => p.PoiId == serverPoi.PoiId);
-
-                if (localPoi != null)
-                {
-                    // 2. API hiện tại chỉ cung cấp DescriptionVi; không cố gắng merge các trường dịch cũ.
-                }
-
-                // 3. Lúc này mới lưu đè vào SQLite
-                await _database.InsertOrReplaceAsync(serverPoi);
-                Debug.WriteLine($"=== ĐÃ ĐỒNG BỘ {pois.Count} QUÁN TỪ WEB ADMIN ===");
+                await _database!.InsertOrReplaceAsync(serverPoi);
             }
+            Debug.WriteLine($"=== ĐÃ ĐỒNG BỘ {pois?.Count ?? 0} QUÁN TỪ WEB ADMIN ===");
         }
 
         public async Task SaveToursFromServerAsync(List<Itinerary> tours)
         {
             await Init();
             foreach (var tour in tours)
-                await _database.InsertOrReplaceAsync(tour);
+                await _database!.InsertOrReplaceAsync(tour);
+        }
+
+        public async Task SaveAudiosFromServerAsync(List<FoodTourApp.Models.Audio> audios)
+        {
+            await Init();
+            if (audios == null) return;
+            foreach (var audio in audios)
+                await _database!.InsertOrReplaceAsync(audio);
+            Debug.WriteLine($"=== ĐÃ ĐỒNG BỘ {audios.Count} KỊCH BẢN ÂM THANH ===");
         }
 
         // ==========================================
-        // 4. QUẢN LÝ NHẬT KÝ (LOGS) & ĐỒNG BỘ
+        // 4. QUẢN LÝ NHẬT KÝ (LOGS)
         // ==========================================
         public async Task LogActivityAsync(int poiId, string actionType, string language)
         {
@@ -82,12 +88,12 @@ namespace FoodTourApp.Services
             {
                 PoiId = poiId,
                 ActionType = actionType,
-                LanguageUsed = language, // Sẽ lưu là VI, EN, ZH, KO, JA
-                DeviceType = "Android",
+                LanguageUsed = language,
+                DeviceType = DeviceInfo.Platform.ToString(),
                 AccessTime = DateTime.Now,
                 IsSynced = 0
             };
-            await _database.InsertAsync(log);
+            await _database!.InsertAsync(log);
         }
 
         public async Task MarkLogsAsSyncedAsync(List<int> logIds)
@@ -95,7 +101,7 @@ namespace FoodTourApp.Services
             await Init();
             foreach (var id in logIds)
             {
-                var log = await _database.Table<ActivityLog>().FirstOrDefaultAsync(l => l.LogId == id);
+                var log = await _database!.Table<ActivityLog>().FirstOrDefaultAsync(l => l.LogId == id);
                 if (log != null)
                 {
                     log.IsSynced = 1;
@@ -105,48 +111,38 @@ namespace FoodTourApp.Services
         }
 
         // ==========================================
-        // 5. CÁC HÀM TRUY VẤN DỮ LIỆU (GETTER)
+        // 5. CÁC HÀM TRUY VẤN (GETTERS / SETTERS)
         // ==========================================
-        public async Task<List<POI>> GetPOIsAsync() { await Init(); return await _database.Table<POI>().ToListAsync(); }
+        public async Task<List<POI>> GetPOIsAsync() { await Init(); return await _database!.Table<POI>().ToListAsync(); }
 
-        public async Task<POI> GetPOIByIdAsync(int poiId) { await Init(); return await _database.Table<POI>().FirstOrDefaultAsync(p => p.PoiId == poiId); }
+        public async Task<POI> GetPOIByIdAsync(int poiId) { await Init(); return await _database!.Table<POI>().FirstOrDefaultAsync(p => p.PoiId == poiId); }
 
-        public async Task<List<Itinerary>> GetItinerariesAsync() { await Init(); return await _database.Table<Itinerary>().ToListAsync(); }
+        public async Task<List<Itinerary>> GetItinerariesAsync() { await Init(); return await _database!.Table<Itinerary>().ToListAsync(); }
 
-        public async Task<int> SavePOIAsync(POI poi) { await Init(); return poi.PoiId != 0 ? await _database.UpdateAsync(poi) : await _database.InsertAsync(poi); }
+        public async Task<int> SavePOIAsync(POI poi) { await Init(); return poi.PoiId != 0 ? await _database!.UpdateAsync(poi) : await _database!.InsertAsync(poi); }
 
-        public async Task<int> DeletePOIAsync(POI poi) { await Init(); return await _database.DeleteAsync(poi); }
+        public async Task<int> DeletePOIAsync(POI poi) { await Init(); return await _database!.DeleteAsync(poi); }
 
-        public async Task<List<ActivityLog>> GetUnSyncedLogsAsync() { await Init(); return await _database.Table<ActivityLog>().Where(l => l.IsSynced == 0).ToListAsync(); }
+        public async Task<List<ActivityLog>> GetUnSyncedLogsAsync() { await Init(); return await _database!.Table<ActivityLog>().Where(l => l.IsSynced == 0).ToListAsync(); }
 
         public async Task<List<MenuItemModel>> GetMenuItemsByPoiIdAsync(int poiId)
         {
-            await Init(); // Cực kỳ quan trọng: Phải khởi tạo DB trước
-            var list = await _database.Table<MenuItemModel>()
+            await Init();
+            var list = await _database!.Table<MenuItemModel>()
                                       .Where(m => m.PoiId == poiId)
                                       .ToListAsync();
-
-            System.Diagnostics.Debug.WriteLine($"=== POI {poiId} có {list.Count} món ăn");
             return list;
         }
 
-        // Lưu/đồng bộ danh sách MenuItems lấy từ server vào SQLite
         public async Task SaveMenuItemsFromServerAsync(List<MenuItemModel> items)
         {
             await Init();
+            if (items == null) return;
             foreach (var item in items)
             {
-                try
-                {
-                    // InsertOrReplaceAsync sẽ upsert dựa trên khóa chính (MenuId)
-                    await _database.InsertOrReplaceAsync(item);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"=== LỖI LƯU MENU ITEM (MenuId={item?.MenuId}): {ex.Message}");
-                }
+                try { await _database!.InsertOrReplaceAsync(item); }
+                catch (Exception ex) { Debug.WriteLine($"=== LỖI MENU ITEM: {ex.Message}"); }
             }
-            Debug.WriteLine($"=== ĐÃ LƯU {items?.Count ?? 0} MENU ITEMS TỪ SERVER");
         }
     }
 }

@@ -261,6 +261,14 @@ namespace AdminWeb.Controllers
             }); 
             return Json(result);
         }
+        [AllowAnonymous]
+        [HttpGet("/api/v1/audios/all")]
+        public async Task<IActionResult> GetAllAudiosApi()
+        {
+            // Lấy tất cả audio để App đồng bộ về SQLite
+            var audios = await _context.Audios.ToListAsync();
+            return Json(audios);
+        }
     }
 
     public class ActivityLogDto

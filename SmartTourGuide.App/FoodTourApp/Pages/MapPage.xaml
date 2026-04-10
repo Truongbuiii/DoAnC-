@@ -3,7 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.Pages.MapPage"
              BackgroundColor="#F9FAFB">
-
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Sync Data" 
+                     Clicked="OnManualSyncClicked" 
+                     Priority="0" />
+    </ContentPage.ToolbarItems>
     <Grid RowDefinitions="Auto, Auto, *">
 
 
@@ -48,7 +52,6 @@
                 </Border>
             </VerticalStackLayout>
         </Grid>
-
         <!-- MAP + CONTROLS -->
         <Grid Grid.Row="2">
             <WebView x:Name="MapWebView" HorizontalOptions="Fill" VerticalOptions="Fill"/>

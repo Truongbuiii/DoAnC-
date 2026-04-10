@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.Text;
-using System.Text.Json;
+using System.Text.Json; // Dùng thư viện này cho đồng bộ
+using System.Diagnostics; // Để sửa lỗi 'Debug'
 using FoodTourApp.Models;
 
 namespace FoodTourApp.Services
@@ -10,7 +11,9 @@ namespace FoodTourApp.Services
         private readonly DatabaseService _dbService;
         private readonly HttpClient _httpClient;
 
+        // URL ngrok của bạn
         public const string BaseUrl = "https://tandra-acetylenic-aurelio.ngrok-free.dev";
+
         public ApiSyncService(DatabaseService dbService)
         {
             _dbService = dbService;
@@ -20,7 +23,7 @@ namespace FoodTourApp.Services
             };
         }
 
-        // SYNC POI TỪ SERVER VỀ SQLITE
+        // 1. SYNC POI TỪ SERVER VỀ SQLITE
         public async Task<bool> SyncPoisAsync()
         {
             try
@@ -33,8 +36,7 @@ namespace FoodTourApp.Services
                 {
                     foreach (var poi in pois)
                     {
-                        if (!string.IsNullOrEmpty(poi.ImageSource)
-                            && !poi.ImageSource.StartsWith("http"))
+                        if (!string.IsNullOrEmpty(poi.ImageSource) && !poi.ImageSource.StartsWith("http"))
                         {
                             poi.ImageSource = $"{BaseUrl}/images/{poi.ImageSource}";
                         }
@@ -51,7 +53,7 @@ namespace FoodTourApp.Services
             return false;
         }
 
-        // SYNC TOURS TỪ SERVER VỀ SQLITE
+        // 2. SYNC TOURS TỪ SERVER VỀ SQLITE
         public async Task<bool> SyncToursAsync()
         {
             try
@@ -64,8 +66,7 @@ namespace FoodTourApp.Services
                 {
                     foreach (var tour in tours)
                     {
-                        if (!string.IsNullOrEmpty(tour.ImageSource)
-                            && !tour.ImageSource.StartsWith("http"))
+                        if (!string.IsNullOrEmpty(tour.ImageSource) && !tour.ImageSource.StartsWith("http"))
                         {
                             tour.ImageSource = $"{BaseUrl}/images/{tour.ImageSource}";
                         }
@@ -82,7 +83,34 @@ namespace FoodTourApp.Services
             return false;
         }
 
-        // SYNC ACTIVITY LOGS LÊN SERVER
+        // 3. SYNC AUDIOS (KỊCH BẢN TTS) - ĐÃ FIX LỖI
+        public async Task<bool> SyncAudiosAsync()
+        {
+            try
+            {
+                // ĐÃ FIX: Thêm BaseUrl vào phía trước
+                var response = await _httpClient.GetStringAsync($"{BaseUrl}/api/v1/audios/all");
+
+                // ĐÃ FIX: Chuyển sang dùng JsonSerializer (System.Text.Json) cho đồng bộ với cả file
+                var audios = JsonSerializer.Deserialize<List<FoodTourApp.Models.Audio>>(response,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (audios != null && audios.Count > 0)
+                {
+                    await _dbService.SaveAudiosFromServerAsync(audios);
+                    System.Diagnostics.Debug.WriteLine($"=== SYNC AUDIO OK: {audios.Count}");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // ĐÃ FIX: Dùng System.Diagnostics.Debug để tránh lỗi CS0103
+                System.Diagnostics.Debug.WriteLine($"=== LỖI SYNC AUDIO: {ex.Message}");
+            }
+            return false;
+        }
+
+        // 4. SYNC ACTIVITY LOGS LÊN SERVER
         public async Task<bool> SyncLogsAsync()
         {
             try
@@ -101,13 +129,11 @@ namespace FoodTourApp.Services
 
                 var json = JsonSerializer.Serialize(dtos);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(
-                    $"{BaseUrl}/api/v1/analytics/sync", content);
+                var response = await _httpClient.PostAsync($"{BaseUrl}/api/v1/analytics/sync", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    await _dbService.MarkLogsAsSyncedAsync(
-                        unsynced.Select(l => l.LogId).ToList());
+                    await _dbService.MarkLogsAsSyncedAsync(unsynced.Select(l => l.LogId).ToList());
                     System.Diagnostics.Debug.WriteLine($"=== LOGS SYNCED: {unsynced.Count}");
                     return true;
                 }
@@ -119,7 +145,7 @@ namespace FoodTourApp.Services
             return false;
         }
 
-        // SYNC MENU ITEMS TỪ SERVER VỀ SQLITE
+        // 5. SYNC MENU ITEMS TỪ SERVER VỀ SQLITE
         public async Task<bool> SyncMenuItemsAsync()
         {
             try
@@ -132,8 +158,7 @@ namespace FoodTourApp.Services
                 {
                     foreach (var it in items)
                     {
-                        if (!string.IsNullOrEmpty(it.ImageSource)
-                            && !it.ImageSource.StartsWith("http"))
+                        if (!string.IsNullOrEmpty(it.ImageSource) && !it.ImageSource.StartsWith("http"))
                         {
                             it.ImageSource = $"{BaseUrl}/images/{it.ImageSource}";
                         }

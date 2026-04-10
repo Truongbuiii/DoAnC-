@@ -370,6 +370,7 @@ public partial class MapPage : ContentPage
         {
             await apiSync.SyncPoisAsync();
             await apiSync.SyncToursAsync();
+            await apiSync.SyncAudiosAsync();
             await apiSync.SyncLogsAsync();
             await _dbService.TranslateAndCachePoisAsync();
 
@@ -448,7 +449,26 @@ public partial class MapPage : ContentPage
         }
         return false;
     }
+    private async void OnManualSyncClicked(object sender, EventArgs e)
+    {
+        MapLoading.IsVisible = true;
+        StatusLabel.Text = "⏳ Đang đồng bộ kịch bản mới...";
 
+        var apiSync = new ApiSyncService(_dbService);
+        bool success = await apiSync.SyncAudiosAsync();
+
+        MapLoading.IsVisible = false;
+        if (success)
+        {
+            await DisplayAlert("Thành công", "Đã tải kịch bản AI mới nhất!", "OK");
+            _allPoisFromDb = (await _dbService.GetPOIsAsync()).ToList();
+            RefreshListView();
+        }
+        else
+        {
+            await DisplayAlert("Lỗi", "Không thể kết nối với Server Web.", "Thử lại");
+        }
+    }
     private void LoadDefaultMap()
     {
         var html = new HtmlWebViewSource();
@@ -467,19 +487,47 @@ public partial class MapPage : ContentPage
 
     // --- SỰ KIỆN TƯƠNG TÁC (UI EVENTS) ---
 
-    // Hàm mới để xử lý thuyết minh (Narration)
     private void PlayPoiNarration(POI poi)
     {
-        _ = Task.Run(async () =>
+        Task.Run(async () =>
         {
-            string text = poi.DescriptionVi;
-            if (!IsVietnamese(_currentLanguage))
+            try
             {
-                var translator = new TranslationService();
-                var translated = await translator.TranslateAsync(poi.DescriptionVi, GetShortLangCode(_currentLanguage));
-                text = string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
+                // 1. LẤY KỊCH BẢN: Ưu tiên Script (TTS), fallback về DescriptionVi
+                var audio = await _dbService.GetAudioByPoiIdAsync(poi.PoiId);
+                string textToProcess = (audio != null && !string.IsNullOrEmpty(audio.Script))
+                                       ? audio.Script
+                                       : poi.DescriptionVi;
+
+                if (string.IsNullOrEmpty(textToProcess)) return;
+
+                // 2. DỊCH THUẬT: Chuyển ngữ nếu máy không phải Tiếng Việt
+                string finalSpeech = textToProcess;
+                if (!IsVietnamese(_currentLanguage))
+                {
+                    var translator = new TranslationService();
+                    var translated = await translator.TranslateAsync(textToProcess, GetShortLangCode(_currentLanguage));
+                    finalSpeech = string.IsNullOrEmpty(translated) ? textToProcess : translated;
+                }
+
+                // 3. CẬP NHẬT UI & PHÁT LOA (Phải chạy trên MainThread)
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    // --- ĐÂY LÀ PHẦN PHỤC HỒI CODE CŨ CỦA BẠN ---
+                    // Hiển thị lại icon tọa độ và khoảng cách trên màn hình
+                    StatusLabel.Text = $"📍 {poi.DistanceDisplay}";
+
+                    // Nếu bạn muốn đảm bảo tên quán cũng khớp thì thêm dòng này:
+                    CurrentPoiName.Text = poi.Name;
+
+                    // Phát âm thanh ra loa
+                    SpeakText(finalSpeech);
+                });
             }
-            MainThread.BeginInvokeOnMainThread(() => SpeakText(text));
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"=== LỖI THUYẾT MINH: {ex.Message}");
+            }
         });
     }
 
