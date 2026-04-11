@@ -32,6 +32,7 @@ public partial class MapPage : ContentPage
     private bool _hasUserLocation = false;
 
     private string _currentLanguage = "vi-VN";
+    private static string _lastMapTranslatedLang = "";
 
 #if ANDROID
     private AndroidTtsService? _androidTts;
@@ -344,6 +345,10 @@ public partial class MapPage : ContentPage
         var filtered = _allPoisFromDb.Where(p => (p.DisplayName ?? p.Name).ToLower().Contains(currentSearch) || p.Category.ToLower().Contains(currentSearch)).ToList();
         _poiListForDisplay.Clear();
         foreach (var p in filtered) _poiListForDisplay.Add(p);
+
+        // Force CollectionView to re-render
+        PoisListView.ItemsSource = null;
+        PoisListView.ItemsSource = _poiListForDisplay;
     }
 
     private void EnsureDisplayNames(List<POI> pois)
@@ -358,7 +363,20 @@ public partial class MapPage : ContentPage
     private async Task TranslatePoisInBackground(List<POI> pois)
     {
         var preferred = Preferences.Get("AppLanguage", "vi-VN");
-        if (preferred.StartsWith("vi", StringComparison.OrdinalIgnoreCase)) return;
+
+        // If Vietnamese selected, mark and skip translation
+        if (preferred.StartsWith("vi", StringComparison.OrdinalIgnoreCase))
+        {
+            _lastMapTranslatedLang = "vi-VN";
+            return;
+        }
+
+        // If we've already translated for this language, skip work
+        if (_lastMapTranslatedLang == preferred)
+            return;
+
+        // New language -> remember and proceed with translation
+        _lastMapTranslatedLang = preferred;
 
         try
         {
@@ -375,11 +393,16 @@ public partial class MapPage : ContentPage
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 RefreshListView();
-                // If current displayed POI was translated, update the POI card
+                
                 if (_currentDisplayedPoi != null)
                 {
                     var current = pois.FirstOrDefault(x => x.PoiId == _currentDisplayedPoi.PoiId);
                     if (current != null) UpdatePoiCardDisplay(current);
+                }
+
+                if (_hasUserLocation)
+                {
+                    UpdateInterface(_lastUserLat, _lastUserLon, _currentDisplayedPoi);
                 }
             });
         }
@@ -440,8 +463,11 @@ public partial class MapPage : ContentPage
         }
     }
 
-    // --- VÒNG ĐỜI TRANG (LIFECYCLE) ---
+    // THÊM 2 BIẾN NÀY LÊN ĐẦU CLASS (Dưới dòng private static string _lastMapTranslatedLang = "";)
+    private bool _isDataLoaded = false;
+    private List<POI> _basePoisFromDb = new(); // Lưu bản gốc 10 quán để không bao giờ bị xóa
 
+    // --- VÒNG ĐỜI TRANG (LIFECYCLE) ---
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -450,38 +476,73 @@ public partial class MapPage : ContentPage
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
 
-        var apiSync = new ApiSyncService(_dbService);
-        _ = Task.Run(async () =>
+        // 1. LOAD DATA TỪ DB LẦN ĐẦU (Chỉ chạy 1 lần duy nhất)
+        if (!_isDataLoaded)
         {
-            await apiSync.SyncPoisAsync();
-            await apiSync.SyncToursAsync();
-            await apiSync.SyncAudiosAsync();
-            await apiSync.SyncLogsAsync();
-            await _dbService.TranslateAndCachePoisAsync();
-
-            MainThread.BeginInvokeOnMainThread(async () =>
+            var apiSync = new ApiSyncService(_dbService);
+            _ = Task.Run(async () =>
             {
-                _allPoisFromDb = (await _dbService.GetPOIsAsync()).ToList();
-                RefreshListView();
+                await apiSync.SyncPoisAsync();
+                await apiSync.SyncToursAsync();
+                await apiSync.SyncAudiosAsync();
+                await apiSync.SyncLogsAsync();
+                await _dbService.TranslateAndCachePoisAsync();
+
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    // Lấy dữ liệu 1 lần lưu vào kho gốc
+                    _basePoisFromDb = (await _dbService.GetPOIsAsync()).ToList();
+                    _allPoisFromDb = new List<POI>(_basePoisFromDb); // Copy ra để dùng
+
+                    EnsureDisplayNames(_allPoisFromDb);
+                    RefreshListView();
+
+                    // Dịch lần đầu
+                    _ = TranslatePoisInBackground(_allPoisFromDb);
+                });
             });
-        });
+
+            _isDataLoaded = true; // Chốt cờ: Không bao giờ móc DB lần 2 nữa
+        }
+        else
+        {
+            // 2. DATA ĐÃ CÓ SẴN TRONG RAM: Chỉ cần phục hồi lại
+
+            // Luôn reset lại danh sách từ kho gốc trước khi xử lý (để tránh bị kẹt 3 quán của Tour cũ)
+            _allPoisFromDb = new List<POI>(_basePoisFromDb);
+
+            // Nếu ngôn ngữ đổi thì dịch lại từ đầu
+            if (_currentLanguage != _lastMapTranslatedLang)
+            {
+                _ = TranslatePoisInBackground(_allPoisFromDb);
+            }
+            else
+            {
+                // Ngôn ngữ không đổi, chỉ cần lôi RAM ra vẽ
+                RefreshListView();
+                if (_hasUserLocation && _currentDisplayedPoi != null)
+                {
+                    UpdateInterface(_lastUserLat, _lastUserLon, _currentDisplayedPoi);
+                }
+            }
+        }
 
 #if ANDROID
-        _androidTts = new AndroidTtsService();
-        await _androidTts.InitializeAsync();
+        if (_androidTts == null)
+        {
+            _androidTts = new AndroidTtsService();
+            await _androidTts.InitializeAsync();
+        }
 #endif
 
+        // Đăng ký lại sự kiện WebView
+        MapWebView.Navigating -= OnMapWebViewNavigating; // Xóa cũ đi cho chắc
         MapWebView.Navigating += OnMapWebViewNavigating;
-
-        var pois = await _dbService.GetPOIsAsync();
-        _allPoisFromDb = pois.ToList();
-        EnsureDisplayNames(_allPoisFromDb);
-        RefreshListView();
-        _ = TranslatePoisInBackground(_allPoisFromDb);
 
         // Xử lý Tour hoặc Highlight từ Preferences
         if (HandlePreferences()) return;
 
+        // Xử lý GPS
         var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
         {
@@ -516,10 +577,17 @@ public partial class MapPage : ContentPage
         {
             Preferences.Remove("TourPoiIds");
             var ids = tourPoiIds.Split(',').Select(int.Parse).ToList();
-            var tourPois = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
-            if (tourPois.Any())
+
+            // Cập nhật _allPoisFromDb theo Tour (lúc này nó đang là 10 quán nhờ được reset ở trên)
+            _allPoisFromDb = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
+
+            RefreshListView();
+
+            if (_allPoisFromDb.Any())
             {
-                UpdateInterface(tourPois.First().Latitude, tourPois.First().Longitude, tourPois.First());
+                var first = _allPoisFromDb.First();
+                // Truyền _allPoisFromDb (đã lọc 3 quán) vào hàm này để nó gán cho Bản đồ
+                UpdateInterface(first.Latitude, first.Longitude, first);
                 StartTrackingLocation();
                 return true;
             }
@@ -536,6 +604,8 @@ public partial class MapPage : ContentPage
         }
         return false;
     }
+
+
     private async void OnManualSyncClicked(object sender, EventArgs e)
     {
         MapLoading.IsVisible = true;
@@ -592,7 +662,7 @@ public partial class MapPage : ContentPage
         {
             try
             {
-                // 1. LẤY KỊCH BẢN: Ưu tiên Script (TTS), fallback về DescriptionVi
+                // 1. LẤY KỊCH BẢN: Ớ ưu tiên Script (TTS), fallback về DescriptionVi
                 var audio = await _dbService.GetAudioByPoiIdAsync(poi.PoiId);
                 string textToProcess = (audio != null && !string.IsNullOrEmpty(audio.Script))
                                        ? audio.Script

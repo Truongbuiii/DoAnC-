@@ -34,17 +34,19 @@
                          Padding="20,0,20,25">
 
                     <Border BackgroundColor="#F97316"
-                StrokeShape="RoundRectangle 8"
-                Padding="8,2" HorizontalOptions="Start">
-                        <Label Text="{Binding DisplayCategory, FallbackValue={Binding Category}}" 
-                   TextColor="White" FontSize="11" FontAttributes="Bold"/>
+        StrokeShape="RoundRectangle 8"
+        Padding="8,2" HorizontalOptions="Start">
+                        <Label x:Name="CategoryLabel" 
+           Text="{Binding DisplayCategory}" 
+           TextColor="White" FontSize="11" FontAttributes="Bold"/>
                     </Border>
 
-                    <Label Text="{Binding DisplayName, FallbackValue={Binding Name}}" 
-               FontSize="26" 
-               FontAttributes="Bold" 
-               TextColor="White" 
-               LineBreakMode="WordWrap"/>
+                    <Label x:Name="PoiNameLabel" 
+       Text="{Binding DisplayName}" 
+       FontSize="26" 
+       FontAttributes="Bold" 
+       TextColor="White" 
+       LineBreakMode="WordWrap"/>
                 </VerticalStackLayout>
 
                 <ImageButton Source="back_icon.png"

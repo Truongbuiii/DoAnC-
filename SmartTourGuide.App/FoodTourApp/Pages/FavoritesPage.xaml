@@ -44,9 +44,9 @@
                             </Image>
 
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
-                                <Label Text="{Binding Name}" FontSize="15"
+                                <Label Text="{Binding DisplayName}" FontSize="15"
                FontAttributes="Bold" TextColor="#111827"/>
-                                <Label Text="{Binding Category}" FontSize="12" TextColor="#F97316"/>
+                                <Label Text="{Binding DisplayCategory}" FontSize="12" TextColor="#F97316"/>
                             </VerticalStackLayout>
                             <Button Grid.Column="2" Text="🗑️" FontSize="18"
             BackgroundColor="Transparent" TextColor="#EF4444"

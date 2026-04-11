@@ -4,7 +4,7 @@ using FoodTourApp.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Networking; // Bắt buộc thêm thư viện này để check mạng
+using Microsoft.Maui.Networking;
 
 namespace FoodTourApp;
 
@@ -13,8 +13,12 @@ public partial class MainPage : ContentPage
     private readonly DatabaseService _dbService = new DatabaseService();
     private static bool _hasShownLanguagePicker = false;
 
-    // 1. Thêm biến cờ để chỉ Sync API 1 lần duy nhất khi mở App
+    // --- CÁC BIẾN KÉT SẮT (CACHE RAM) ---
     private static bool _isInitialLoad = true;
+    private static string _lastTranslatedLang = "";
+    private bool _isDataLoaded = false;
+    private List<POI> _cachedPois = new();
+    private List<Itinerary> _cachedTours = new();
 
     private string _currentLanguage = "vi-VN";
 
@@ -27,48 +31,127 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
 
-        // 1. Kiểm tra và chọn ngôn ngữ lần đầu
+        // 1. Kiểm tra và chọn ngôn ngữ lần đầu (FIX LỖI LẶP 2 LẦN)
         if (!_hasShownLanguagePicker && !Preferences.ContainsKey("AppLanguage"))
         {
-            _hasShownLanguagePicker = true;
-            await Task.Delay(500);
+            _hasShownLanguagePicker = true; // 🔒 Khóa cửa ngay lập tức để chặn lần gọi thứ 2
 
-            string action = await DisplayActionSheetAsync(
-                "Chọn ngôn ngữ thuyết minh",
-                "Hủy", null,
-                "🇻🇳 Tiếng Việt",
-                "🇺🇸 English",
-                "🇨🇳 中文",
-                "🇰🇷 한국어",
-                "🇯🇵 日本語");
-
-            string lang = action switch
+            // Dùng Dispatcher để đợi giao diện App load xong hoàn toàn mới bật Popup
+            Dispatcher.Dispatch(async () =>
             {
-                "🇺🇸 English" => "en-US",
-                "🇨🇳 中文" => "zh-CN",
-                "🇰🇷 한국어" => "ko-KR",
-                "🇯🇵 日本語" => "ja-JP",
-                _ => "vi-VN"
-            };
+                await Task.Delay(300); // Trễ 0.3s để tạo hiệu ứng mượt mà
 
-            Preferences.Set("AppLanguage", lang);
-            Lang.Set(lang);
+                string action = await DisplayActionSheetAsync(
+                    "Chọn ngôn ngữ thuyết minh",
+                    "Hủy", null,
+                    "🇻🇳 Tiếng Việt",
+                    "🇺🇸 English",
+                    "🇨🇳 中文",
+                    "🇰🇷 한국어",
+                    "🇯🇵 日本語");
 
-            if (Shell.Current is AppShell appShell)
-                appShell.ApplyLanguage();
+                string lang = action switch
+                {
+                    "🇺🇸 English" => "en-US",
+                    "🇨🇳 中文" => "zh-CN",
+                    "🇰🇷 한국어" => "ko-KR",
+                    "🇯🇵 日本語" => "ja-JP",
+                    _ => "vi-VN"
+                };
+
+                Preferences.Set("AppLanguage", lang);
+                Lang.Set(lang);
+
+                if (Shell.Current is AppShell appShell)
+                    appShell.ApplyLanguage();
+
+                // Sau khi người dùng chọn xong, ép hệ thống dịch giao diện ngay lập tức
+                _currentLanguage = lang;
+                _lastTranslatedLang = "";
+                _ = TranslateDataAsync();
+            });
+        }
+        else
+        {
+            // Lần sau mở App thì đọc thẳng từ Preferences
+            _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         }
 
-        _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
 
-        // 2. LUÔN LUÔN load dữ liệu từ SQLite local lên giao diện cho mượt
-        await LoadLocalData();
-
-        // 3. CHỈ gọi API tải dữ liệu từ Server nếu là lần đầu tiên mở app
-        if (_isInitialLoad)
+        // 2. LOGIC CACHE & CHỐNG CHỚP MÀN HÌNH
+        if (!_isDataLoaded)
         {
-            await RunBackgroundSync();
-            _isInitialLoad = false; // Đánh dấu đã sync xong
+            // LẦN ĐẦU MỞ APP
+            _cachedPois = (await _dbService.GetPOIsAsync()).ToList();
+            _cachedTours = (await _dbService.GetItinerariesAsync()).ToList();
+
+            bool isVietnamese = _currentLanguage.StartsWith("vi", StringComparison.OrdinalIgnoreCase);
+
+            // MẸO: Nếu là tiếng Anh, hiện dấu "..." trong lúc chờ dịch để giấu tiếng Việt đi
+            foreach (var p in _cachedPois)
+            {
+                p.DisplayName = isVietnamese ? p.Name : "...";
+                p.DisplayCategory = isVietnamese ? p.Category : "...";
+            }
+            foreach (var t in _cachedTours)
+            {
+                t.DisplayName = isVietnamese ? t.TourName : "...";
+            }
+
+            UpdateUI(); // Vẽ giao diện ngay lập tức
+
+            if (!isVietnamese)
+            {
+                _ = TranslateDataAsync(); // Bắt đầu dịch ngầm
+            }
+            else
+            {
+                _lastTranslatedLang = _currentLanguage;
+            }
+
+            _isDataLoaded = true; // Chốt cờ: Lần sau quay lại không móc DB nữa!
+
+            // 3. ĐỒNG BỘ MẠNG CHẠY NGẦM (Chỉ sync Data, không phá UI)
+            if (_isInitialLoad)
+            {
+                await RunBackgroundSync();
+                _isInitialLoad = false;
+            }
+        }
+        else
+        {
+            // LẦN SAU QUAY LẠI: Dữ liệu đã có sẵn trong két sắt RAM
+            if (_currentLanguage != _lastTranslatedLang)
+            {
+                bool isVietnamese = _currentLanguage.StartsWith("vi", StringComparison.OrdinalIgnoreCase);
+
+                foreach (var p in _cachedPois)
+                {
+                    p.DisplayName = isVietnamese ? p.Name : "...";
+                    p.DisplayCategory = isVietnamese ? p.Category : "...";
+                }
+                foreach (var t in _cachedTours)
+                {
+                    t.DisplayName = isVietnamese ? t.TourName : "...";
+                }
+
+                UpdateUI();
+
+                if (!isVietnamese)
+                {
+                    _ = TranslateDataAsync();
+                }
+                else
+                {
+                    _lastTranslatedLang = _currentLanguage;
+                }
+            }
+            else
+            {
+                // Ngôn ngữ KHÔNG ĐỔI -> Tải thẳng từ RAM lên màn hình (Mượt 100%, không chớp!)
+                UpdateUI();
+            }
         }
     }
 
@@ -84,20 +167,60 @@ public partial class MainPage : ContentPage
         LblFeatured.Text = Lang.Get("home_featured");
     }
 
-    // TÁCH HÀM MỚI: Chỉ chịu trách nhiệm đồng bộ mạng
+    private void UpdateUI()
+    {
+        FeaturedPoisList.ItemsSource = null;
+        ToursList.ItemsSource = null;
+        FeaturedPoisList.ItemsSource = _cachedPois;
+        ToursList.ItemsSource = _cachedTours;
+    }
+
+    private async Task TranslateDataAsync()
+    {
+        // Chặn dịch 2 lần
+        if (_lastTranslatedLang == _currentLanguage) return;
+
+        string targetLang = _currentLanguage; // Lưu lại ngôn ngữ đang muốn dịch
+
+        try
+        {
+            var translator = new TranslationService();
+            string shortCode = GetShortLangCode(targetLang);
+
+            // Dịch POI (Nếu API lỗi thì fallback về lại tiếng Việt gốc thay vì để "...")
+            foreach (var p in _cachedPois)
+            {
+                var dn = await translator.TranslateAsync(p.Name, shortCode);
+                p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
+
+                var dc = await translator.TranslateAsync(p.Category, shortCode);
+                p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+            }
+
+            foreach (var t in _cachedTours)
+            {
+                var dt = await translator.TranslateAsync(t.TourName, shortCode);
+                t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+            }
+
+            _lastTranslatedLang = targetLang; // Chốt cờ thành công
+            MainThread.BeginInvokeOnMainThread(() => UpdateUI());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Lỗi dịch MainPage: {ex.Message}");
+            // Bị lỗi thì fallback toàn bộ về tiếng Việt để không bị kẹt dấu "..."
+            foreach (var p in _cachedPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
+            foreach (var t in _cachedTours) { t.DisplayName = t.TourName; }
+            MainThread.BeginInvokeOnMainThread(() => UpdateUI());
+        }
+    }
+
     private async Task RunBackgroundSync()
     {
-        // FAST-FAIL: Kiểm tra nếu không có mạng thì DỪNG NGAY LẬP TỨC
-        if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
-        {
-            System.Diagnostics.Debug.WriteLine("=== OFFLINE MODE: Bỏ qua Sync API ===");
-            return;
-        }
+        if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet) return;
 
-        System.Diagnostics.Debug.WriteLine("=== ĐANG CHẠY ĐỒNG BỘ LẦN ĐẦU (BACKGROUND SYNC) ===");
         var apiSync = new ApiSyncService(_dbService);
-
-        // Chạy ngầm để không đơ giao diện
         _ = Task.Run(async () =>
         {
             await apiSync.SyncPoisAsync();
@@ -105,60 +228,10 @@ public partial class MainPage : ContentPage
             await apiSync.SyncToursAsync();
             await apiSync.SyncLogsAsync();
 
-            // Nạp lại giao diện lần nữa sau khi đã tải xong dữ liệu mới
-            MainThread.BeginInvokeOnMainThread(async () => await LoadLocalData());
+            // ĐÃ XÓA KHỐI LỆNH PHÁ HOẠI GIAO DIỆN Ở ĐÂY.
+            // Dữ liệu mới đã được lưu vào SQLite. Lần sau mở App nó sẽ tự động update, 
+            // không được phép ghi đè UI làm gián đoạn người dùng.
         });
-    }
-
-    // TÁCH HÀM MỚI: Chỉ chịu trách nhiệm đọc SQLite và dịch thuật
-    private async Task LoadLocalData()
-    {
-        var allPois = (await _dbService.GetPOIsAsync()).ToList();
-        var allTours = (await _dbService.GetItinerariesAsync()).ToList();
-
-        // Gán tên mặc định
-        foreach (var p in allPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
-        foreach (var t in allTours) { t.DisplayName = t.TourName; }
-
-        FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
-
-        // Dịch thuật AI nếu không phải tiếng Việt
-        var preferredLang = Preferences.Get("AppLanguage", "vi-VN");
-        if (!preferredLang.StartsWith("vi", StringComparison.OrdinalIgnoreCase))
-        {
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    var translator = new TranslationService();
-                    string targetLang = GetShortLangCode(preferredLang);
-
-                    // THẬN TRỌNG: Cân nhắc bỏ dịch Category để giảm số lượng request
-                    foreach (var p in allPois)
-                    {
-                        var dn = await translator.TranslateAsync(p.Name, targetLang);
-                        if (!string.IsNullOrEmpty(dn)) p.DisplayName = dn;
-                    }
-
-                    foreach (var t in allTours)
-                    {
-                        var dt = await translator.TranslateAsync(t.TourName, targetLang);
-                        if (!string.IsNullOrEmpty(dt)) t.DisplayName = dt;
-                    }
-
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-                        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Translation error: {ex.Message}");
-                }
-            });
-        }
     }
 
     private string GetShortLangCode(string culture)

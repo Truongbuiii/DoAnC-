@@ -22,7 +22,9 @@ public partial class PoiDetailPage : ContentPage
     {
         InitializeComponent();
         _poi = poi;
-        BindingContext = _poi; // Gán để hiện Tên quán, Ảnh quán...
+
+        // 💡 BẮT BUỘC: Gán Binding để hình ảnh (ImageSource) hiện lên ngay lập tức!
+        BindingContext = _poi;
 
         WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
         {
@@ -30,23 +32,7 @@ public partial class PoiDetailPage : ContentPage
             {
                 _currentLanguage = m.Value;
                 Lang.Load();
-
-                var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
-                var displayPoi = freshPoi ?? _poi;
-                BindingContext = displayPoi;
-
-                // Always display Vietnamese first, then try to translate if needed
-                DetailDescription.Text = displayPoi.DescriptionVi;
-                if (!IsVietnamese(_currentLanguage))
-                {
-                    var translated = await GetDisplayDescriptionAsync(displayPoi);
-                    if (!string.IsNullOrEmpty(translated))
-                        DetailDescription.Text = translated;
-                }
-
-                ApplyLanguage();
-                UpdateFavoriteButton();
-                // No menu to load anymore
+                await RefreshAndTranslateDataAsync();
             });
         });
     }
@@ -57,46 +43,62 @@ public partial class PoiDetailPage : ContentPage
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         Lang.Load();
 
-        // 1. Lấy dữ liệu mới nhất từ DB
+        await RefreshAndTranslateDataAsync();
+
+#if ANDROID
+        if (_androidTts == null)
+        {
+            _androidTts = new AndroidTtsService();
+            await _androidTts.InitializeAsync();
+        }
+#endif
+    }
+
+    private async Task RefreshAndTranslateDataAsync()
+    {
         var poiFromDb = await _dbService.GetPOIByIdAsync(_poi.PoiId);
         var displayPoi = poiFromDb ?? _poi;
 
-        BindingContext = displayPoi; // CẬP NHẬT LẠI ĐỂ HIỆN TÊN QUÁN
+        BindingContext = displayPoi; // Chỉ dùng để load hình ảnh
 
-        // 2. Hiện nội dung mô tả: luôn lấy DescriptionVi làm gốc
-        DetailDescription.Text = displayPoi.DescriptionVi;
+        bool isVietnamese = IsVietnamese(_currentLanguage);
 
-        // Ensure display name/category are set
-        if (string.IsNullOrEmpty(displayPoi.DisplayName)) displayPoi.DisplayName = displayPoi.Name;
-        if (string.IsNullOrEmpty(displayPoi.DisplayCategory)) displayPoi.DisplayCategory = displayPoi.Category;
-
-        // 3. Nếu ngôn ngữ hệ thống không phải tiếng Việt thì thực hiện dịch on-demand
-        if (!IsVietnamese(_currentLanguage))
+        if (!isVietnamese)
         {
-            var translated = await GetDisplayDescriptionAsync(displayPoi);
-            if (!string.IsNullOrEmpty(translated))
-                DetailDescription.Text = translated;
+            // TỐI ƯU UX: Hiện dấu ba chấm (...) giấu tiếng Việt đi trong lúc chờ AI dịch
+            PoiNameLabel.Text = "...";
+            CategoryLabel.Text = "...";
 
-            // Also translate display name and category for the detail page
             var shortCode = GetShortLangCode(_currentLanguage);
             var translator = new TranslationService();
+
             var dn = await translator.TranslateAsync(displayPoi.Name, shortCode);
             var dc = await translator.TranslateAsync(displayPoi.Category, shortCode);
-            if (!string.IsNullOrEmpty(dn)) displayPoi.DisplayName = dn;
-            if (!string.IsNullOrEmpty(dc)) displayPoi.DisplayCategory = dc;
-            BindingContext = displayPoi;
+            var translatedDesc = await GetDisplayDescriptionAsync(displayPoi);
+
+            displayPoi.DisplayName = !string.IsNullOrEmpty(dn) ? dn : displayPoi.Name;
+            displayPoi.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : displayPoi.Category;
+
+            // 💡 CHỐT HẠ: Đập thẳng Text mới vào giao diện, không chờ MAUI Binding nữa!
+            PoiNameLabel.Text = displayPoi.DisplayName;
+            CategoryLabel.Text = displayPoi.DisplayCategory;
+            DetailDescription.Text = !string.IsNullOrEmpty(translatedDesc) ? translatedDesc : displayPoi.DescriptionVi;
+        }
+        else
+        {
+            // Tiếng Việt thì đập thẳng dữ liệu gốc
+            displayPoi.DisplayName = displayPoi.Name;
+            displayPoi.DisplayCategory = displayPoi.Category;
+
+            PoiNameLabel.Text = displayPoi.Name;
+            CategoryLabel.Text = displayPoi.Category;
+            DetailDescription.Text = displayPoi.DescriptionVi;
         }
 
         ApplyLanguage();
         UpdateFavoriteButton();
-
-#if ANDROID
-        _androidTts = new AndroidTtsService();
-        await _androidTts.InitializeAsync();
-#endif
     }
 
-    // Trả về chuỗi hiển thị (dịch nếu cần). Không ghi vào model.
     private async Task<string?> GetDisplayDescriptionAsync(POI poi)
     {
         if (poi == null || string.IsNullOrEmpty(poi.DescriptionVi)) return null;
@@ -141,11 +143,9 @@ public partial class PoiDetailPage : ContentPage
         return string.Empty;
     }
 
-    // --- CÁC HÀM SỰ KIỆN GIỮ NGUYÊN ---
     private void ApplyLanguage()
     {
         LblIntroTitle.Text = Lang.Get("detail_intro");
-        // Removed LblMenuTitle since the menu section is gone
         BtnListen.Text = Lang.Get("detail_listen");
         BtnMap.Text = Lang.Get("detail_map");
         BtnNavigate.Text = Lang.Get("detail_navigate");
@@ -191,11 +191,11 @@ public partial class PoiDetailPage : ContentPage
         {
             text = await GetDisplayDescriptionAsync(displayPoi) ?? displayPoi.DescriptionVi;
         }
+
 #if ANDROID
         _androidTts?.SetLanguage(_currentLanguage);
         _androidTts?.Speak(text);
 #endif
-        // Log activity locally then trigger immediate background sync
         _ = Task.Run(async () =>
         {
             await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
