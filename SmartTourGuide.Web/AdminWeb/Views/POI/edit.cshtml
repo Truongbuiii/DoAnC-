@@ -1,7 +1,8 @@
 ﻿@model AdminWeb.Models.POI
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <style>
     .edit-container { background-color: #f8f9fa; padding: 30px; border-radius: 20px; }
     .card-custom { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); background: #fff; margin-bottom: 25px; }
@@ -10,15 +11,10 @@
     .form-control-custom { border-radius: 10px; border: 1px solid #d1d3e2; padding: 12px; transition: 0.3s; width: 100%; }
     .form-control-custom:focus { border-color: #f6c23e; box-shadow: 0 0 8px rgba(246, 194, 62, 0.2); outline: none; }
     .img-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; border: 3px solid #f8f9fc; }
-    .btn-update { background: #f6c23e; color: #fff; font-weight: 700; border: none; padding: 15px 40px; border-radius: 12px; transition: 0.3s; width: 100%; }
+    .btn-update { background: #f6c23e; color: #fff; font-weight: 700; border: none; padding: 15px 40px; border-radius: 12px; transition: 0.3s; width: 100%; cursor: pointer; }
     .btn-update:hover { background: #e0ac1f; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(246, 194, 62, 0.3); }
     .btn-back { color: #858796; text-decoration: none; font-weight: 600; transition: 0.2s; display: block; text-align: center; margin-top: 15px; }
     .btn-back:hover { color: #4e73df; }
-    .nav-tabs-custom { border-bottom: 2px solid #eaecf4; margin-bottom: 0; }
-    .nav-tabs-custom .nav-link { color: #858796; font-weight: 600; border: none; border-bottom: 3px solid transparent; padding: 12px 20px; transition: 0.2s; }
-    .nav-tabs-custom .nav-link:hover { color: #f6c23e; border-bottom-color: #fce8b2; }
-    .nav-tabs-custom .nav-link.active { color: #f6c23e; border-bottom-color: #f6c23e; background: transparent; }
-    .tab-content-custom { background: #fffdf5; border: 1px solid #eaecf4; border-top: none; border-radius: 0 0 12px 12px; padding: 25px; }
 </style>
 
 <div class="container py-5">
@@ -33,38 +29,40 @@
             </div>
         </div>
 
+        @* FORM DUY NHẤT BAO QUANH TẤT CẢ *@
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <input type="hidden" asp-for="PoiId" />
             <input type="hidden" asp-for="ImageSource" />
 
-            <!-- ROW 1: Thuyết minh + Hình ảnh/Phân quyền -->
             <div class="row">
+                @* CỘT TRÁI: THUYẾT MINH *@
                 <div class="col-lg-8">
-                  <div class="card-custom p-4">
-    <div class="mb-4">
-        <label class="form-label-custom">Tên địa điểm (Chính)</label>
-        <input asp-for="Name" class="form-control-custom fs-5 fw-bold text-primary" required placeholder="Nhập tên quán..." />
-    </div>
+                    <div class="card-custom p-4">
+                        <div class="mb-4">
+                            <label class="form-label-custom">Tên địa điểm (Chính)</label>
+                            <input asp-for="Name" class="form-control-custom fs-5 fw-bold text-primary" required placeholder="Nhập tên quán..." />
+                        </div>
 
-    <div class="border-bottom pb-2 mb-3">
-        <h5 class="fw-bold text-secondary mb-0"><i class="bi bi-translate me-2"></i>Thuyết minh</h5>
-    </div>
+                        <div class="border-bottom pb-2 mb-3">
+                            <h5 class="fw-bold text-secondary mb-0"><i class="bi bi-translate me-2"></i>Thuyết minh</h5>
+                        </div>
 
-    <div class="mb-3">
-        <label class="form-label-custom text-danger">Nội dung thuyết minh (Tiếng Việt)</label>
-        <textarea asp-for="DescriptionVi" id="desc-vi" class="form-control-custom" rows="6"
-                  placeholder="Nhập nội dung thuyết minh tiếng Việt..."></textarea>
-        <small class="text-muted fst-italic">
-            <i class="bi bi-info-circle"></i> App sẽ tự động dịch sang 4 ngôn ngữ khi hiển thị cho du khách.
-        </small>
-    </div>
-</div>
+                        <div class="mb-3">
+                            <label class="form-label-custom text-danger">Nội dung thuyết minh (Tiếng Việt)</label>
+                            <textarea asp-for="DescriptionVi" id="desc-vi" class="form-control-custom" rows="6"
+                                      placeholder="Nhập nội dung thuyết minh tiếng Việt..."></textarea>
+                            <small class="text-muted fst-italic">
+                                <i class="bi bi-info-circle"></i> App sẽ tự động dịch sang 4 ngôn ngữ khi hiển thị cho du khách.
+                            </small>
+                        </div>
+                    </div>
                 </div>
 
+                @* CỘT PHẢI: HÌNH ẢNH, TRẠNG THÁI, PHÂN QUYỀN *@
                 <div class="col-lg-4">
                     <div class="card-custom">
                         <div class="header-gold">
-                            <i class="bi bi-image me-2"></i>Hình ảnh & Phân quyền
+                            <i class="bi bi-image me-2"></i>Hình ảnh & Trạng thái
                         </div>
                         <div class="p-4">
                             <div class="text-center mb-3">
@@ -77,70 +75,72 @@
                             <label class="form-label-custom mt-2">Thay đổi ảnh mới</label>
                             <input type="file" name="imageFile" class="form-control mb-3" accept="image/*" />
 
-                            @if (User.IsInRole("Admin"))
-                            {
+                            @* Ô TRẠNG THÁI - ĐỂ KHÔNG BỊ NULL DATABASE *@
+                            <label class="form-label-custom mt-2">Trạng thái hoạt động</label>
+                            <select asp-for="Status" class="form-control-custom mb-3 shadow-sm" style="border-left: 5px solid #f6c23e;">
+                                <option value="Hoạt động">🟢 Hoạt động</option>
+                                <option value="Tạm ẩn">🟡 Tạm ẩn</option>
+                                @if (User.IsInRole("Admin")) {
+                                    <option value="Ngưng hoạt động">🔴 Ngưng hoạt động</option>
+                                }
+                            </select>
+
+                            @if (User.IsInRole("Admin")) {
                                 <div class="mb-3 pt-3 border-top">
                                     <label class="form-label-custom text-success"><i class="bi bi-person-badge me-1"></i>Giao quyền Chủ Quán</label>
                                     <select asp-for="OwnerUsername" class="form-control-custom border-success" asp-items="ViewBag.OwnerList">
                                         <option value="">-- Thuộc quản lý Admin --</option>
                                     </select>
-                                    <small class="text-muted">Chọn tài khoản sẽ được quyền sửa quán này</small>
                                 </div>
-                            }
-                            else
-                            {
+                            } else {
                                 <input type="hidden" asp-for="OwnerUsername" />
                             }
 
                             <label class="form-label-custom mt-2">Phân loại quán</label>
                             <select asp-for="Category" class="form-control-custom bg-light">
-                               <form asp-action="Edit" method="post">
-   <option value="Quán ốc">Quán ốc</option>
-    <option value="Hải sản">Hải sản</option>
-    <option value="Lẩu dê">Lẩu dê</option>
-    <option value="Món lẩu">Món lẩu</option>
-    <option value="Đồ Nhật">Đồ Nhật</option>
-    <option value="Ăn vặt">Ăn vặt / Ăn nhẹ</option>
-    <option value="Điểm tham quan">Điểm tham quan</option> </form>
+                                <option value="Quán ốc">Quán ốc</option>
+                                <option value="Hải sản">Hải sản</option>
+                                <option value="Lẩu dê">Lẩu dê</option>
+                                <option value="Món lẩu">Món lẩu</option>
+                                <option value="Đồ Nhật">Đồ Nhật</option>
+                                <option value="Ăn vặt">Ăn vặt / Ăn nhẹ</option>
+                                <option value="Điểm tham quan">Điểm tham quan</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ROW 2: GPS MAP PICKER - FULL WIDTH -->
+            @* ROW 2: GPS MAP PICKER *@
             <div class="card-custom p-4">
                 <label class="form-label-custom">
                     <i class="bi bi-geo-alt-fill me-2"></i>Vị trí GPS — Click hoặc kéo marker để chọn tọa độ
                 </label>
-                <div id="map-picker" style="height:450px;border-radius:10px;margin-bottom:16px;border:1px solid #d1d3e2;width:100%;"></div>
-                <small class="text-muted d-block mb-3">
-                    <i class="bi bi-info-circle"></i> Click trên bản đồ hoặc kéo marker để cập nhật tọa độ
-                </small>
+                <div id="map-picker" style="height:400px;border-radius:10px;margin-bottom:16px;border:1px solid #d1d3e2;width:100%;"></div>
+                
                 <div class="row">
                     <div class="col-md-4">
-                        <small class="text-muted fw-bold">Vĩ độ (Latitude)</small>
-                        <input asp-for="Latitude" id="lat-input" class="form-control-custom font-monospace" required />
+                        <small class="text-muted fw-bold d-block mb-1">Vĩ độ (Latitude)</small>
+                        <input asp-for="Latitude" id="lat-input" class="form-control-custom font-monospace" required step="any" />
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted fw-bold">Kinh độ (Longitude)</small>
-                        <input asp-for="Longitude" id="lon-input" class="form-control-custom font-monospace" required />
+                        <small class="text-muted fw-bold d-block mb-1">Kinh độ (Longitude)</small>
+                        <input asp-for="Longitude" id="lon-input" class="form-control-custom font-monospace" required step="any" />
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted text-danger fw-bold">Bán kính kích hoạt (m)</small>
-                        <input asp-for="TriggerRadius" class="form-control-custom" />
+                        <small class="text-muted text-danger fw-bold d-block mb-1">Bán kính kích hoạt (m)</small>
+                        <input asp-for="TriggerRadius" class="form-control-custom" type="number" />
                     </div>
                 </div>
             </div>
 
-            <!-- NÚT LƯU -->
+            @* NÚT CẬP NHẬT *@
             <button type="submit" class="btn-update shadow mt-2">
                 <i class="bi bi-floppy-fill me-2"></i>Lưu thay đổi
             </button>
             <a asp-action="Index" class="btn-back">
                 <i class="bi bi-arrow-left me-1"></i>Hủy bỏ & Quay lại
             </a>
-
         </form>
     </div>
 </div>
@@ -153,8 +153,7 @@
     var map = L.map('map-picker').setView([initLat, initLon], 17);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
+        attribution: '&copy; OpenStreetMap',
         maxZoom: 20
     }).addTo(map);
 
@@ -170,20 +169,8 @@
         updateInputs(pos.lat, pos.lng);
     });
 
-    document.getElementById('lat-input').addEventListener('change', moveMarker);
-    document.getElementById('lon-input').addEventListener('change', moveMarker);
-
     function updateInputs(lat, lng) {
         document.getElementById('lat-input').value = lat.toFixed(6);
         document.getElementById('lon-input').value = lng.toFixed(6);
-    }
-
-    function moveMarker() {
-        var lat = parseFloat(document.getElementById('lat-input').value);
-        var lon = parseFloat(document.getElementById('lon-input').value);
-        if (!isNaN(lat) && !isNaN(lon)) {
-            marker.setLatLng([lat, lon]);
-            map.setView([lat, lon], 17);
-        }
     }
 </script>

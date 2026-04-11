@@ -1,107 +1,107 @@
-﻿@model IEnumerable<AdminWeb.Models.Admin>
+﻿    @model IEnumerable<AdminWeb.Models.Admin>
 
-@* Dùng giao diện này cho đẹp và đồng bộ với Sidebar của Tài nhé *@
-<div class="container-fluid py-4">
-    <div class="card shadow mb-4" style="border-radius: 15px; border: none;">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center" 
-             style="background: linear-gradient(45deg, #4e73df, #224abe); border-radius: 15px 15px 0 0;">
-            <h6 class="m-0 font-weight-bold text-white">
-                <i class="fas fa-user-shield me-2"></i> QUẢN LÝ TÀI KHOẢN HỆ THỐNG
-            </h6>
-            <a asp-action="Create" class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
-                <i class="fas fa-plus-circle me-1"></i> THÊM CHỦ QUÁN MỚI
-            </a>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 25%">Tên đăng nhập</th>
-                            <th style="width: 40%">Họ và Tên</th>
-                            <th style="width: 20%">Vai trò</th>
-                            <th class="text-center" style="width: 15%">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model) {
+    @* Dùng giao diện này cho đẹp và đồng bộ với Sidebar của Tài nhé *@
+    <div class="container-fluid py-4">
+        <div class="card shadow mb-4" style="border-radius: 15px; border: none;">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center" 
+                 style="background: linear-gradient(45deg, #4e73df, #224abe); border-radius: 15px 15px 0 0;">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-user-shield me-2"></i> QUẢN LÝ TÀI KHOẢN HỆ THỐNG
+                </h6>
+                <a asp-action="Create" class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+                    <i class="fas fa-plus-circle me-1"></i> THÊM CHỦ QUÁN MỚI
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <td class="fw-bold text-dark">@item.Username</td>
-                                <td>@item.FullName</td>
-                                <td>
-                                    @if(item.Username.ToLower() == "admin") {
-                                        <span class="badge bg-danger">Quản trị viên</span>
-                                    } else {
-                                        <span class="badge bg-success">Chủ sở hữu (Owner)</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    @if(item.Username.ToLower() != "admin") {
-                                        <div class="d-flex justify-content-center gap-2">
-                                            @* NÚT SỬA MỚI THÊM *@
-                                           <a asp-action="Edit" asp-route-id="@item.AdminId" class="btn btn-outline-primary btn-sm">
-    <i class="fas fa-edit"></i> Sửa
-</a>
-
-                                           @* NÚT XÓA ĐÃ SỬA *@
-<button type="button" 
-        class="btn btn-outline-danger btn-sm border-0" 
-        onclick="confirmDeleteAdmin('@item.AdminId', '@item.Username')">
-    <i class="fas fa-trash-alt"></i> Xóa
-</button>
-                                        </div>
-                                    } else {
-                                        <small class="text-muted fst-italic">Hệ thống</small>
-                                    }
-                                </td>
+                                <th style="width: 25%">Tên đăng nhập</th>
+                                <th style="width: 40%">Họ và Tên</th>
+                                <th style="width: 20%">Vai trò</th>
+                                <th class="text-center" style="width: 15%">Thao tác</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model) {
+                                <tr>
+                                    <td class="fw-bold text-dark">@item.Username</td>
+                                    <td>@item.FullName</td>
+                                    <td>
+                                        @if(item.Username.ToLower() == "admin") {
+                                            <span class="badge bg-danger">Quản trị viên</span>
+                                        } else {
+                                            <span class="badge bg-success">Chủ sở hữu (Owner)</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if(item.Username.ToLower() != "admin") {
+                                            <div class="d-flex justify-content-center gap-2">
+                                                @* NÚT SỬA MỚI THÊM *@
+                                               <a asp-action="Edit" asp-route-id="@item.AdminId" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-edit"></i> Sửa
+    </a>
+
+                                               @* NÚT XÓA ĐÃ SỬA *@
+    <button type="button" 
+            class="btn btn-outline-danger btn-sm border-0" 
+            onclick="confirmDeleteAdmin('@item.AdminId', '@item.Username')">
+        <i class="fas fa-trash-alt"></i> Xóa
+    </button>
+                                            </div>
+                                        } else {
+                                            <small class="text-muted fst-italic">Hệ thống</small>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // 1. Popup hiện thông báo "Xóa thành công" hoặc "Lỗi"
-        var successMsg = `@Html.Raw(TempData["SuccessMessage"])`;
-        var errorMsg = `@Html.Raw(TempData["ErrorMessage"])`;
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            // 1. Popup hiện thông báo "Xóa thành công" hoặc "Lỗi"
+            var successMsg = `@Html.Raw(TempData["SuccessMessage"])`;
+            var errorMsg = `@Html.Raw(TempData["ErrorMessage"])`;
 
-        if (successMsg && successMsg.trim() !== "") {
-            Swal.fire({
-                title: 'Thành công!',
-                text: successMsg,
-                icon: 'success',
-                timer: 3000,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true
-            });
-        }
+            if (successMsg && successMsg.trim() !== "") {
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: successMsg,
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                });
+            }
         
-        if (errorMsg && errorMsg.trim() !== "") {
-            Swal.fire({ title: 'Lỗi!', text: errorMsg, icon: 'error' });
-        }
+            if (errorMsg && errorMsg.trim() !== "") {
+                Swal.fire({ title: 'Lỗi!', text: errorMsg, icon: 'error' });
+            }
 
-        // 2. Hàm popup "Hỏi trước khi xóa"
-        function confirmDeleteAdmin(id, user) {
-            Swal.fire({
-                title: 'Xác nhận xóa tài khoản?',
-                html: `Bạn có chắc muốn xóa <b>${user}</b>?<br><span class="text-danger">Dữ liệu tài khoản sẽ bị mất vĩnh viễn!</span>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e74a3b',
-                cancelButtonColor: '#858796',
-                confirmButtonText: 'Đồng ý xóa',
-                cancelButtonText: 'Hủy'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Gọi đến Action Delete trong AdminsController
-                    window.location.href = '@Url.Action("Delete", "Admins")/' + id;
-                }
-            })
-        }
-    </script>
-}
+            // 2. Hàm popup "Hỏi trước khi xóa"
+            function confirmDeleteAdmin(id, user) {
+                Swal.fire({
+                    title: 'Xác nhận xóa tài khoản?',
+                    html: `Bạn có chắc muốn xóa <b>${user}</b>?<br><span class="text-danger">Dữ liệu tài khoản sẽ bị mất vĩnh viễn!</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e74a3b',
+                    cancelButtonColor: '#858796',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gọi đến Action Delete trong AdminsController
+                        window.location.href = '@Url.Action("Delete", "Admins")/' + id;
+                    }
+                })
+            }
+        </script>
+    }

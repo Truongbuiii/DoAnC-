@@ -108,33 +108,38 @@ namespace AdminWeb.Controllers
             return View(poi);
         }
 
-        // 4. TRANG CHỈNH SỬA (GET)
         public async Task<IActionResult> Edit(int id)
         {
             var poi = await _context.POIs.FindAsync(id);
             if (poi == null) return NotFound();
 
+            // Kiểm tra quyền: Nếu không phải Admin và không phải chủ quán thì cấm
             if (!User.IsInRole("Admin") && poi.OwnerUsername != User.Identity.Name) return Forbid();
 
+            // Lấy danh sách username của các chủ quán (trừ admin tổng)
             var owners = await _context.Admins
                 .Where(a => a.Username != "admin")
                 .Select(a => a.Username)
                 .ToListAsync();
 
+            // SỬA TẠI ĐÂY: 
+            // Tham số 1: Danh sách
+            // Tham số 2: Giá trị mặc định (SelectedValue)
             ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
+          
+
             return View(poi);
         }
-
-        // 5. XỬ LÝ LƯU SAU KHI SỬA
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, POI poi, IFormFile? imageFile)
         {
             if (id != poi.PoiId) return NotFound();
 
-            // Xóa validation cho các trường tự động xử lý
+            // 1. Xóa validation để không bị lỗi "đứng máy" khi nhấn Lưu
             ModelState.Remove("ImageSource");
             ModelState.Remove("Audios");
+            ModelState.Remove("OwnerUsername"); // THÊM DÒNG NÀY
 
             if (ModelState.IsValid)
             {
@@ -150,12 +155,13 @@ namespace AdminWeb.Controllers
                     }
                     else
                     {
-                        // Giữ lại ảnh cũ nếu không đổi
                         _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
                     }
 
                     _context.Update(poi);
                     await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = $"Cập nhật '{poi.Name}' thành công!"; // Thêm thông báo cho mượt
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -163,9 +169,16 @@ namespace AdminWeb.Controllers
                     ModelState.AddModelError("", "Lỗi sửa: " + ex.Message);
                 }
             }
+
+            // 2. QUAN TRỌNG: Nếu lưu thất bại, phải nạp lại danh sách chủ quán để trang Edit không bị lỗi
+            var owners = await _context.Admins
+                .Where(a => a.Username != "admin")
+                .Select(a => a.Username)
+                .ToListAsync();
+            ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
+
             return View(poi);
         }
-
         // 6. XỬ LÝ XÓA
         public async Task<IActionResult> Delete(int id)
         {
