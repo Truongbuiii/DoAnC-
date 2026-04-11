@@ -158,6 +158,17 @@ INSERT INTO TourDetails (TourId, PoiId, [Order]) VALUES
 INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, AccessTime) VALUES 
 (1, N'Listen', 'VI', 'iPhone 15', GETDATE()), (10, N'Listen', 'EN', 'Android', GETDATE());
 GO
+ALTER TABLE POIs
+ADD Status NVARCHAR(50) DEFAULT N'Hoạt động' WITH VALUES;
+
+UPDATE POIs 
+SET 
+    TriggerRadius = 30, -- Hoặc số bất kỳ bạn muốn
+    ImageSource = 'default.jpg',
+    DescriptionVi = N'Đang cập nhật nội dung...'
+WHERE TriggerRadius IS NULL 
+   OR ImageSource IS NULL 
+   OR DescriptionVi IS NULL;
 
 -- ==========================================
 -- 4. KIỂM TRA LẠI (10 Audios gốc, 10 POIs)
