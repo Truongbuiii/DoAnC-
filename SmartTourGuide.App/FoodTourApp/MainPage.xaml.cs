@@ -4,6 +4,7 @@ using FoodTourApp.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Networking; // Bắt buộc thêm thư viện này để check mạng
 
 namespace FoodTourApp;
 
@@ -11,6 +12,10 @@ public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
     private static bool _hasShownLanguagePicker = false;
+
+    // 1. Thêm biến cờ để chỉ Sync API 1 lần duy nhất khi mở App
+    private static bool _isInitialLoad = true;
+
     private string _currentLanguage = "vi-VN";
 
     public MainPage()
@@ -55,7 +60,16 @@ public partial class MainPage : ContentPage
 
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
-        await LoadDashboard();
+
+        // 2. LUÔN LUÔN load dữ liệu từ SQLite local lên giao diện cho mượt
+        await LoadLocalData();
+
+        // 3. CHỈ gọi API tải dữ liệu từ Server nếu là lần đầu tiên mở app
+        if (_isInitialLoad)
+        {
+            await RunBackgroundSync();
+            _isInitialLoad = false; // Đánh dấu đã sync xong
+        }
     }
 
     private void ApplyLanguage()
@@ -70,24 +84,34 @@ public partial class MainPage : ContentPage
         LblFeatured.Text = Lang.Get("home_featured");
     }
 
-    private async Task LoadDashboard()
+    // TÁCH HÀM MỚI: Chỉ chịu trách nhiệm đồng bộ mạng
+    private async Task RunBackgroundSync()
     {
+        // FAST-FAIL: Kiểm tra nếu không có mạng thì DỪNG NGAY LẬP TỨC
+        if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+        {
+            System.Diagnostics.Debug.WriteLine("=== OFFLINE MODE: Bỏ qua Sync API ===");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine("=== ĐANG CHẠY ĐỒNG BỘ LẦN ĐẦU (BACKGROUND SYNC) ===");
         var apiSync = new ApiSyncService(_dbService);
+
+        // Chạy ngầm để không đơ giao diện
         _ = Task.Run(async () =>
         {
             await apiSync.SyncPoisAsync();
-            await apiSync.SyncAudiosAsync(); // Đồng bộ kịch bản AI
+            await apiSync.SyncAudiosAsync();
             await apiSync.SyncToursAsync();
             await apiSync.SyncLogsAsync();
 
-            MainThread.BeginInvokeOnMainThread(async () =>
-                await LoadData());
+            // Nạp lại giao diện lần nữa sau khi đã tải xong dữ liệu mới
+            MainThread.BeginInvokeOnMainThread(async () => await LoadLocalData());
         });
-
-        await LoadData();
     }
 
-    private async Task LoadData()
+    // TÁCH HÀM MỚI: Chỉ chịu trách nhiệm đọc SQLite và dịch thuật
+    private async Task LoadLocalData()
     {
         var allPois = (await _dbService.GetPOIsAsync()).ToList();
         var allTours = (await _dbService.GetItinerariesAsync()).ToList();
@@ -99,7 +123,7 @@ public partial class MainPage : ContentPage
         FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
         ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
 
-        // Dịch thuật AI nếu không phải tiếng Việt (đọc ngôn ngữ từ Preferences mỗi lần để phản ánh thay đổi)
+        // Dịch thuật AI nếu không phải tiếng Việt
         var preferredLang = Preferences.Get("AppLanguage", "vi-VN");
         if (!preferredLang.StartsWith("vi", StringComparison.OrdinalIgnoreCase))
         {
@@ -110,13 +134,11 @@ public partial class MainPage : ContentPage
                     var translator = new TranslationService();
                     string targetLang = GetShortLangCode(preferredLang);
 
+                    // THẬN TRỌNG: Cân nhắc bỏ dịch Category để giảm số lượng request
                     foreach (var p in allPois)
                     {
                         var dn = await translator.TranslateAsync(p.Name, targetLang);
                         if (!string.IsNullOrEmpty(dn)) p.DisplayName = dn;
-
-                        var dc = await translator.TranslateAsync(p.Category, targetLang);
-                        if (!string.IsNullOrEmpty(dc)) p.DisplayCategory = dc;
                     }
 
                     foreach (var t in allTours)

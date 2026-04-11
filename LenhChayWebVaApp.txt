@@ -1,0 +1,4 @@
+- Chạy web
+dotnet run --urls "http://0.0.0.0:5110"
+- Chạy ngrok
+ngrok http 5110

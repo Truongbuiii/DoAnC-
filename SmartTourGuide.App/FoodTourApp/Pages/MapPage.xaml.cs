@@ -265,19 +265,39 @@ public partial class MapPage : ContentPage
 
     private async Task CheckAndNarrate(double lat, double lon)
     {
+        // 1. THUẬT TOÁN THRESHOLD: CHỐNG NHIỄU GPS VÀ QUÁ TẢI WEBVIEW
+        double distanceMoved = 0;
+        if (_hasUserLocation)
+        {
+            // Tính khoảng cách giữa vị trí cũ và vị trí mới
+            distanceMoved = LocationHelper.CalculateDistance(_lastUserLat, _lastUserLon, lat, lon);
+        }
+
+        // Nếu di chuyển DƯỚI 5 mét, coi như đứng yên (nhiễu sóng) -> Không vẽ lại bản đồ
+        bool shouldUpdateMap = !_hasUserLocation || distanceMoved > 5;
+
+        // Cập nhật tọa độ mới
         _lastUserLat = lat;
         _lastUserLon = lon;
         _hasUserLocation = true;
 
-        // Run geofence check on background thread to avoid blocking UI
-        var result = await Task.Run(() => _geofenceService.CheckGeofences(lat, lon, _allPoisFromDb));
+        // 2. CHẠY GEOFENCE (Hàm Async đã tối ưu)
+        // Lưu ý: Nhớ đảm bảo GeofenceService.cs của bạn đã đổi hàm thành CheckGeofencesAsync như bước trước
+        var result = await _geofenceService.CheckGeofencesAsync(lat, lon, _allPoisFromDb);
 
-        // Update UI
-        string latStr = lat.ToString(CultureInfo.InvariantCulture);
-        string lonStr = lon.ToString(CultureInfo.InvariantCulture);
+        // 3. CẬP NHẬT GIAO DIỆN (CHỈ VẼ LẠI WEBVIEW KHI CẦN)
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+            // CHỈ gửi tọa độ sang JavaScript nếu người dùng thực sự di chuyển > 5m
+            if (shouldUpdateMap)
+            {
+                string latStr = lat.ToString(CultureInfo.InvariantCulture);
+                string lonStr = lon.ToString(CultureInfo.InvariantCulture);
+                MapWebView.Eval($"setUserLocation({latStr}, {lonStr}, 15)");
+                System.Diagnostics.Debug.WriteLine($"[Bản đồ] Đã vẽ lại vị trí mới (di chuyển: {distanceMoved:F1}m)");
+            }
+
+            // (Giữ nguyên đoạn code cập nhật UI danh sách và Card POI của bạn)
             RefreshListView();
 
             if (result.NearestPoi != null)
@@ -299,9 +319,9 @@ public partial class MapPage : ContentPage
             }
         });
 
+        // 4. KIỂM TRA PHÁT AUDIO THUYẾT MINH
         if (result.ShouldNarrate && result.PoiToNarrate != null)
         {
-            // Use NarrationService queue to avoid blocking
             var poi = result.PoiToNarrate;
             string textToSpeak;
             if (IsVietnamese(_currentLanguage)) textToSpeak = poi.DescriptionVi;
@@ -313,10 +333,7 @@ public partial class MapPage : ContentPage
                 textToSpeak = string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
             }
 
-            // Queue narration (non-blocking)
             _ = _narrationService.QueueAndPlayAsync(poi.PoiId.ToString(), textToSpeak);
-
-            // Log activity in background, but await to ensure DB write scheduled
             _ = Task.Run(async () => await _dbService.LogActivityAsync(poi.PoiId, "AutoTrigger", _currentLanguage));
         }
     }
