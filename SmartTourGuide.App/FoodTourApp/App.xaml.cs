@@ -1,6 +1,4 @@
 ﻿using FoodTourApp.Services;
-using Microsoft.Extensions.DependencyInjection;
-using FoodTourApp.Models;
 
 namespace FoodTourApp
 {
@@ -12,15 +10,58 @@ namespace FoodTourApp
         public App(ApiSyncService syncService, DatabaseService dbService)
         {
             InitializeComponent();
-
             _syncService = syncService;
             _dbService = dbService;
 
-            // Load ngôn ngữ đã chọn từ Preferences
-            // Lang.Load(); 
+            // Load ngôn ngữ đã lưu
+            Lang.Load();
 
-            // 2. Kích hoạt đồng bộ ngầm ngay khi mở App (Dùng Task.Run để không chặn UI)
+            // Sync ngầm khi mở app
             Task.Run(async () => await StartInitialSync());
+        }
+
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+            return new Window(new AppShell());
+        }
+
+        protected override async void OnStart()
+        {
+            base.OnStart();
+
+            // Chỉ hỏi ngôn ngữ nếu chưa có
+            if (!Preferences.ContainsKey("AppLanguage"))
+            {
+                await Task.Delay(800);
+
+                if (Shell.Current == null) return;
+
+                string action = await Shell.Current.DisplayActionSheetAsync(
+                    "Chọn ngôn ngữ thuyết minh",
+                    null, null,
+                    "🇻🇳 Tiếng Việt",
+                    "🇺🇸 English",
+                    "🇨🇳 中文",
+                    "🇰🇷 한국어",
+                    "🇯🇵 日本語");
+
+                // ✅ Dùng đúng language code
+                string lang = action switch
+                {
+                    "🇺🇸 English" => "en-US",
+                    "🇨🇳 中文" => "zh-CN",
+                    "🇰🇷 한국어" => "ko-KR",
+                    "🇯🇵 日本語" => "ja-JP",
+                    _ => "vi-VN"
+                };
+
+                Preferences.Set("AppLanguage", lang);
+                Lang.Set(lang);
+
+                // Cập nhật tab titles ngay sau khi chọn
+                if (Shell.Current is AppShell appShell)
+                    appShell.ApplyLanguage();
+            }
         }
 
         protected override async void OnSleep()
@@ -28,8 +69,7 @@ namespace FoodTourApp
             base.OnSleep();
             try
             {
-                var apiSync = new ApiSyncService(new DatabaseService());
-                await apiSync.SyncLogsAsync();
+                await _syncService.SyncLogsAsync();
             }
             catch (Exception ex)
             {
@@ -37,66 +77,22 @@ namespace FoodTourApp
             }
         }
 
-        // FIX CS0618: Di chuyển CreateWindow ra ngoài Constructor
-        protected override Window CreateWindow(IActivationState? activationState)
-        {
-            return new Window(new AppShell());
-        }
-
         private async Task StartInitialSync()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== BẮT ĐẦU ĐỒNG BỘ TỪ WEB SERVER ===");
+                System.Diagnostics.Debug.WriteLine("=== BẮT ĐẦU SYNC ===");
                 bool poiOk = await _syncService.SyncPoisAsync();
                 bool tourOk = await _syncService.SyncToursAsync();
 
                 if (poiOk)
-                {
                     await _dbService.TranslateAndCachePoisAsync();
-                }
 
                 await _syncService.SyncLogsAsync();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== LỖI KHỞI TẠO DỮ LIỆU: {ex.Message}");
-            }
-        }
-
-        protected override async void OnStart()
-        {
-            base.OnStart();
-
-            bool hasChosenLanguage = Preferences.ContainsKey("AppLanguage");
-            if (!hasChosenLanguage)
-            {
-                // Phải đợi một chút để Shell.Current không bị null
-                await Task.Delay(1000);
-
-                if (Shell.Current != null)
-                {
-                    // FIX CS0618: Dùng DisplayActionSheetAsync thay vì DisplayActionSheet
-                    string action = await Shell.Current.DisplayActionSheetAsync(
-                        "Chọn ngôn ngữ thuyết minh",
-                        null, null,
-                        "🇻🇳 Tiếng Việt",
-                        "🇺🇸 English",
-                        "🇨🇳 中文",
-                        "🇰🇷 한국어",
-                        "🇯🇵 日本語");
-
-                    string lang = action switch
-                    {
-                        "🇺🇸 English" => "en",
-                        "🇨🇳 中文" => "zh",
-                        "🇰🇷 한국어" => "ko",
-                        "🇯🇵 日本語" => "ja",
-                        _ => "vi"
-                    };
-
-                    Preferences.Set("AppLanguage", lang);
-                }
+                System.Diagnostics.Debug.WriteLine($"=== LỖI SYNC: {ex.Message}");
             }
         }
     }

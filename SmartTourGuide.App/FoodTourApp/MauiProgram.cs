@@ -15,7 +15,7 @@ public static class MauiProgram
             .UseBarcodeReader() // ← thêm dòng này
             .ConfigureFonts(fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+               fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
 
         // ============================================================

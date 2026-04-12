@@ -13,6 +13,8 @@ public partial class PoiDetailPage : ContentPage
     private readonly POI _poi;
     private string _currentLanguage = "vi-VN";
     private readonly DatabaseService _dbService = new DatabaseService();
+    private string? _cachedTranslatedDescription = null;
+    private string? _cachedLanguage = null;
 
 #if ANDROID
     private AndroidTtsService? _androidTts;
@@ -104,7 +106,12 @@ public partial class PoiDetailPage : ContentPage
         if (poi == null || string.IsNullOrEmpty(poi.DescriptionVi)) return null;
 
         var shortCode = GetShortLangCode(_currentLanguage);
-        if (string.IsNullOrEmpty(shortCode) || shortCode == "vi") return poi.DescriptionVi;
+        if (string.IsNullOrEmpty(shortCode) || shortCode == "vi")
+            return poi.DescriptionVi;
+
+        // Dùng cache nếu ngôn ngữ không đổi
+        if (_cachedLanguage == _currentLanguage && _cachedTranslatedDescription != null)
+            return _cachedTranslatedDescription;
 
         try
         {
@@ -113,7 +120,13 @@ public partial class PoiDetailPage : ContentPage
 
             var translator = new TranslationService();
             var translated = await translator.TranslateAsync(poi.DescriptionVi, shortCode);
-            return string.IsNullOrEmpty(translated) ? poi.DescriptionVi : translated;
+
+            // Lưu cache
+            _cachedTranslatedDescription = string.IsNullOrEmpty(translated)
+                ? poi.DescriptionVi : translated;
+            _cachedLanguage = _currentLanguage;
+
+            return _cachedTranslatedDescription;
         }
         catch
         {
@@ -125,7 +138,6 @@ public partial class PoiDetailPage : ContentPage
             TranslationLoader.IsVisible = false;
         }
     }
-
     private static bool IsVietnamese(string culture)
     {
         if (string.IsNullOrEmpty(culture)) return false;
@@ -176,31 +188,40 @@ public partial class PoiDetailPage : ContentPage
         else FavoritesPage.AddFavorite(_poi.PoiId);
         UpdateFavoriteButton();
     }
-
     private async void OnSpeakClicked(object sender, EventArgs e)
     {
         var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
         var displayPoi = freshPoi ?? _poi;
 
-        string text;
-        if (IsVietnamese(_currentLanguage))
-        {
-            text = displayPoi.DescriptionVi;
-        }
-        else
-        {
-            text = await GetDisplayDescriptionAsync(displayPoi) ?? displayPoi.DescriptionVi;
-        }
-
-#if ANDROID
-        _androidTts?.SetLanguage(_currentLanguage);
-        _androidTts?.Speak(text);
-#endif
         _ = Task.Run(async () =>
         {
-            await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
-            var apiSync = new ApiSyncService(new DatabaseService());
-            await apiSync.SyncLogsAsync();
+            try
+            {
+                string textToSpeak = displayPoi.DescriptionVi ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(textToSpeak)) return;
+
+                if (!IsVietnamese(_currentLanguage))
+                {
+                    // Dùng cache — không gọi API lại
+                    var translated = await GetDisplayDescriptionAsync(displayPoi);
+                    if (!string.IsNullOrEmpty(translated))
+                        textToSpeak = translated;
+                }
+
+#if ANDROID
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _androidTts?.SetLanguage(_currentLanguage);
+                    _androidTts?.Speak(textToSpeak);
+                });
+#endif
+
+                await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OnSpeakClicked error: {ex.Message}");
+            }
         });
     }
 
