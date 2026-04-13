@@ -3,14 +3,19 @@ using FoodTourApp.Models;
 using FoodTourApp.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
-using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Networking;
 
 namespace FoodTourApp;
 
 public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
-    private static bool _hasShownLanguagePicker = false;
+
+    private static bool _isInitialLoad = true;
+    private static string _lastTranslatedLang = "";
+    private bool _isDataLoaded = false;
+    private List<POI> _cachedPois = new();
+    private List<Itinerary> _cachedTours = new();
     private string _currentLanguage = "vi-VN";
 
     public MainPage()
@@ -18,44 +23,56 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        // 1. Kiểm tra và chọn ngôn ngữ lần đầu
-        if (!_hasShownLanguagePicker && !Preferences.ContainsKey("AppLanguage"))
+        var newLang = Preferences.Get("AppLanguage", "vi-VN");
+
+        // Nếu đổi ngôn ngữ → reset cache để dịch lại
+        if (newLang != _currentLanguage)
         {
-            _hasShownLanguagePicker = true;
-            await Task.Delay(500);
-
-            string action = await DisplayActionSheetAsync(
-                "Chọn ngôn ngữ thuyết minh",
-                "Hủy", null,
-                "🇻🇳 Tiếng Việt",
-                "🇺🇸 English",
-                "🇨🇳 中文",
-                "🇰🇷 한국어",
-                "🇯🇵 日本語");
-
-            string lang = action switch
-            {
-                "🇺🇸 English" => "en-US",
-                "🇨🇳 中文" => "zh-CN",
-                "🇰🇷 한국어" => "ko-KR",
-                "🇯🇵 日本語" => "ja-JP",
-                _ => "vi-VN"
-            };
-
-            Preferences.Set("AppLanguage", lang);
-            Lang.Set(lang);
-
-            if (Shell.Current is AppShell appShell)
-                appShell.ApplyLanguage();
+            _currentLanguage = newLang;
+            _lastTranslatedLang = "";
+            _isDataLoaded = false;
         }
 
-        _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
-        await LoadDashboard();
+        LoadInitialData();
+    }
+
+    private void LoadInitialData()
+    {
+        if (_isDataLoaded)
+        {
+            UpdateUI();
+            if (!_currentLanguage.StartsWith("vi") && _lastTranslatedLang != _currentLanguage)
+                _ = TranslateDataAsync();
+            return;
+        }
+
+        _isDataLoaded = true;
+
+        _ = Task.Run(async () =>
+        {
+            var pois = (await _dbService.GetPOIsAsync()).ToList();
+            var tours = (await _dbService.GetItinerariesAsync()).ToList();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _cachedPois = pois;
+                _cachedTours = tours;
+                UpdateUI();
+                if (!_currentLanguage.StartsWith("vi"))
+                    _ = TranslateDataAsync();
+            });
+        });
+
+        if (_isInitialLoad)
+        {
+            _ = RunBackgroundSync();
+            _isInitialLoad = false;
+        }
     }
 
     private void ApplyLanguage()
@@ -70,73 +87,62 @@ public partial class MainPage : ContentPage
         LblFeatured.Text = Lang.Get("home_featured");
     }
 
-    private async Task LoadDashboard()
+    private void UpdateUI()
     {
-        var apiSync = new ApiSyncService(_dbService);
-        _ = Task.Run(async () =>
-        {
-            await apiSync.SyncPoisAsync();
-            await apiSync.SyncAudiosAsync(); // Đồng bộ kịch bản AI
-            await apiSync.SyncToursAsync();
-            await apiSync.SyncLogsAsync();
-
-            MainThread.BeginInvokeOnMainThread(async () =>
-                await LoadData());
-        });
-
-        await LoadData();
+        FeaturedPoisList.ItemsSource = null;
+        ToursList.ItemsSource = null;
+        FeaturedPoisList.ItemsSource = _cachedPois;
+        ToursList.ItemsSource = _cachedTours;
     }
 
-    private async Task LoadData()
+    private async Task TranslateDataAsync()
     {
-        var allPois = (await _dbService.GetPOIsAsync()).ToList();
-        var allTours = (await _dbService.GetItinerariesAsync()).ToList();
+        if (_lastTranslatedLang == _currentLanguage) return;
+        string targetLang = _currentLanguage;
 
-        // Gán tên mặc định
-        foreach (var p in allPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
-        foreach (var t in allTours) { t.DisplayName = t.TourName; }
-
-        FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
-
-        // Dịch thuật AI nếu không phải tiếng Việt (đọc ngôn ngữ từ Preferences mỗi lần để phản ánh thay đổi)
-        var preferredLang = Preferences.Get("AppLanguage", "vi-VN");
-        if (!preferredLang.StartsWith("vi", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            _ = Task.Run(async () =>
+            var translator = new TranslationService();
+            string shortCode = GetShortLangCode(targetLang);
+
+            foreach (var p in _cachedPois)
             {
-                try
-                {
-                    var translator = new TranslationService();
-                    string targetLang = GetShortLangCode(preferredLang);
+                var dn = await translator.TranslateAsync(p.Name, shortCode);
+                p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
 
-                    foreach (var p in allPois)
-                    {
-                        var dn = await translator.TranslateAsync(p.Name, targetLang);
-                        if (!string.IsNullOrEmpty(dn)) p.DisplayName = dn;
+                var dc = await translator.TranslateAsync(p.Category, shortCode);
+                p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+            }
 
-                        var dc = await translator.TranslateAsync(p.Category, targetLang);
-                        if (!string.IsNullOrEmpty(dc)) p.DisplayCategory = dc;
-                    }
+            foreach (var t in _cachedTours)
+            {
+                var dt = await translator.TranslateAsync(t.TourName, shortCode);
+                t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+            }
 
-                    foreach (var t in allTours)
-                    {
-                        var dt = await translator.TranslateAsync(t.TourName, targetLang);
-                        if (!string.IsNullOrEmpty(dt)) t.DisplayName = dt;
-                    }
-
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        FeaturedPoisList.ItemsSource = new ObservableCollection<POI>(allPois);
-                        ToursList.ItemsSource = new ObservableCollection<Itinerary>(allTours);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Translation error: {ex.Message}");
-                }
-            });
+            _lastTranslatedLang = targetLang;
+            MainThread.BeginInvokeOnMainThread(() => UpdateUI());
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Lỗi dịch MainPage: {ex.Message}");
+            foreach (var p in _cachedPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
+            foreach (var t in _cachedTours) { t.DisplayName = t.TourName; }
+            MainThread.BeginInvokeOnMainThread(() => UpdateUI());
+        }
+    }
+
+    private async Task RunBackgroundSync()
+    {
+        if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet) return;
+
+        var apiSync = new ApiSyncService(_dbService);
+        await Task.Run(async () =>
+        {
+            await apiSync.SyncPoisAsync();
+            await apiSync.SyncToursAsync();
+            await apiSync.SyncLogsAsync();
+        });
     }
 
     private string GetShortLangCode(string culture)

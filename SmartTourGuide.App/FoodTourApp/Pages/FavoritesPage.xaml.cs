@@ -1,5 +1,8 @@
 using FoodTourApp.Models;
 using FoodTourApp.Services;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
+using Microsoft.Maui.ApplicationModel;
 
 namespace FoodTourApp.Pages;
 
@@ -18,7 +21,9 @@ public partial class FavoritesPage : ContentPage
         base.OnAppearing();
         Lang.Load();
         ApplyLanguage();
-        await LoadFavorites();
+
+        // Gọi hàm load dữ liệu
+        await LoadFavoritesAsync();
     }
 
     private void ApplyLanguage()
@@ -29,12 +34,69 @@ public partial class FavoritesPage : ContentPage
         LblEmptySub.Text = Lang.Get("fav_empty_sub");
     }
 
-    private async Task LoadFavorites()
+    private async Task LoadFavoritesAsync()
     {
         var favoriteIds = GetFavoriteIds();
         var allPois = await _dbService.GetPOIsAsync();
         var favorites = allPois.Where(p => favoriteIds.Contains(p.PoiId)).ToList();
+
+        // 1. Kiểm tra ngôn ngữ hiện tại
+        string currentLang = Preferences.Get("AppLanguage", "vi-VN");
+        bool isVietnamese = currentLang.StartsWith("vi", StringComparison.OrdinalIgnoreCase);
+
+        // 2. Mớm dữ liệu tạm thời (Tránh chớp tiếng Việt)
+        foreach (var p in favorites)
+        {
+            p.DisplayName = isVietnamese ? p.Name : "...";
+            p.DisplayCategory = isVietnamese ? p.Category : "...";
+        }
+
+        // Đẩy danh sách rỗng / có dấu "..." ra màn hình trước
+        FavoritesList.ItemsSource = null;
         FavoritesList.ItemsSource = favorites;
+
+        // 3. Chạy dịch thuật ngầm nếu không phải tiếng Việt
+        if (!isVietnamese && favorites.Any())
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var translator = new TranslationService();
+                    string shortCode = currentLang.Split('-')[0].ToLower();
+
+                    foreach (var p in favorites)
+                    {
+                        var dn = await translator.TranslateAsync(p.Name, shortCode);
+                        var dc = await translator.TranslateAsync(p.Category, shortCode);
+
+                        p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
+                        p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+                    }
+
+                    // Cập nhật lại UI sau khi dịch xong (Ép ListView vẽ lại)
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        FavoritesList.ItemsSource = null;
+                        FavoritesList.ItemsSource = favorites;
+                    });
+                }
+                catch
+                {
+                    // Lỗi API / Mất mạng -> Trả về lại tiếng Việt gốc
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        foreach (var p in favorites)
+                        {
+                            p.DisplayName = p.Name;
+                            p.DisplayCategory = p.Category;
+                        }
+                        FavoritesList.ItemsSource = null;
+                        FavoritesList.ItemsSource = favorites;
+                    });
+                }
+            });
+        }
     }
 
     private async void OnPoiSelected(object sender, SelectionChangedEventArgs e)
@@ -56,8 +118,11 @@ public partial class FavoritesPage : ContentPage
             Lang.Get("btn_cancel"));
 
         if (!confirm) return;
+
         RemoveFavorite(poiId);
-        await LoadFavorites();
+
+        // Tải lại danh sách sau khi xóa
+        await LoadFavoritesAsync();
     }
 
     public static List<int> GetFavoriteIds()

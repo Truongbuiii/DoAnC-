@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="FoodTourApp.Pages.PoiDetailPage"
-             Title=""
+             Title="" 
+             Shell.NavBarIsVisible="True" 
              BackgroundColor="#F3F4F6">
 
     <ScrollView>
@@ -10,16 +11,17 @@
 
             <AbsoluteLayout HeightRequest="250">
                 <BoxView Color="#1F2937"
-             AbsoluteLayout.LayoutFlags="All"
-             AbsoluteLayout.LayoutBounds="0,0,1,1"/>
+                         AbsoluteLayout.LayoutFlags="All"
+                         AbsoluteLayout.LayoutBounds="0,0,1,1"/>
+
                 <Image x:Name="MainImage"
-           Source="{Binding ImageSource}" 
-           Aspect="AspectFill"
-           AbsoluteLayout.LayoutFlags="All"
-           AbsoluteLayout.LayoutBounds="0,0,1,1"/>
+                       Source="{Binding ImageSource}" 
+                       Aspect="AspectFill"
+                       AbsoluteLayout.LayoutFlags="All"
+                       AbsoluteLayout.LayoutBounds="0,0,1,1"/>
 
                 <BoxView AbsoluteLayout.LayoutFlags="All"
-             AbsoluteLayout.LayoutBounds="0,0,1,1">
+                         AbsoluteLayout.LayoutBounds="0,0,1,1">
                     <BoxView.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                             <GradientStop Color="#00000000" Offset="0.4"/>
@@ -29,40 +31,37 @@
                 </BoxView>
 
                 <VerticalStackLayout Spacing="2"
-                         AbsoluteLayout.LayoutFlags="XProportional,WidthProportional"
-                         AbsoluteLayout.LayoutBounds="0,1,1,AutoSize"
-                         Padding="20,0,20,25">
+                                     AbsoluteLayout.LayoutFlags="XProportional,WidthProportional"
+                                     AbsoluteLayout.LayoutBounds="0,1,1,AutoSize"
+                                     Padding="20,0,20,25">
 
                     <Border BackgroundColor="#F97316"
-                StrokeShape="RoundRectangle 8"
-                Padding="8,2" HorizontalOptions="Start">
-                        <Label Text="{Binding DisplayCategory, FallbackValue={Binding Category}}" 
-                   TextColor="White" FontSize="11" FontAttributes="Bold"/>
+                            StrokeShape="RoundRectangle 8"
+                            Padding="8,2" HorizontalOptions="Start">
+                        <Label x:Name="CategoryLabel" 
+                               Text="{Binding DisplayCategory}" 
+                               TextColor="White" FontSize="11" FontAttributes="Bold"/>
                     </Border>
 
-                    <Label Text="{Binding DisplayName, FallbackValue={Binding Name}}" 
-               FontSize="26" 
-               FontAttributes="Bold" 
-               TextColor="White" 
-               LineBreakMode="WordWrap"/>
+                    <Label x:Name="PoiNameLabel" 
+                           Text="{Binding DisplayName}" 
+                           FontSize="26" 
+                           FontAttributes="Bold" 
+                           TextColor="White" 
+                           LineBreakMode="WordWrap"/>
                 </VerticalStackLayout>
-
-                <ImageButton Source="back_icon.png"
-                 WidthRequest="35" HeightRequest="35"
-                 Clicked="OnBackClicked"
-                 BackgroundColor="#66000000" CornerRadius="18"
-                 AbsoluteLayout.LayoutBounds="16,40,35,35"
-                 AbsoluteLayout.LayoutFlags="None"/>
             </AbsoluteLayout>
 
             <Border Margin="16,-20,16,0" Padding="20"
-        BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0">
+                    BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.1"/>
                 </Border.Shadow>
+
                 <VerticalStackLayout Spacing="8">
                     <Label x:Name="LblIntroTitle" FontSize="17" FontAttributes="Bold" TextColor="#111827"/>
                     <BoxView HeightRequest="3" WidthRequest="40" Color="#F97316" HorizontalOptions="Start" CornerRadius="2"/>
+
                     <Grid Margin="0,10,0,0">
                         <ActivityIndicator x:Name="TranslationLoader" IsRunning="False" IsVisible="False" Color="#F97316" HorizontalOptions="Center" VerticalOptions="Center" ZIndex="1" />
                         <Label x:Name="DetailDescription" LineBreakMode="WordWrap" FontSize="15" TextColor="#444444">
@@ -76,34 +75,36 @@
                 </VerticalStackLayout>
             </Border>
 
-
-            <!-- 4 NÚT -->
             <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*"
-        RowSpacing="8" ColumnSpacing="8" Margin="16,12,16,16">
+                  RowSpacing="8" ColumnSpacing="8" Margin="16,12,16,16">
+
                 <Button Grid.Row="0" Grid.Column="0"
-              x:Name="BtnFavorite"
-              Clicked="OnFavoriteClicked"
-              BackgroundColor="#EF4444" TextColor="White"
-              CornerRadius="12" HeightRequest="46"
-              FontAttributes="Bold" FontSize="13"/>
+                        x:Name="BtnFavorite"
+                        Clicked="OnFavoriteClicked"
+                        BackgroundColor="#EF4444" TextColor="White"
+                        CornerRadius="12" HeightRequest="46"
+                        FontAttributes="Bold" FontSize="13"/>
+
                 <Button Grid.Row="0" Grid.Column="1"
-              x:Name="BtnListen"
-              Clicked="OnSpeakClicked"
-              BackgroundColor="#F97316" TextColor="White"
-              CornerRadius="12" HeightRequest="46"
-              FontAttributes="Bold" FontSize="13"/>
+                        x:Name="BtnListen"
+                        Clicked="OnSpeakClicked"
+                        BackgroundColor="#F97316" TextColor="White"
+                        CornerRadius="12" HeightRequest="46"
+                        FontAttributes="Bold" FontSize="13"/>
+
                 <Button Grid.Row="1" Grid.Column="0"
-              x:Name="BtnMap"
-              Clicked="OnViewOnMapClicked"
-              BackgroundColor="#3B82F6" TextColor="White"
-              CornerRadius="12" HeightRequest="46"
-              FontAttributes="Bold" FontSize="13"/>
+                        x:Name="BtnMap"
+                        Clicked="OnViewOnMapClicked"
+                        BackgroundColor="#3B82F6" TextColor="White"
+                        CornerRadius="12" HeightRequest="46"
+                        FontAttributes="Bold" FontSize="13"/>
+
                 <Button Grid.Row="1" Grid.Column="1"
-              x:Name="BtnNavigate"
-              Clicked="OnDirectClicked"
-              BackgroundColor="#1F2937" TextColor="White"
-              CornerRadius="12" HeightRequest="46"
-              FontAttributes="Bold" FontSize="13"/>
+                        x:Name="BtnNavigate"
+                        Clicked="OnDirectClicked"
+                        BackgroundColor="#1F2937" TextColor="White"
+                        CornerRadius="12" HeightRequest="46"
+                        FontAttributes="Bold" FontSize="13"/>
             </Grid>
 
         </VerticalStackLayout>
