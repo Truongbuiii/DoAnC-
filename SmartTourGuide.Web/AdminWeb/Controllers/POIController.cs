@@ -73,7 +73,6 @@ namespace AdminWeb.Controllers
             ModelState.Remove("Audios");
             ModelState.Remove("OwnerUsername");
 
-
             if (ModelState.IsValid)
             {
                 try
@@ -93,11 +92,26 @@ namespace AdminWeb.Controllers
                         }
                         poi.ImageSource = fileName;
                     }
-                    _context.POIs.Add(poi);
-                    await _context.SaveChangesAsync();
-                    // THÊM DÒNG NÀY:
-                    TempData["SuccessMessage"] = "Chúc mừng! Bạn đã thêm địa điểm '" + poi.Name + "' thành công.";
 
+                    // 1. LƯU POI VÀO DATABASE TRƯỚC
+                    _context.POIs.Add(poi);
+                    await _context.SaveChangesAsync(); // Lưu xong lệnh này thì poi.PoiId mới được cấp số (VD: 38)
+
+                    // 2. TỰ ĐỘNG TẠO KỊCH BẢN AUDIO TƯƠNG ỨNG
+                    if (!string.IsNullOrEmpty(poi.DescriptionVi))
+                    {
+                        var newAudio = new Audio
+                        {
+                            PoiId = poi.PoiId,        // Liên kết đúng với ID của quán vừa tạo
+                            AudioName = poi.Name,     // Lấy tên quán làm tiêu đề kịch bản
+                            Script = poi.DescriptionVi, // Lấy đoạn nội dung thuyết minh tiếng Việt
+                            AudioFilePath = ""        // Để trống, sau này upload file MP3 thì thay đổi
+                        };
+                        _context.Audios.Add(newAudio);
+                        await _context.SaveChangesAsync(); // Lưu kịch bản vào bảng Audios
+                    }
+
+                    TempData["SuccessMessage"] = "Chúc mừng! Bạn đã thêm địa điểm '" + poi.Name + "' thành công.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -105,6 +119,14 @@ namespace AdminWeb.Controllers
                     ModelState.AddModelError("", "Lỗi rồi ơi: " + ex.Message);
                 }
             }
+
+            // 3. FIX LỖI: Nạp lại danh sách Chủ quán nếu lưu thất bại (chưa nhập đủ thông tin)
+            var owners = await _context.Admins
+                .Where(a => a.Username != "admin")
+                .Select(a => a.Username)
+                .ToListAsync();
+            ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
+
             return View(poi);
         }
 
@@ -139,12 +161,13 @@ namespace AdminWeb.Controllers
             // 1. Xóa validation để không bị lỗi "đứng máy" khi nhấn Lưu
             ModelState.Remove("ImageSource");
             ModelState.Remove("Audios");
-            ModelState.Remove("OwnerUsername"); // THÊM DÒNG NÀY
+            ModelState.Remove("OwnerUsername");
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Xử lý lưu ảnh
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
@@ -155,13 +178,43 @@ namespace AdminWeb.Controllers
                     }
                     else
                     {
+                        // Giữ lại ảnh cũ nếu không đổi
                         _context.Entry(poi).Property(x => x.ImageSource).IsModified = false;
                     }
 
+                    // Cập nhật thông tin POI
                     _context.Update(poi);
+
+                    // ==========================================
+                    // BƯỚC 2: TỰ ĐỘNG ĐỒNG BỘ SANG BẢNG AUDIO
+                    // ==========================================
+                    var linkedAudio = await _context.Audios.FirstOrDefaultAsync(a => a.PoiId == poi.PoiId);
+
+                    if (linkedAudio != null)
+                    {
+                        // Nếu kịch bản đã tồn tại -> Cập nhật nội dung mới
+                        linkedAudio.Script = poi.DescriptionVi;
+                        linkedAudio.AudioName = poi.Name;
+                        _context.Update(linkedAudio);
+                    }
+                    else if (!string.IsNullOrEmpty(poi.DescriptionVi))
+                    {
+                        // Nếu chưa có kịch bản (do lúc thêm quán quên nhập) -> Tạo mới luôn
+                        var newAudio = new Audio
+                        {
+                            PoiId = poi.PoiId,
+                            AudioName = poi.Name,
+                            Script = poi.DescriptionVi,
+                            AudioFilePath = ""
+                        };
+                        _context.Audios.Add(newAudio);
+                    }
+                    // ==========================================
+
+                    // Lưu TẤT CẢ thay đổi (cả POI và Audio) xuống DB cùng 1 lúc
                     await _context.SaveChangesAsync();
 
-                    TempData["SuccessMessage"] = $"Cập nhật '{poi.Name}' thành công!"; // Thêm thông báo cho mượt
+                    TempData["SuccessMessage"] = $"Cập nhật '{poi.Name}' thành công!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -170,7 +223,7 @@ namespace AdminWeb.Controllers
                 }
             }
 
-            // 2. QUAN TRỌNG: Nếu lưu thất bại, phải nạp lại danh sách chủ quán để trang Edit không bị lỗi
+            // 3. QUAN TRỌNG: Nếu lưu thất bại, phải nạp lại danh sách chủ quán để trang Edit không bị lỗi
             var owners = await _context.Admins
                 .Where(a => a.Username != "admin")
                 .Select(a => a.Username)
@@ -178,7 +231,7 @@ namespace AdminWeb.Controllers
             ViewBag.OwnerList = new SelectList(owners, poi.OwnerUsername);
 
             return View(poi);
-        }
+        }   
         // 6. XỬ LÝ XÓA
         public async Task<IActionResult> Delete(int id)
         {

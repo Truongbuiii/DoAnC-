@@ -89,19 +89,10 @@
                 </p>
             </div>
             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                @* PHÂN QUYỀN: CHỈ ADMIN MỚI THẤY NÚT TẠO MỚI *@
-                @if (User.IsInRole("Admin"))
-                {
-                    <a class="btn-create-audio" asp-action="Create">
-                        <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i> TẠO MỚI KỊCH BẢN
-                    </a>
-                }
-                else
-                {
-                    <span class="badge bg-info text-dark p-2 border border-info shadow-sm" style="font-size: 0.85rem;">
-                        <i class="bi bi-person-check-fill me-1"></i> Quyền Chủ Sở Hữu
-                    </span>
-                }
+         <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <span class="badge bg-secondary p-2 border shadow-sm" style="font-size: 0.85rem;">
+                    <i class="bi bi-eye-fill me-1"></i> Chế độ chỉ xem (Đồng bộ từ POI)
+                </span>
             </div>
         </div>
     </div>
@@ -160,15 +151,17 @@
                     }
                 </td>
 
-                <td>
-                    <div class="btn-group shadow-sm">
-                        <a asp-action="Edit" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                            <i class="bi bi-pencil-fill"></i>
+              <td>
+                    @if (item.PoiId != null)
+                    {
+                        <a asp-controller="POI" asp-action="Edit" asp-route-id="@item.PoiId" class="btn btn-sm btn-outline-primary shadow-sm fw-bold">
+                            <i class="bi bi-pencil-square me-1"></i> Sửa tại POI
                         </a>
-                        <a asp-action="Delete" asp-route-id="@item.AudioId" class="btn btn-sm btn-outline-danger" title="Xóa">
-                            <i class="bi bi-trash-fill"></i>
-                        </a>
-                    </div>
+                    }
+                    else
+                    {
+                        <span class="text-danger small fst-italic">Chưa liên kết POI</span>
+                    }
                 </td>
             </tr>
         }
