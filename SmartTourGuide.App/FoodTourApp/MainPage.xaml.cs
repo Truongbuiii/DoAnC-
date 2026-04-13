@@ -17,6 +17,7 @@ public partial class MainPage : ContentPage
     private List<POI> _cachedPois = new();
     private List<Itinerary> _cachedTours = new();
     private string _currentLanguage = "vi-VN";
+    private bool _isTranslating = false;
 
     public MainPage()
     {
@@ -58,6 +59,17 @@ public partial class MainPage : ContentPage
             var pois = (await _dbService.GetPOIsAsync()).ToList();
             var tours = (await _dbService.GetItinerariesAsync()).ToList();
 
+            // THÊM ĐOẠN NÀY ĐỂ GÁN GIÁ TRỊ MẶC ĐỊNH
+            foreach (var p in pois)
+            {
+                p.DisplayName = p.Name;
+                p.DisplayCategory = p.Category;
+            }
+            foreach (var t in tours)
+            {
+                t.DisplayName = t.TourName;
+            }
+
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 _cachedPois = pois;
@@ -93,11 +105,18 @@ public partial class MainPage : ContentPage
         ToursList.ItemsSource = null;
         FeaturedPoisList.ItemsSource = _cachedPois;
         ToursList.ItemsSource = _cachedTours;
+        LoadingSpinner.IsRunning = _isTranslating;
+        LoadingSpinner.IsVisible = _isTranslating;
     }
 
     private async Task TranslateDataAsync()
     {
         if (_lastTranslatedLang == _currentLanguage) return;
+
+        // 1. BẬT TRẠNG THÁI LOADING VÀ CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC
+        _isTranslating = true;
+        MainThread.BeginInvokeOnMainThread(() => UpdateUI());
+
         string targetLang = _currentLanguage;
 
         try
@@ -105,32 +124,48 @@ public partial class MainPage : ContentPage
             var translator = new TranslationService();
             string shortCode = GetShortLangCode(targetLang);
 
+            var translateTasks = new List<Task>();
+
             foreach (var p in _cachedPois)
             {
-                var dn = await translator.TranslateAsync(p.Name, shortCode);
-                p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
+                translateTasks.Add(Task.Run(async () =>
+                {
+                    var dn = await translator.TranslateAsync(p.Name, shortCode);
+                    p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
 
-                var dc = await translator.TranslateAsync(p.Category, shortCode);
-                p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+                    var dc = await translator.TranslateAsync(p.Category, shortCode);
+                    p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+                }));
             }
 
             foreach (var t in _cachedTours)
             {
-                var dt = await translator.TranslateAsync(t.TourName, shortCode);
-                t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+                translateTasks.Add(Task.Run(async () =>
+                {
+                    var dt = await translator.TranslateAsync(t.TourName, shortCode);
+                    t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+                }));
             }
 
+            await Task.WhenAll(translateTasks);
+
             _lastTranslatedLang = targetLang;
-            MainThread.BeginInvokeOnMainThread(() => UpdateUI());
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Lỗi dịch MainPage: {ex.Message}");
+            // Nếu lỗi mạng, gán lại tên gốc
             foreach (var p in _cachedPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
             foreach (var t in _cachedTours) { t.DisplayName = t.TourName; }
+        }
+        finally
+        {
+            // 2. TẮT TRẠNG THÁI LOADING (DÙ THÀNH CÔNG HAY BỊ LỖI CŨNG PHẢI TẮT)
+            _isTranslating = false;
             MainThread.BeginInvokeOnMainThread(() => UpdateUI());
         }
     }
+
 
     private async Task RunBackgroundSync()
     {
