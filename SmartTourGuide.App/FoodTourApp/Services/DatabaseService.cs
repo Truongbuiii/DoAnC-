@@ -89,6 +89,7 @@ namespace FoodTourApp.Services
                 ActionType = actionType,
                 LanguageUsed = language,
                 DeviceType = DeviceInfo.Platform.ToString(),
+DeviceId = DeviceInfo.Current.Name + "_" + DeviceInfo.Platform.ToString(), // thêm
                 AccessTime = DateTime.Now,
                 IsSynced = 0
             };

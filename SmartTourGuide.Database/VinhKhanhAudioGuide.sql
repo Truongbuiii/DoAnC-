@@ -77,7 +77,8 @@ CREATE TABLE ActivityLogs (
     PoiId INT FOREIGN KEY REFERENCES POIs(PoiId) ON DELETE CASCADE,
     ActionType NVARCHAR(50), 
     LanguageUsed NVARCHAR(10),
-    DeviceType NVARCHAR(50), 
+    DeviceType NVARCHAR(50),
+    DeviceId NVARCHAR(255),     -- ✅ Định danh thiết bị unique
     AccessTime DATETIME DEFAULT GETDATE()
 );
 GO
@@ -154,16 +155,18 @@ INSERT INTO TourDetails (TourId, PoiId, [Order]) VALUES
 (2, 2, 1), (2, 4, 2), (2, 7, 3), (2, 9, 4),
 (3, 1, 1), (3, 5, 2), (3, 6, 3);
 
--- 3.6 Nạp Logs
-INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, AccessTime) VALUES 
-(1, N'Listen', 'VI', 'iPhone 15', GETDATE()), (10, N'Listen', 'EN', 'Android', GETDATE());
+-- 3.6 Nạp Logs mẫu
+INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, DeviceId, AccessTime) VALUES 
+(1, N'Listen', 'VI', 'iPhone 15', 'iPhone15_iOS', GETDATE()),
+(10, N'Listen', 'EN', 'Android', 'SamsungA9_Android', GETDATE());
 GO
+
 ALTER TABLE POIs
 ADD Status NVARCHAR(50) DEFAULT N'Hoạt động' WITH VALUES;
 
 UPDATE POIs 
 SET 
-    TriggerRadius = 30, -- Hoặc số bất kỳ bạn muốn
+    TriggerRadius = 30,
     ImageSource = 'default.jpg',
     DescriptionVi = N'Đang cập nhật nội dung...'
 WHERE TriggerRadius IS NULL 
@@ -171,7 +174,7 @@ WHERE TriggerRadius IS NULL
    OR DescriptionVi IS NULL;
 
 -- ==========================================
--- 4. KIỂM TRA LẠI (10 Audios gốc, 10 POIs)
+-- 4. KIỂM TRA LẠI
 -- ==========================================
 SELECT COUNT(*) AS [So Luong Audio] FROM Audios;
 SELECT COUNT(*) AS [So Luong Quan An] FROM POIs;

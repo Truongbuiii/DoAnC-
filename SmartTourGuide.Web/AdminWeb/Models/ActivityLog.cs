@@ -17,7 +17,8 @@ namespace AdminWeb.Models
 
         public string? ActionType { get; set; } // Ví dụ: 'Listen'
         public string? LanguageUsed { get; set; } // Ví dụ: 'VI', 'EN'
-        public string? DeviceType { get; set; } // Ví dụ: 'iPhone', 'Android'
+        public string? DeviceType { get; set; }
+        public string? DeviceId { get; set; }  // ✅ THÊM DÒNG NÀY
         public DateTime? AccessTime { get; set; }
     }
 }

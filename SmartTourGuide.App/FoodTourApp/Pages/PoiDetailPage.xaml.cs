@@ -217,6 +217,8 @@ public partial class PoiDetailPage : ContentPage
 #endif
 
                 await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
+                var apiSync = new ApiSyncService(_dbService);
+                await apiSync.SyncLogsAsync();
             }
             catch (Exception ex)
             {

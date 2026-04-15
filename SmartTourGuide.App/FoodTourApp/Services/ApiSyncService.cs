@@ -124,6 +124,7 @@ namespace FoodTourApp.Services
                     l.ActionType,
                     l.LanguageUsed,
                     l.DeviceType,
+                    l.DeviceId, 
                     l.AccessTime
                 }).ToList();
 

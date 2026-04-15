@@ -71,7 +71,12 @@ namespace AdminWeb.Controllers
             ViewBag.LangLabels = languageData.Any() ? languageData.Select(x => x.Language).ToArray() : new string[] { "N/A" };
             ViewBag.LangCounts = languageData.Any() ? languageData.Select(x => x.Count).ToArray() : new int[] { 0 };
 
-            ViewBag.TotalVisits = await currentData.CountAsync();
+            // ✅ THÊM: Thiết bị đang active (10 phút gần nhất)
+            ViewBag.ActiveDevices = await currentData
+                .Where(x => x.AccessTime >= DateTime.Now.AddMinutes(-10))
+                .Select(x => x.DeviceType)
+                .Distinct()
+                .CountAsync();
             ViewBag.IsAdmin = isAdmin;
 
             return View();

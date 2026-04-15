@@ -314,7 +314,12 @@ public partial class MapPage : ContentPage
             }
 
             SpeakText(textToSpeak, voiceLang);
-            _ = Task.Run(async () => await _dbService.LogActivityAsync(poi.PoiId, "AutoTrigger", _currentLanguage));
+            _ = Task.Run(async () =>
+            {
+                await _dbService.LogActivityAsync(poi.PoiId, "AutoTrigger", _currentLanguage);
+                var apiSync = new ApiSyncService(_dbService);
+                await apiSync.SyncLogsAsync();
+            });
         }
     }
 
