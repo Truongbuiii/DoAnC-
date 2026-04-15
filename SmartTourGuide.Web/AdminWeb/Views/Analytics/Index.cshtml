@@ -1,17 +1,21 @@
-﻿@{
+@{
     ViewData["Title"] = ViewBag.AnalyticsTitle;
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            @* HIỆN TIÊU ĐỀ ĐỘNG TỪ CONTROLLER *@
             <h2 class="fw-bold text-dark mb-1">@ViewBag.AnalyticsTitle</h2>
             <p class="text-muted small">Dữ liệu thực tế từ lượt truy cập của khách du lịch</p>
         </div>
-        <button class="btn btn-outline-primary rounded-pill px-4" onclick="window.print()">
-            <i class="bi bi-printer me-2"></i> Xuất báo cáo
-        </button>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-success fs-6 px-3 py-2">
+                ● LIVE — cập nhật sau <span id="refresh-countdown">10</span>s
+            </span>
+            <button class="btn btn-outline-primary rounded-pill px-4" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i> Xuất báo cáo
+            </button>
+        </div>
     </div>
 
     <div class="row mb-4">
@@ -21,7 +25,7 @@
                 <div class="small fw-bold text-uppercase opacity-75">Tổng lượt truy cập</div>
                 <div class="h3 fw-bold my-2">@ViewBag.TotalVisits</div>
                 <div class="small opacity-75">
-                    <i class="bi bi-graph-up-arrow"></i> 
+                    <i class="bi bi-graph-up-arrow"></i>
                     @(ViewBag.IsAdmin ? "Toàn phố Vĩnh Khánh" : "Tại quán của bạn")
                 </div>
             </div>
@@ -53,7 +57,6 @@
                 <div class="card-header bg-white border-0 py-3">
                     <h6 class="fw-bold mb-0 text-dark">
                         <i class="bi bi-bar-chart-line me-2 text-primary"></i>
-                        @* TIÊU ĐỀ BIỂU ĐỒ TỰ THAY ĐỔI *@
                         @(ViewBag.IsAdmin ? "Xếp hạng lượt khách giữa các địa điểm" : "Xu hướng lượt khách ghé quán theo thời gian")
                     </h6>
                 </div>
@@ -90,8 +93,7 @@
         const isAdmin = @Json.Serialize(ViewBag.IsAdmin);
 
         new Chart(ctxPoi, {
-            // Nếu là Chủ quán, dùng biểu đồ 'line' cho mượt, Admin dùng 'bar' để so sánh
-            type: isAdmin ? 'bar' : 'line', 
+            type: isAdmin ? 'bar' : 'line',
             data: {
                 labels: @Html.Raw(Json.Serialize(ViewBag.PoiNames)),
                 datasets: [{
@@ -102,7 +104,7 @@
                     borderWidth: 3,
                     borderRadius: 8,
                     fill: true,
-                    tension: 0.4 // Làm mượt đường line cho chủ quán
+                    tension: 0.4
                 }]
             },
             options: {
@@ -137,5 +139,17 @@
                 }
             }
         });
+    </script>
+
+    @* AUTO-REFRESH MỖI 10 GIÂY *@
+    <script>
+        var refreshSeconds = 10;
+        var countdownEl = document.getElementById('refresh-countdown');
+
+        setInterval(function () {
+            refreshSeconds--;
+            if (countdownEl) countdownEl.textContent = refreshSeconds;
+            if (refreshSeconds <= 0) location.reload();
+        }, 1000);
     </script>
 }

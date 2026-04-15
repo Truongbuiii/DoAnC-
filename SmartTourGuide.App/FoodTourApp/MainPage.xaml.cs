@@ -4,6 +4,7 @@ using FoodTourApp.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using Microsoft.Maui.Networking;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace FoodTourApp;
 
@@ -11,7 +12,7 @@ public partial class MainPage : ContentPage
 {
     private readonly DatabaseService _dbService = new DatabaseService();
 
-    private static bool _isInitialLoad = true;
+    private bool _isInitialLoad = true;
     private static string _lastTranslatedLang = "";
     private bool _isDataLoaded = false;
     private List<POI> _cachedPois = new();
@@ -22,6 +23,20 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
+
+        // ✅ Lắng nghe sự kiện đổi ngôn ngữ từ SettingsPage
+        WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _currentLanguage = m.Value;
+                _lastTranslatedLang = "";
+                _isDataLoaded = false;
+                Lang.Load();
+                ApplyLanguage();
+                LoadInitialData();
+            });
+        });
     }
 
     protected override void OnAppearing()
@@ -59,7 +74,6 @@ public partial class MainPage : ContentPage
             var pois = (await _dbService.GetPOIsAsync()).ToList();
             var tours = (await _dbService.GetItinerariesAsync()).ToList();
 
-            // THÊM ĐOẠN NÀY ĐỂ GÁN GIÁ TRỊ MẶC ĐỊNH
             foreach (var p in pois)
             {
                 p.DisplayName = p.Name;
@@ -113,7 +127,6 @@ public partial class MainPage : ContentPage
     {
         if (_lastTranslatedLang == _currentLanguage) return;
 
-        // 1. BẬT TRẠNG THÁI LOADING VÀ CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC
         _isTranslating = true;
         MainThread.BeginInvokeOnMainThread(() => UpdateUI());
 
@@ -154,18 +167,15 @@ public partial class MainPage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Lỗi dịch MainPage: {ex.Message}");
-            // Nếu lỗi mạng, gán lại tên gốc
             foreach (var p in _cachedPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
             foreach (var t in _cachedTours) { t.DisplayName = t.TourName; }
         }
         finally
         {
-            // 2. TẮT TRẠNG THÁI LOADING (DÙ THÀNH CÔNG HAY BỊ LỖI CŨNG PHẢI TẮT)
             _isTranslating = false;
             MainThread.BeginInvokeOnMainThread(() => UpdateUI());
         }
     }
-
 
     private async Task RunBackgroundSync()
     {
@@ -177,6 +187,23 @@ public partial class MainPage : ContentPage
             await apiSync.SyncPoisAsync();
             await apiSync.SyncToursAsync();
             await apiSync.SyncLogsAsync();
+        });
+
+        var pois = (await _dbService.GetPOIsAsync()).ToList();
+        var tours = (await _dbService.GetItinerariesAsync()).ToList();
+
+        foreach (var p in pois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
+        foreach (var t in tours) { t.DisplayName = t.TourName; }
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            _cachedPois = pois;
+            _cachedTours = tours;
+            _isDataLoaded = true;
+            UpdateUI();
+
+            if (!_currentLanguage.StartsWith("vi"))
+                _ = TranslateDataAsync();
         });
     }
 

@@ -37,7 +37,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Chỉ redirect HTTPS khi không dùng ngrok
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles(); // Để hiện CSS, JS, Hình ảnh
 
 app.UseRouting();

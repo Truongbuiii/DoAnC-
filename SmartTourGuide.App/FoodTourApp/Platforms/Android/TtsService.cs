@@ -1,5 +1,6 @@
 ﻿using Android.Speech.Tts;
 using AndroidTts = Android.Speech.Tts.TextToSpeech;
+using System.Diagnostics;
 
 namespace FoodTourApp.Platforms.Android
 {
@@ -8,46 +9,52 @@ namespace FoodTourApp.Platforms.Android
         private AndroidTts? _tts;
         private bool _isInitialized = false;
         private TaskCompletionSource<bool>? _initTcs;
+        
+        // ✅ THÊM: Track ngôn ngữ hiện tại
+        private string _currentLanguageCode = "vi-VN";
 
         public async Task<bool> InitializeAsync()
         {
-            // Thử khởi tạo 3 lần
             for (int i = 0; i < 3; i++)
             {
                 _initTcs = new TaskCompletionSource<bool>();
                 _tts = new AndroidTts(global::Android.App.Application.Context, this);
-
-                // Đợi tối đa 5 giây
                 var timeoutTask = Task.Delay(5000);
                 var completedTask = await Task.WhenAny(_initTcs.Task, timeoutTask);
-
                 if (completedTask == _initTcs.Task && _isInitialized)
-                {
                     return true;
-                }
-
-                // Đợi 1 giây rồi thử lại
                 await Task.Delay(1000);
             }
-
             return false;
         }
 
         public void OnInit(OperationResult status)
         {
             _isInitialized = (status == OperationResult.Success);
-
             if (_isInitialized && _tts != null)
             {
-                _tts.SetLanguage(Java.Util.Locale.Default);
+                // ✅ SỬA: Set tiếng Việt mặc định thay vì Locale.Default
+                var viLocale = new Java.Util.Locale("vi", "VN");
+                var result = _tts.SetLanguage(viLocale);
+                
+                if (result == LanguageAvailableResult.MissingData || 
+                    result == LanguageAvailableResult.NotSupported)
+                {
+                    // Tiếng Việt chưa cài → dùng English làm fallback
+                    Debug.WriteLine("=== TTS: Tiếng Việt chưa cài, fallback English");
+                    _tts.SetLanguage(Java.Util.Locale.Us);
+                }
             }
-
             _initTcs?.TrySetResult(_isInitialized);
         }
 
         public void SetLanguage(string languageCode)
         {
-            if (_tts == null) return;
+            if (_tts == null || !_isInitialized) return;
+            
+            // ✅ THÊM: Không set lại nếu ngôn ngữ không đổi
+            if (_currentLanguageCode == languageCode) return;
+            _currentLanguageCode = languageCode;
 
             var locale = languageCode switch
             {
@@ -59,7 +66,23 @@ namespace FoodTourApp.Platforms.Android
                 _ => Java.Util.Locale.Default
             };
 
-            _tts.SetLanguage(locale);
+            // ✅ SỬA: Kiểm tra kết quả SetLanguage
+            var result = _tts.SetLanguage(locale);
+            
+            if (result == LanguageAvailableResult.MissingData || 
+                result == LanguageAvailableResult.NotSupported)
+            {
+                Debug.WriteLine($"=== TTS: Ngôn ngữ {languageCode} chưa cài trên máy!");
+                
+                // Fallback: nếu không có ngôn ngữ yêu cầu → dùng tiếng Anh
+                // (tốt hơn là đọc tiếng Việt bằng giọng random)
+                _tts.SetLanguage(Java.Util.Locale.Us);
+                _currentLanguageCode = "en-US";
+            }
+            else
+            {
+                Debug.WriteLine($"=== TTS: Đã set ngôn ngữ {languageCode} ✅");
+            }
         }
 
         public void Speak(string text)

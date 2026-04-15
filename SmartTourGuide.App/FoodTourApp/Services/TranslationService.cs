@@ -21,32 +21,20 @@ namespace FoodTourApp.Services
 
             try
             {
-                // KHAI BÁO BIẾN CHO KHỚP VỚI URL
-                string from = "vi"; // Ngôn ngữ nguồn luôn là tiếng Việt
-                string to = targetLang; // Ngôn ngữ đích truyền từ ngoài vào (en, ja, ko...)
-                string myEmail = "buiductruong0001@gmail.com";
-
-                // Sửa URL: Truyền đúng biến from và to vào
-                string url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(text)}&langpair={from}|{to}&de={myEmail}";
-
+                string url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(text)}&langpair=vi|{targetLang}&de=buiductruong0001@gmail.com";
                 var response = await _httpClient.GetStringAsync(url);
-                Debug.WriteLine($"=== API RESPONSE: {response}");
 
-                using (var doc = JsonDocument.Parse(response))
-                {
-                    var root = doc.RootElement;
-                    var responseData = root.GetProperty("responseData");
-                    var translatedText = responseData.GetProperty("translatedText").GetString();
+                using var doc = JsonDocument.Parse(response);
+                var translatedText = doc.RootElement
+                    .GetProperty("responseData")
+                    .GetProperty("translatedText")
+                    .GetString();
 
-                    // Kiểm tra lỗi từ API
-                    if (string.IsNullOrEmpty(translatedText) || translatedText.Contains("MYMEMORY WARNING"))
-                    {
-                        return null;
-                    }
+                if (string.IsNullOrEmpty(translatedText) || translatedText.Contains("MYMEMORY WARNING"))
+                    return null;
 
-                    Debug.WriteLine($"=== TRANSLATED ({targetLang}): {translatedText}");
-                    return translatedText;
-                }
+                Debug.WriteLine($"=== TRANSLATED ({targetLang}): {translatedText}");
+                return translatedText;
             }
             catch (Exception ex)
             {

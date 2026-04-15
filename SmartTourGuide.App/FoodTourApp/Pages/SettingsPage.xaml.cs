@@ -50,7 +50,7 @@ public partial class SettingsPage : ContentPage
         CooldownLabel.Text = $"{(int)CooldownSlider.Value}";
     }
 
-    private void OnLanguageChanged(object sender, EventArgs e)
+    private  void OnLanguageChanged(object sender, EventArgs e)
     {
         if (LangPicker.SelectedIndex < 0) return;
         var code = _languageCodes[LangPicker.SelectedIndex];
@@ -58,12 +58,12 @@ public partial class SettingsPage : ContentPage
         Lang.Set(code);
         ApplyLanguage();
 
-        // 1. Cập nhật tab titles ngay lập tức
         if (Shell.Current is AppShell appShell)
             appShell.ApplyLanguage();
 
-        // 2. BẮN TÍN HIỆU ĐỔI NGÔN NGỮ TOÀN APP
         WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(code));
+
+       
     }
 
     private void OnAutoNarrateToggled(object sender, ToggledEventArgs e)

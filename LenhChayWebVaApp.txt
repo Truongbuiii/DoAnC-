@@ -1,4 +1,13 @@
-- Chạy web
-dotnet run --urls "http://0.0.0.0:5110"
-- Chạy ngrok
-ngrok http 5110
+Lệnh tạo apk
+dotnet publish -f net10.0-android -c Release -p:AndroidPackageFormat=apk -p:AndroidKeyStore=false
+
+□ 1. Chạy Terminal 1 (web) → đợi thấy "Now listening on: http://0.0.0.0:5195"
+dotnet run --urls "http://0.0.0.0:5195"
+
+□ 2. Chạy Terminal 2 (ngrok) → đợi thấy "Forwarding: https://tandra-acetylenic-aurelio.ngrok-free.dev → http://localhost:5195"
+ngrok http --domain=tandra-acetylenic-aurelio.ngrok-free.dev 5195
+
+□ 3. Mở browser → vào trang Analytics → thấy badge ● LIVE
+
+
+□ 4. Mở app trên các điện thoại → data tự về sau 3-5 giây
