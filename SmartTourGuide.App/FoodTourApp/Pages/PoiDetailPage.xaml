@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              x:Class="FoodTourApp.Pages.PoiDetailPage"
              Title="" 
              Shell.NavBarIsVisible="True" 
@@ -52,6 +53,7 @@
                 </VerticalStackLayout>
             </AbsoluteLayout>
 
+            <!-- Mô tả -->
             <Border Margin="16,-20,16,0" Padding="20"
                     BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0">
                 <Border.Shadow>
@@ -75,8 +77,9 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Các nút chức năng -->
             <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*"
-                  RowSpacing="8" ColumnSpacing="8" Margin="16,12,16,16">
+                  RowSpacing="8" ColumnSpacing="8" Margin="16,12,16,8">
 
                 <Button Grid.Row="0" Grid.Column="0"
                         x:Name="BtnFavorite"
@@ -106,6 +109,34 @@
                         CornerRadius="12" HeightRequest="46"
                         FontAttributes="Bold" FontSize="13"/>
             </Grid>
+
+            <!-- ✅ QR Code section -->
+            <Border Margin="16,4,16,16" Padding="20"
+                    BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,5" Radius="15" Opacity="0.1"/>
+                </Border.Shadow>
+
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label Text="📷 Mã QR địa điểm" 
+                           FontSize="15" FontAttributes="Bold" 
+                           TextColor="#111827"
+                           HorizontalOptions="Center"/>
+                    <BoxView HeightRequest="3" WidthRequest="40" 
+                             Color="#F97316" HorizontalOptions="Center" CornerRadius="2"/>
+                    <Label Text="Cho khách quét để xem thông tin quán" 
+                           FontSize="12" TextColor="#6B7280"
+                           HorizontalOptions="Center"/>
+
+                    <zxing:BarcodeGeneratorView
+                        x:Name="QrCodeView"
+                        Format="QrCode"
+                        HeightRequest="180"
+                        WidthRequest="180"
+                        HorizontalOptions="Center"
+                        Margin="0,8,0,0"/>
+                </VerticalStackLayout>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>

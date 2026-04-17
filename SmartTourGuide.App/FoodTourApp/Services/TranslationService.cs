@@ -33,6 +33,14 @@ namespace FoodTourApp.Services
                 if (string.IsNullOrEmpty(translatedText) || translatedText.Contains("MYMEMORY WARNING"))
                     return null;
 
+                // ✅ THÊM: Strip HTML tags và decode HTML entities
+                translatedText = System.Text.RegularExpressions.Regex.Replace(translatedText, "<.*?>", "");
+                translatedText = System.Net.WebUtility.HtmlDecode(translatedText).Trim();
+
+                // ✅ THÊM: Nếu kết quả sau khi strip giống text gốc → trả về null để dùng text gốc
+                if (string.IsNullOrWhiteSpace(translatedText))
+                    return null;
+
                 Debug.WriteLine($"=== TRANSLATED ({targetLang}): {translatedText}");
                 return translatedText;
             }

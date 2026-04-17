@@ -92,8 +92,12 @@ public partial class QRPage : ContentPage
                 if (poiId > 0)
                 {
                     var lang = Preferences.Get("AppLanguage", "vi-VN");
-                    _ = Task.Run(() => _dbService.LogActivityAsync(poiId, "ScanQR", lang));
-
+                    _ = Task.Run(async () =>
+                    {
+                        await _dbService.LogActivityAsync(poiId, "ScanQR", lang);
+                        var apiSync = new ApiSyncService(_dbService);
+                        await apiSync.SyncLogsAsync();
+                    });
                     var poi = await _dbService.GetPOIByIdAsync(poiId);
                     if (poi != null)
                     {

@@ -6,6 +6,7 @@ namespace FoodTourApp
     {
         private readonly ApiSyncService _syncService;
         private readonly DatabaseService _dbService;
+        private System.Threading.Timer? _syncTimer;
 
         public App(ApiSyncService syncService, DatabaseService dbService)
         {
@@ -18,6 +19,18 @@ namespace FoodTourApp
 
             // Sync ngầm khi mở app
             Task.Run(async () => await StartInitialSync());
+
+            _syncTimer = new System.Threading.Timer(async _ =>
+            {
+                try
+                {
+                    await _syncService.SyncPoisAsync();
+                    await _syncService.SyncToursAsync();
+                    await _syncService.SyncLogsAsync();
+                    System.Diagnostics.Debug.WriteLine("=== AUTO SYNC OK ===");
+                }
+                catch { }
+            }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

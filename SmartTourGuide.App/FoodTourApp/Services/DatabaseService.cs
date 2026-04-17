@@ -54,18 +54,31 @@ namespace FoodTourApp.Services
         public async Task SavePOIsFromServerAsync(List<POI> pois)
         {
             await Init();
-            foreach (var serverPoi in pois)
+            var serverIds = pois.Select(p => p.PoiId).ToHashSet();
+            var localPois = await _database!.Table<POI>().ToListAsync();
+            foreach (var local in localPois)
             {
-                await _database!.InsertOrReplaceAsync(serverPoi);
+                if (!serverIds.Contains(local.PoiId))
+                    await _database.DeleteAsync(local);
             }
-            Debug.WriteLine($"=== ĐÃ ĐỒNG BỘ {pois?.Count ?? 0} QUÁN TỪ WEB ADMIN ===");
+            foreach (var poi in pois)
+                await _database!.InsertOrReplaceAsync(poi);
+            Debug.WriteLine($"=== SYNC OK: {pois.Count} POIs");
         }
 
         public async Task SaveToursFromServerAsync(List<Itinerary> tours)
         {
             await Init();
+            var serverIds = tours.Select(t => t.TourId).ToHashSet();
+            var localTours = await _database!.Table<Itinerary>().ToListAsync();
+            foreach (var local in localTours)
+            {
+                if (!serverIds.Contains(local.TourId))
+                    await _database.DeleteAsync(local);
+            }
             foreach (var tour in tours)
                 await _database!.InsertOrReplaceAsync(tour);
+            Debug.WriteLine($"=== SYNC TOURS OK: {tours.Count}");
         }
 
         public async Task SaveAudiosFromServerAsync(List<FoodTourApp.Models.Audio> audios)

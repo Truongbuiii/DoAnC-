@@ -369,12 +369,38 @@
                             onclick="confirmDelete('@poi.PoiId', '@poi.Name')" title="Xóa">
                         <i class="bi bi-trash-fill"></i>
                     </button>
+                    <button type="button" class="action-btn shadow-sm text-success" 
+                            onclick="showQR('@poi.PoiId', '@poi.Name')" title="Xem QR">
+                        <i class="bi bi-qr-code"></i>
+                    </button>
                 </div>
             </td>
         </tr>
     }
 </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="qrModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="qrModalTitle">Mã QR địa điểm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p class="text-muted small mb-3">Khách quét mã này bằng app để xem thông tin quán</p>
+                    <div id="qrcode" class="d-flex justify-content-center mb-3"></div>
+                    <p class="text-muted small" id="qrPoiId"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0 justify-content-center">
+                    <button class="btn btn-success rounded-pill px-4" onclick="downloadQR()">
+                        <i class="bi bi-download me-2"></i>Tải QR về
+                    </button>
+                    <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
@@ -397,6 +423,7 @@
     }
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // 1. Popup thông báo (Dùng SweetAlert2 cho mượt)
@@ -450,6 +477,33 @@
                 window.location.href = '@Url.Action("ChangeStatus", "POI")' + '?id=' + id + '&status=Ngưng hoạt động';
             }
         })
+    }
+
+    var currentPoiId = '';
+
+    function showQR(poiId, poiName) {
+        currentPoiId = poiId;
+        document.getElementById('qrModalTitle').textContent = '📷 QR - ' + poiName;
+        document.getElementById('qrPoiId').textContent = 'Mã POI: ' + poiId;
+        document.getElementById('qrcode').innerHTML = '';
+        new QRCode(document.getElementById('qrcode'), {
+            text: poiId.toString(),
+            width: 200,
+            height: 200,
+            colorDark: '#1F2937',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        new bootstrap.Modal(document.getElementById('qrModal')).show();
+    }
+
+    function downloadQR() {
+        var canvas = document.querySelector('#qrcode canvas');
+        if (!canvas) return;
+        var link = document.createElement('a');
+        link.download = 'QR_POI_' + currentPoiId + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
     }
     </script>
 }

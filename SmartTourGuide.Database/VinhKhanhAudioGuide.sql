@@ -129,19 +129,49 @@ INSERT INTO MenuItems(PoiId, DishName, Price, ImageSource, IsRecommended) VALUES
 -- 3.4 Nạp Audios
 CREATE TABLE #TempAudio (AName NVARCHAR(200), ADesc NVARCHAR(200), AScript NVARCHAR(MAX), APath NVARCHAR(MAX), SearchName NVARCHAR(100));
 INSERT INTO #TempAudio VALUES
-(N'Chào mừng', N'Kịch bản tiếng Việt', N'Chào mừng bạn đã đến với khu phố ẩm thực nhộn nhịp nhất Sài Gòn. Hãy đi dọc theo con phố để khám phá nhé!', NULL, N'%Cổng chào%'),
-(N'Lẩu dê', N'Kịch bản tiếng Việt', N'Đừng bỏ qua món lẩu dê trứ danh tại Dê Chung. Nước dùng được hầm kỹ với thảo mộc, cực kỳ bổ dưỡng.', NULL, N'%Dê Chung%'),
-(N'Hải sản', N'Kịch bản tiếng Việt', N'Ốc Vũ 37 là điểm đến tuyệt vời cho các món ốc xào me, xào tỏi. Nhất định phải thử ốc len xào dừa nhé.', NULL, N'%Ốc Vũ%'),
-(N'Bún cá', N'Kịch bản tiếng Việt', N'Hương vị miền Tây thu nhỏ tại Bún cá Dì Tư. Tô bún nóng hổi, cá lóc ngọt thịt sẽ làm ấm bụng bạn.', NULL, N'%Dì Tư%'),
-(N'Ốc Thảo 123', N'Kịch bản tiếng Việt', N'Một trong những quán ốc đông đúc nhất khu vực. Hải sản tươi sống, chế biến nhanh và cực kỳ đậm đà.', NULL, N'%Ốc Thảo 123%'),
-(N'Sushi KO', N'Kịch bản tiếng Việt', N'Trải nghiệm ẩm thực Nhật Bản ngay giữa lòng phố ốc. Sushi và sashimi ở đây luôn tươi ngon mỗi ngày.', NULL, N'%Sushi KO%'),
-(N'Chilli', N'Kịch bản tiếng Việt', N'Hương vị lẩu nướng cay nồng đúng điệu. Thích hợp cho những buổi tiệc nướng cùng gia đình và bạn bè.', NULL, N'%Chilli%'),
-(N'Ốc Đào 2', N'Kịch bản tiếng Việt', N'Chi nhánh của thương hiệu Ốc Đào nổi tiếng. Hãy thử ngay càng ghẹ rang muối và ốc hương xào bơ.', NULL, N'%Ốc Đào%'),
-(N'Ốc Thảo 383', N'Kịch bản tiếng Việt', N'Không gian rộng rãi, thoáng mát. Thực đơn đa dạng với các món ốc và hải sản theo mùa.', NULL, N'%Ốc Thảo 383%'),
-(N'Ốc Oanh', N'Kịch bản tiếng Việt', N'Quán ốc được cẩm nang Michelin giới thiệu. Nổi bật với các loại ốc "khổng lồ" và nước sốt bí truyền.', NULL, N'%Ốc Oanh%');
+(N'Chào mừng', N'Kịch bản tiếng Việt', 
+ N'Chào mừng bạn đến với phố ẩm thực Vĩnh Khánh, thiên đường ăn uống về đêm sầm uất nhất Quận 4. Đây là điểm bắt đầu cho hành trình khám phá vị giác của bạn.', 
+ NULL, N'%Cổng chào%'),
+
+(N'Lẩu dê', N'Kịch bản tiếng Việt', 
+ N'Dê Chung tại số 3 Vĩnh Khánh nổi tiếng với món lẩu dê thơm ngon đặc trưng, nước dùng đậm đà nấu cùng thảo mộc thanh mát.', 
+ NULL, N'%Dê Chung%'),
+
+(N'Hải sản', N'Kịch bản tiếng Việt', 
+ N'Ốc Vũ là quán ốc chuẩn local của Quận 4 với phong cách chế biến dân dã nhưng đậm đà. Món ăn làm nên thương hiệu của quán là ốc len xào dừa.', 
+ NULL, N'%Ốc Vũ%'),
+
+(N'Bún cá', N'Kịch bản tiếng Việt', 
+ N'Bún cá Dì Tư mang trọn hương vị miền Tây sông nước lên phố thị. Miếng cá lóc đồng chắc thịt, nước lèo vàng ươm màu nghệ.', 
+ NULL, N'%Dì Tư%'),
+
+(N'Ốc Thảo 123', N'Kịch bản tiếng Việt', 
+ N'Ốc Thảo 123 là thiên đường hải sản sầm uất bậc nhất con phố. Với thực đơn đa dạng hàng trăm món ốc và hải sản tươi sống.', 
+ NULL, N'%Ốc Thảo 123%'),
+
+(N'Sushi KO', N'Kịch bản tiếng Việt', 
+ N'Sushi KO mang đến làn gió mới cho phố Vĩnh Khánh với các món Nhật Bản sáng tạo. Với tiêu chí chất lượng Nhật - giá bình dân.', 
+ NULL, N'%Sushi KO%'),
+
+(N'Chilli', N'Kịch bản tiếng Việt', 
+ N'Chilli phục vụ thực đơn lẩu và nướng tự chọn phong phú với giá cả phải chăng. Đặc trưng của quán là các loại nước sốt ướp thịt đậm đà.', 
+ NULL, N'%Chilli%'),
+
+(N'Ốc Đào 2', N'Kịch bản tiếng Việt', 
+ N'Ốc Đào 2 là thương hiệu hải sản lừng lẫy Sài Gòn nay đã có mặt tại Vĩnh Khánh. Quán đặc biệt hút khách nhờ công thức sốt trứng muối.', 
+ NULL, N'%Ốc Đào%'),
+
+(N'Ốc Thảo 383', N'Kịch bản tiếng Việt', 
+ N'Ốc Thảo 383 sở hữu không gian vô cùng rộng rãi và thoáng đãng, cực kỳ phù hợp cho các buổi tiệc đoàn đông người.', 
+ NULL, N'%Ốc Thảo 383%'),
+
+(N'Ốc Oanh', N'Kịch bản tiếng Việt', 
+ N'Ốc Oanh là niềm tự hào của phố ẩm thực khi được Michelin Bib Gourmand 2024 vinh danh. Những con ốc kích cỡ khủng, nước sốt đậm đà.', 
+ NULL, N'%Ốc Oanh%');
 
 INSERT INTO Audios (AudioName, [Description], Script, AudioFilePath, PoiId)
-SELECT T.AName, T.ADesc, T.AScript, T.APath, P.PoiId FROM #TempAudio T JOIN POIs P ON P.Name LIKE T.SearchName;
+SELECT T.AName, T.ADesc, T.AScript, T.APath, P.PoiId 
+FROM #TempAudio T JOIN POIs P ON P.Name LIKE T.SearchName;
 DROP TABLE #TempAudio;
 
 -- 3.5 Nạp Tours & TourDetails

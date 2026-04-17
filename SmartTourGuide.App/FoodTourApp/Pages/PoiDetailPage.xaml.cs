@@ -46,6 +46,7 @@ public partial class PoiDetailPage : ContentPage
         Lang.Load();
 
         await RefreshAndTranslateDataAsync();
+        QrCodeView.Value = _poi.PoiId.ToString();
 
 #if ANDROID
         if (_androidTts == null)
