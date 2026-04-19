@@ -63,10 +63,16 @@ namespace AdminWeb.Controllers
             // 2. THỐNG KÊ NGÔN NGỮ (BẢN TỐI ƯU CHỐNG LỖI DB TRỐNG)
             var currentData = isAdmin ? query : query.Where(l => l.Poi.OwnerUsername == currentUserName);
 
-            var languageData = await currentData
+            var rawLanguageData = await currentData
                 .GroupBy(l => l.LanguageUsed)
                 .Select(g => new { Language = g.Key ?? "Unknown", Count = g.Count() })
                 .ToListAsync();
+
+            var languageData = rawLanguageData
+                .GroupBy(x => NormalizeLanguage(x.Language))
+                .Select(g => new { Language = g.Key, Count = g.Sum(x => x.Count) })
+                .OrderByDescending(x => x.Count)
+                .ToList();
 
             ViewBag.LangLabels = languageData.Any() ? languageData.Select(x => x.Language).ToArray() : new string[] { "N/A" };
             ViewBag.LangCounts = languageData.Any() ? languageData.Select(x => x.Count).ToArray() : new int[] { 0 };
@@ -80,6 +86,20 @@ namespace AdminWeb.Controllers
             ViewBag.IsAdmin = isAdmin;
 
             return View();
+        }
+
+        private static string NormalizeLanguage(string lang)
+        {
+            if (string.IsNullOrEmpty(lang)) return "Unknown";
+            return lang.ToUpper() switch
+            {
+                "EN" or "EN-US" => "English",
+                "VI" or "VI-VN" => "Tiếng Việt",
+                "ZH" or "ZH-CN" => "中文",
+                "KO" or "KO-KR" => "한국어",
+                "JA" or "JA-JP" => "日本語",
+                _ => lang
+            };
         }
     }
 }

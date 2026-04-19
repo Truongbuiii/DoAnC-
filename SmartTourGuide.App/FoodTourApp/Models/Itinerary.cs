@@ -33,6 +33,9 @@ namespace FoodTourApp.Models
         }
 
         [Ignore]
+        public string? DisplayTotalTime { get; set; }
+
+        [Ignore]
         public List<int> PoiIds
         {
             get

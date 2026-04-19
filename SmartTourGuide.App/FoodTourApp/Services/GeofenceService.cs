@@ -14,6 +14,7 @@ namespace FoodTourApp.Services
         public int DefaultRadius { get; set; } = 0;
 
         private readonly Dictionary<int, DateTime> _enterTimes = new();
+        private int _roundRobinIndex = 0;
 
         /// <summary>
         /// TỐI ƯU HÓA: Chạy ngầm (Task.Run) để không làm giật giao diện
@@ -28,6 +29,7 @@ namespace FoodTourApp.Services
 
                 POI? nearestPoi = null;
                 double nearestDistance = double.MaxValue;
+                var poisInRange = new List<(POI poi, double distance)>();
 
                 foreach (var poi in cachedPois)
                 {
@@ -52,6 +54,7 @@ namespace FoodTourApp.Services
                     double radius = DefaultRadius > 0 ? DefaultRadius : poi.TriggerRadius;
                     if (distMeters <= radius)
                     {
+                        poisInRange.Add((poi, distMeters));
                         if (distMeters < nearestDistance)
                         {
                             nearestDistance = distMeters;
@@ -60,33 +63,37 @@ namespace FoodTourApp.Services
                     }
                     else
                     {
-                        // Ra khỏi vùng -> xóa thời gian vào
                         _enterTimes.Remove(poi.PoiId);
                     }
                 }
 
+var poisInRangeSorted = poisInRange
+    .OrderBy(x => x.distance)
+    .ThenBy(x => x.poi.PoiId)
+    .Select(x => x.poi)
+    .ToList();
                 result.NearestPoi = nearestPoi;
                 result.DistanceMeters = nearestDistance;
 
-                if (nearestPoi != null)
+                if (poisInRangeSorted.Count > 0)
                 {
-                    // Logic Debounce
-                    if (!_enterTimes.ContainsKey(nearestPoi.PoiId))
-                    {
-                        _enterTimes[nearestPoi.PoiId] = DateTime.Now;
-                    }
+                    // Lấy POI theo vòng tròn
+                    var poiToNarrate = poisInRangeSorted[_roundRobinIndex % poisInRangeSorted.Count];
 
-                    var timeInZone = (DateTime.Now - _enterTimes[nearestPoi.PoiId]).TotalSeconds;
+                    if (!_enterTimes.ContainsKey(poiToNarrate.PoiId))
+                        _enterTimes[poiToNarrate.PoiId] = DateTime.Now;
 
-                    if (timeInZone >= DebounceSeconds)
+                    var timeInZone = (DateTime.Now - _enterTimes[poiToNarrate.PoiId]).TotalSeconds;
+
+                    result.NearestPoi = poisInRangeSorted[0]; // Hiện card POI gần nhất
+                    result.DistanceMeters = nearestDistance;
+
+                    if (timeInZone >= DebounceSeconds && CanTriggerPoi(poiToNarrate.PoiId))
                     {
-                        // Logic Cooldown
-                        if (CanTriggerPoi(nearestPoi.PoiId))
-                        {
-                            result.ShouldNarrate = true;
-                            result.PoiToNarrate = nearestPoi;
-                            MarkAsPlayed(nearestPoi.PoiId);
-                        }
+                        result.ShouldNarrate = true;
+                        result.PoiToNarrate = poiToNarrate;
+                        MarkAsPlayed(poiToNarrate.PoiId);
+                        _roundRobinIndex++;
                     }
                 }
 

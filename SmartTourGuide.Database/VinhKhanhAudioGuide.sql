@@ -187,8 +187,8 @@ INSERT INTO TourDetails (TourId, PoiId, [Order]) VALUES
 
 -- 3.6 Nạp Logs mẫu
 INSERT INTO ActivityLogs (PoiId, ActionType, LanguageUsed, DeviceType, DeviceId, AccessTime) VALUES 
-(1, N'Listen', 'VI', 'iPhone 15', 'iPhone15_iOS', GETDATE()),
-(10, N'Listen', 'EN', 'Android', 'SamsungA9_Android', GETDATE());
+(1, N'Listen', 'vi-VN', 'iPhone 15', 'iPhone15_iOS', GETDATE()),
+(10, N'Listen', 'en-US', 'Android', 'SamsungA9_Android', GETDATE());
 GO
 
 ALTER TABLE POIs

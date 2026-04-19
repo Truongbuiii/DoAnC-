@@ -82,6 +82,7 @@ public partial class MainPage : ContentPage
             foreach (var t in tours)
             {
                 t.DisplayName = t.TourName;
+                t.DisplayTotalTime = t.TotalTime;
             }
 
             MainThread.BeginInvokeOnMainThread(() =>
@@ -157,6 +158,8 @@ public partial class MainPage : ContentPage
                 {
                     var dt = await translator.TranslateAsync(t.TourName, shortCode);
                     t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+                    var dtt = await translator.TranslateAsync(t.TotalTime, shortCode);
+                    t.DisplayTotalTime = !string.IsNullOrEmpty(dtt) ? dtt : t.TotalTime;
                 }));
             }
 

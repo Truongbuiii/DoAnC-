@@ -46,7 +46,7 @@ public partial class MapPage : ContentPage
         _narrationService = new NarrationService();
 
         _geofenceService.CooldownMinutes = 1;
-        _geofenceService.DebounceSeconds = 1;
+        _geofenceService.DebounceSeconds = 3;
 
         _narrationStartedHandler = (s, e) =>
         {
@@ -299,6 +299,7 @@ public partial class MapPage : ContentPage
         if (result.ShouldNarrate && result.PoiToNarrate != null)
         {
             var poi = result.PoiToNarrate;
+    _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
             string textToSpeak = poi.DescriptionVi;
             string voiceLang = "vi-VN";
 
@@ -576,41 +577,44 @@ public partial class MapPage : ContentPage
         StopTrackingLocation();
     }
 
-    private void PlayPoiNarration(POI poi)
+  private void PlayPoiNarration(POI poi)
+{
+    Task.Run(async () =>
     {
-        Task.Run(async () =>
+        try
         {
-            try
+            // ✅ THÊM: Lấy ngôn ngữ mới nhất
+            var currentLang = Preferences.Get("AppLanguage", "vi-VN");
+            
+            string textToProcess = poi.DescriptionVi;
+            string voiceLang = "vi-VN";
+
+            if (string.IsNullOrEmpty(textToProcess)) return;
+
+            if (!IsVietnamese(currentLang)) // ✅ Đổi _currentLanguage → currentLang
             {
-                string textToProcess = poi.DescriptionVi;
-                string voiceLang = "vi-VN"; // Mặc định giọng Việt
-
-                if (string.IsNullOrEmpty(textToProcess)) return;
-
-                if (!IsVietnamese(_currentLanguage))
+                var translator = new TranslationService();
+                var translated = await translator.TranslateAsync(textToProcess, GetShortLangCode(currentLang)); // ✅
+                if (!string.IsNullOrEmpty(translated))
                 {
-                    var translator = new TranslationService();
-                    var translated = await translator.TranslateAsync(textToProcess, GetShortLangCode(_currentLanguage));
-                    if (!string.IsNullOrEmpty(translated))
-                    {
-                        textToProcess = translated;
-                        voiceLang = _currentLanguage; // Đổi giọng ngoại ngữ
-                    }
+                    textToProcess = translated;
+                    voiceLang = currentLang; // ✅
                 }
+            }
 
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    StatusLabel.Text = $"📍 {poi.DistanceDisplay}";
-                    CurrentPoiName.Text = string.IsNullOrEmpty(poi.DisplayName) ? poi.Name : poi.DisplayName;
-                    SpeakText(textToProcess, voiceLang);
-                });
-            }
-            catch (Exception ex)
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                System.Diagnostics.Debug.WriteLine($"=== LỖI THUYẾT MINH: {ex.Message}");
-            }
-        });
-    }
+                StatusLabel.Text = $"📍 {poi.DistanceDisplay}";
+                CurrentPoiName.Text = string.IsNullOrEmpty(poi.DisplayName) ? poi.Name : poi.DisplayName;
+                SpeakText(textToProcess, voiceLang);
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== LỖI THUYẾT MINH: {ex.Message}");
+        }
+    });
+}
 
     private async void OnMapWebViewNavigating(object? sender, WebNavigatingEventArgs e)
     {

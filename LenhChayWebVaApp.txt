@@ -6,7 +6,6 @@ dotnet run --urls "http://0.0.0.0:5195"
 
 □ 2. Chạy Terminal 2 (ngrok) → đợi thấy "Forwarding: https://tandra-acetylenic-aurelio.ngrok-free.dev → http://localhost:5195"
 ngrok http --domain=tandra-acetylenic-aurelio.ngrok-free.dev 5195
-
 □ 3. Mở browser → vào trang Analytics → thấy badge ● LIVE
 
 

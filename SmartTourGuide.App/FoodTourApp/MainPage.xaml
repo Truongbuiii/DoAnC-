@@ -80,7 +80,7 @@
                                                    FontSize="15" FontAttributes="Bold"/>
                                             <Border BackgroundColor="#F97316"
                                                     StrokeShape="RoundRectangle 6" Padding="6,2">
-                                                <Label Text="{Binding Duration}" TextColor="White" FontSize="10"/>
+                                                <Label Text="{Binding DisplayTotalTime}" TextColor="White" FontSize="10"/>
                                             </Border>
                                         </VerticalStackLayout>
                                     </Grid>
