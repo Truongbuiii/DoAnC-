@@ -24,7 +24,6 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
-        // ✅ Lắng nghe sự kiện đổi ngôn ngữ từ SettingsPage
         WeakReferenceMessenger.Default.Register<LanguageChangedMessage>(this, (r, m) =>
         {
             MainThread.BeginInvokeOnMainThread(() =>
@@ -45,7 +44,6 @@ public partial class MainPage : ContentPage
 
         var newLang = Preferences.Get("AppLanguage", "vi-VN");
 
-        // Nếu đổi ngôn ngữ → reset cache để dịch lại
         if (newLang != _currentLanguage)
         {
             _currentLanguage = newLang;
@@ -89,6 +87,7 @@ public partial class MainPage : ContentPage
             {
                 _cachedPois = pois;
                 _cachedTours = tours;
+                _lastTranslatedLang = "";
                 UpdateUI();
                 if (!_currentLanguage.StartsWith("vi"))
                     _ = TranslateDataAsync();
@@ -138,17 +137,24 @@ public partial class MainPage : ContentPage
             var translator = new TranslationService();
             string shortCode = GetShortLangCode(targetLang);
 
+            // ✅ Giới hạn 3 request đồng thời tránh rate limit
+            var semaphore = new SemaphoreSlim(3);
             var translateTasks = new List<Task>();
 
             foreach (var p in _cachedPois)
             {
                 translateTasks.Add(Task.Run(async () =>
                 {
-                    var dn = await translator.TranslateAsync(p.Name, shortCode);
-                    p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        var dn = await translator.TranslateAsync(p.Name, shortCode);
+                        p.DisplayName = !string.IsNullOrEmpty(dn) ? dn : p.Name;
 
-                    var dc = await translator.TranslateAsync(p.Category, shortCode);
-                    p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+                        var dc = await translator.TranslateAsync(p.Category, shortCode);
+                        p.DisplayCategory = !string.IsNullOrEmpty(dc) ? dc : p.Category;
+                    }
+                    finally { semaphore.Release(); }
                 }));
             }
 
@@ -156,22 +162,27 @@ public partial class MainPage : ContentPage
             {
                 translateTasks.Add(Task.Run(async () =>
                 {
-                    var dt = await translator.TranslateAsync(t.TourName, shortCode);
-                    t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
-                    var dtt = await translator.TranslateAsync(t.TotalTime, shortCode);
-                    t.DisplayTotalTime = !string.IsNullOrEmpty(dtt) ? dtt : t.TotalTime;
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        var dt = await translator.TranslateAsync(t.TourName, shortCode);
+                        t.DisplayName = !string.IsNullOrEmpty(dt) ? dt : t.TourName;
+
+                        var dtt = await translator.TranslateAsync(t.TotalTime, shortCode);
+                        t.DisplayTotalTime = !string.IsNullOrEmpty(dtt) ? dtt : t.TotalTime;
+                    }
+                    finally { semaphore.Release(); }
                 }));
             }
 
             await Task.WhenAll(translateTasks);
-
             _lastTranslatedLang = targetLang;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Lỗi dịch MainPage: {ex.Message}");
             foreach (var p in _cachedPois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
-            foreach (var t in _cachedTours) { t.DisplayName = t.TourName; }
+            foreach (var t in _cachedTours) { t.DisplayName = t.TourName; t.DisplayTotalTime = t.TotalTime; }
         }
         finally
         {
@@ -196,13 +207,14 @@ public partial class MainPage : ContentPage
         var tours = (await _dbService.GetItinerariesAsync()).ToList();
 
         foreach (var p in pois) { p.DisplayName = p.Name; p.DisplayCategory = p.Category; }
-        foreach (var t in tours) { t.DisplayName = t.TourName; }
+        foreach (var t in tours) { t.DisplayName = t.TourName; t.DisplayTotalTime = t.TotalTime; }
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
             _cachedPois = pois;
             _cachedTours = tours;
             _isDataLoaded = true;
+            _lastTranslatedLang = ""; // ✅ Reset để buộc dịch lại sau sync
             UpdateUI();
 
             if (!_currentLanguage.StartsWith("vi"))

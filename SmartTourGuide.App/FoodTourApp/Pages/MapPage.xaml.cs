@@ -374,8 +374,6 @@ public partial class MapPage : ContentPage
                     var current = pois.FirstOrDefault(x => x.PoiId == _currentDisplayedPoi.PoiId);
                     if (current != null) UpdatePoiCardDisplay(current);
                 }
-                if (_hasUserLocation)
-                    UpdateInterface(_lastUserLat, _lastUserLon, _currentDisplayedPoi);
             });
         }
         catch { }
@@ -396,9 +394,7 @@ public partial class MapPage : ContentPage
 
     private void UpdateInterface(double lat, double lon, POI? poi = null)
     {
-        // CHỐT CHẶN 1: Nếu WebView chưa được khởi tạo thì thoát ngay để không bị trắng màn
         if (MapWebView == null) return;
-
         MapLoading.IsVisible = false;
 
         if (poi != null)
@@ -408,14 +404,23 @@ public partial class MapPage : ContentPage
             CurrentPoiName.Text = !string.IsNullOrWhiteSpace(poi.DisplayName) ? poi.DisplayName : poi.Name;
             CategoryLabel.Text = poi.Category.ToUpper();
             PoiImage.Source = poi.FullImageUrl;
+            BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId) ? Lang.Get("map_favorited") : Lang.Get("map_favorite");
+            StatusLabel.Text = $"📍 {poi.DistanceDisplay}";
 
-            // CHỐT CHẶN 2: Chỉ cập nhật Source nếu thực sự cần thiết để tránh chớp màn hình
-            var newHtml = GenerateMapHtml(poi.Latitude, poi.Longitude, _allPoisFromDb, poi.PoiId);
-            if (MapWebView.Source is not HtmlWebViewSource oldSource || oldSource.Html != newHtml)
+            // Chỉ pan bản đồ, không reload HTML để tránh lag marker
+            string latStr = poi.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string lonStr = poi.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+            if (MapWebView.Source == null)
             {
-                MapWebView.Source = new HtmlWebViewSource { Html = newHtml };
+                MapWebView.Source = new HtmlWebViewSource { Html = GenerateMapHtml(lat, lon, _allPoisFromDb, poi.PoiId) };
             }
-                
+            else
+            {
+                MapWebView.Eval($"map.setView([{latStr}, {lonStr}], 17);");
+                MapWebView.Eval($"if(typeof marker_{poi.PoiId} !== 'undefined') marker_{poi.PoiId}.openPopup();");
+            }
+
             if (_hasUserLocation)
                 _ = DrawBlueDotAfterLoad(_lastUserLat, _lastUserLon);
         }

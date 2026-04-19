@@ -96,13 +96,30 @@ namespace FoodTourApp.Services
         public async Task LogActivityAsync(int poiId, string actionType, string language)
         {
             await Init();
+
+            // Chống spam: Không ghi nếu đã có log cùng POI + ActionType trong 1 phút
+            if (actionType == "AutoTrigger")
+            {
+                var recentLog = await _database!.Table<ActivityLog>()
+                    .Where(l => l.PoiId == poiId 
+                        && l.ActionType == "AutoTrigger"
+                        && l.AccessTime >= DateTime.Now.AddMinutes(-1))
+                    .FirstOrDefaultAsync();
+
+                if (recentLog != null)
+                {
+                    Debug.WriteLine($"=== SPAM BLOCKED: POI {poiId} already logged within 1 min");
+                    return;
+                }
+            }
+
             var log = new ActivityLog
             {
                 PoiId = poiId,
                 ActionType = actionType,
                 LanguageUsed = language,
                 DeviceType = DeviceInfo.Platform.ToString(),
-DeviceId = DeviceInfo.Current.Name + "_" + DeviceInfo.Platform.ToString(), // thêm
+                DeviceId = DeviceInfo.Current.Name + "_" + DeviceInfo.Platform.ToString(),
                 AccessTime = DateTime.Now,
                 IsSynced = 0
             };
