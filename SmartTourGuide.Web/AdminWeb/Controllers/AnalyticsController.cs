@@ -77,12 +77,20 @@ namespace AdminWeb.Controllers
             ViewBag.LangLabels = languageData.Any() ? languageData.Select(x => x.Language).ToArray() : new string[] { "N/A" };
             ViewBag.LangCounts = languageData.Any() ? languageData.Select(x => x.Count).ToArray() : new int[] { 0 };
 
-            // ✅ THÊM: Thiết bị đang active (10 phút gần nhất)
+           
+            // ✅ Ô 1: Đang online thật sự (heartbeat trong 1 phút)
+            ViewBag.OnlineDevices = await _context.DeviceSessions
+                .Where(s => s.IsActive && s.LastSeen >= DateTime.Now.AddMinutes(-1))
+                .CountAsync();
+
+            // ✅ Ô 2: Lịch sử hoạt động 10 phút (đổi từ DeviceType sang DeviceId)
             ViewBag.ActiveDevices = await currentData
                 .Where(x => x.AccessTime >= DateTime.Now.AddMinutes(-10))
-                .Select(x => x.DeviceType)
+                .Select(x => x.DeviceId)
                 .Distinct()
                 .CountAsync();
+
+            ViewBag.TotalVisits = await currentData.CountAsync();
             ViewBag.IsAdmin = isAdmin;
 
             return View();

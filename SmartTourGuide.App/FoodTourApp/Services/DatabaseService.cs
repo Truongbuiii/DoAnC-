@@ -97,20 +97,28 @@ namespace FoodTourApp.Services
         {
             await Init();
 
-            // Chống spam: Không ghi nếu đã có log cùng POI + ActionType trong 1 phút
-            if (actionType == "AutoTrigger")
+            if (actionType == "AutoTrigger" || actionType == "ManualListen")
             {
+                var minutes = actionType == "AutoTrigger" ? -1 : -0.5; // 30 giây cho ManualListen
                 var recentLog = await _database!.Table<ActivityLog>()
-                    .Where(l => l.PoiId == poiId 
-                        && l.ActionType == "AutoTrigger"
-                        && l.AccessTime >= DateTime.Now.AddMinutes(-1))
+                    .Where(l => l.PoiId == poiId
+                        && l.ActionType == actionType
+                        && l.AccessTime >= DateTime.Now.AddMinutes(minutes))
                     .FirstOrDefaultAsync();
 
                 if (recentLog != null)
                 {
-                    Debug.WriteLine($"=== SPAM BLOCKED: POI {poiId} already logged within 1 min");
+                    Debug.WriteLine($"=== SPAM BLOCKED: {actionType} POI {poiId}");
                     return;
                 }
+            }
+
+            // Lấy hoặc tạo DeviceId unique
+            var deviceId = Preferences.Get("DeviceUniqueId", "");
+            if (string.IsNullOrEmpty(deviceId))
+            {
+                deviceId = DeviceInfo.Current.Name + "_" + Guid.NewGuid().ToString("N")[..8];
+                Preferences.Set("DeviceUniqueId", deviceId);
             }
 
             var log = new ActivityLog
@@ -119,7 +127,7 @@ namespace FoodTourApp.Services
                 ActionType = actionType,
                 LanguageUsed = language,
                 DeviceType = DeviceInfo.Platform.ToString(),
-                DeviceId = DeviceInfo.Current.Name + "_" + DeviceInfo.Platform.ToString(),
+                DeviceId = deviceId,
                 AccessTime = DateTime.Now,
                 IsSynced = 0
             };

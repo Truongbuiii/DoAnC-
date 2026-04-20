@@ -7,6 +7,7 @@ namespace FoodTourApp
         private readonly ApiSyncService _syncService;
         private readonly DatabaseService _dbService;
         private System.Threading.Timer? _syncTimer;
+        private readonly HeartbeatService _heartbeatService = new(); // ✅ THÊM
 
         public App(ApiSyncService syncService, DatabaseService dbService)
         {
@@ -16,6 +17,9 @@ namespace FoodTourApp
 
             // Load ngôn ngữ đã lưu
             Lang.Load();
+
+            // ✅ Bắt đầu heartbeat ngay khi mở app
+            _heartbeatService.Start();
 
             // Sync ngầm khi mở app
             Task.Run(async () => await StartInitialSync());
@@ -58,7 +62,6 @@ namespace FoodTourApp
                     "🇰🇷 한국어",
                     "🇯🇵 日本語");
 
-                // ✅ Dùng đúng language code
                 string lang = action switch
                 {
                     "🇺🇸 English" => "en-US",
@@ -71,7 +74,6 @@ namespace FoodTourApp
                 Preferences.Set("AppLanguage", lang);
                 Lang.Set(lang);
 
-                // Cập nhật tab titles ngay sau khi chọn
                 if (Shell.Current is AppShell appShell)
                     appShell.ApplyLanguage();
             }
@@ -80,6 +82,7 @@ namespace FoodTourApp
         protected override async void OnSleep()
         {
             base.OnSleep();
+            _heartbeatService.Stop(); // ✅ Tắt heartbeat khi app vào background
             try
             {
                 await _syncService.SyncLogsAsync();
@@ -88,6 +91,12 @@ namespace FoodTourApp
             {
                 System.Diagnostics.Debug.WriteLine($"OnSleep sync failed: {ex.Message}");
             }
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            _heartbeatService.Start(); // ✅ Bật lại khi app resume
         }
 
         private async Task StartInitialSync()
