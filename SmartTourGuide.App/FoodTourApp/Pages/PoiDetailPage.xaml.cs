@@ -194,10 +194,6 @@ public partial class PoiDetailPage : ContentPage
 
     private async void OnSpeakClicked(object sender, EventArgs e)
     {
-        // ✅ Block nếu đang xử lý
-        if (_isSpeaking) return;
-        _isSpeaking = true;
-
         var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
         var displayPoi = freshPoi ?? _poi;
 
@@ -216,6 +212,7 @@ public partial class PoiDetailPage : ContentPage
                 }
 
 #if ANDROID
+                // ✅ Nghe bình thường, không giới hạn
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     _androidTts?.SetLanguage(_currentLanguage);
@@ -223,6 +220,7 @@ public partial class PoiDetailPage : ContentPage
                 });
 #endif
 
+                // ✅ Log có chống spam (xử lý trong DatabaseService)
                 await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
                 var apiSync = new ApiSyncService(_dbService);
                 await apiSync.SyncLogsAsync();
@@ -230,12 +228,6 @@ public partial class PoiDetailPage : ContentPage
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"OnSpeakClicked error: {ex.Message}");
-            }
-            finally
-            {
-                // ✅ Mở khóa sau 30 giây
-                await Task.Delay(30000);
-                _isSpeaking = false;
             }
         });
     }
