@@ -54,27 +54,36 @@
         @{
             var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
         }
+@* 1. QUẢN LÝ POI *@
+<a asp-controller="POI" asp-action="Index" 
+   class="@(currentController == "POI" ? "active" : "")">
+   <i class="bi bi-map-fill me-2"></i> Quản lý POI
+</a>
 
-        @* 1. QUẢN LÝ POI *@
-        <a asp-controller="POI" asp-action="Index" 
-           class="@(currentController == "POI" ? "active" : "")">
-           <i class="bi bi-map-fill me-2"></i> Quản lý POI
+@* 2. QUẢN LÝ TÀI KHOẢN - CHỈ ADMIN THẤY *@
+@if (User.IsInRole("Admin"))
+{
+    <a asp-controller="Admins" asp-action="Index" 
+       class="@(currentController == "Admins" ? "active" : "")">
+       <i class="bi bi-person-badge-fill me-2"></i> Quản lý Tài khoản
+    </a>
+}
+
+@* Kiểm tra nếu là Chủ quán thì mới hiện mục Đổi mật khẩu *@
+@if (User.IsInRole("Owner"))
+{
+    <li class="nav-item">
+        <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "ChangePassword" ? "active" : "")" 
+           asp-controller="Account" asp-action="ChangePassword">
+            <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
         </a>
-
-        @* 2. QUẢN LÝ TÀI KHOẢN - CHỈ ADMIN THẤY *@
-        @if (User.IsInRole("Admin"))
-        {
-            <a asp-controller="Admins" asp-action="Index" 
-               class="@(currentController == "Admins" ? "active" : "")">
-               <i class="bi bi-person-badge-fill me-2"></i> Quản lý Tài khoản
-            </a>
-        }
-
-        @* 3. QUẢN LÝ AUDIO *@
-        <a asp-controller="Audios" asp-action="Index" 
-           class="@(currentController == "Audios" ? "active" : "")">
-           <i class="bi bi-mic-fill me-2"></i> Quản lý Audio
-        </a>
+    </li>
+}
+@* 3. QUẢN LÝ AUDIO *@
+<a asp-controller="Audios" asp-action="Index" 
+   class="@(currentController == "Audios" ? "active" : "")">
+   <i class="bi bi-mic-fill me-2"></i> Quản lý Audio
+</a>    
 
         @* 4. QUẢN LÝ TOUR - CHỈ ADMIN THẤY *@
         @if (User.IsInRole("Admin"))
