@@ -52,7 +52,9 @@
 	<ItemGroup>
 	  <Folder Include="Resources\QRCodes\" />
 	</ItemGroup>
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+		
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 </Project>
