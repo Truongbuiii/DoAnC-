@@ -248,7 +248,43 @@
                 </div>
             </div>
         </div>
-
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-3 bg-dark d-flex align-items-center justify-content-center p-4">
+                        <div class="bg-white p-2 rounded-3 shadow">
+                            <img id="masterQrImg" 
+                                 src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=vinhkhanh://start-tour" 
+                                 alt="Master QR" 
+                                 class="img-fluid" style="width: 140px; height: 140px;" />
+                        </div>
+                    </div>
+                    <div class="col-md-9 p-4 bg-white border-start border-4 border-dark">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-dark text-white mb-2 px-3">HỆ THỐNG MASTER QR</span>
+                                <h3 class="fw-bold mb-1" style="color: #2d3748;">Cổng Chào Phố Vĩnh Khánh</h3>
+                                <p class="text-muted small mb-3">
+                                    Mã này dùng để dán tại cổng chào. Khi khách quét, App sẽ tự động bật <b>GPS</b> và <b>Thuyết minh tự động</b>.
+                                </p>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="downloadMasterQR()">
+                                        <i class="bi bi-download me-1"></i> Tải ảnh QR
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="window.print()">
+                                        <i class="bi bi-printer me-1"></i> In nhãn cổng
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="geo-text text-primary small">vinhkhanh://start-tour</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">Protocol: Deep Link</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="poi-container card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -505,5 +541,24 @@
         link.href = canvas.toDataURL();
         link.click();
     }
+    function downloadMasterQR() {
+            const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=vinhkhanh://start-tour";
+            const link = document.createElement('a');
+            link.href = qrUrl;
+            link.download = 'QR_TONG_CONG_CHAO_VINHKHANH.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            Swal.fire({
+                title: 'Đang tải...',
+                text: 'Mã QR Tổng đang được tải về máy của bạn.',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
     </script>
 }

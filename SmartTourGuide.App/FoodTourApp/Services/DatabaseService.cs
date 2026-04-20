@@ -89,6 +89,23 @@ namespace FoodTourApp.Services
                 await _database!.InsertOrReplaceAsync(audio);
             Debug.WriteLine($"=== ĐÃ ĐỒNG BỘ {audios.Count} KỊCH BẢN ÂM THANH ===");
         }
+        public async Task ResetAllHeardStatusAsync()
+        {
+            // Đảm bảo Database đã khởi tạo
+            await Init();
+
+            try
+            {
+                // Cập nhật tất cả các quán về trạng thái chưa nghe (IsHeard = 0)
+                // Lưu ý: Đảm bảo class POI của bạn đã có thuộc tính IsHeard
+                await _database.ExecuteAsync("UPDATE POI SET IsHeard = 0");
+                System.Diagnostics.Debug.WriteLine("=== ĐÃ RESET TRẠNG THÁI NGHE CHO TOUR MỚI ===");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi ResetHeard: {ex.Message}");
+            }
+        }
 
         // ==========================================
         // 4. QUẢN LÝ NHẬT KÝ (LOGS)

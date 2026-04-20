@@ -12,7 +12,7 @@ namespace FoodTourApp.Services
         private readonly HttpClient _httpClient;
 
         // URL ngrok của bạn
-        public const string BaseUrl = "https://tandra-acetylenic-aurelio.ngrok-free.dev";
+        public const string BaseUrl = "https://laboring-devotion-cabbie.ngrok-free.dev";
 
         // CHỈ GIỮ LẠI MỘT KHAI BÁO NÀY (Đã thêm Header bỏ qua cảnh báo của Ngrok)
         private static readonly HttpClient SharedHttpClient = new()

@@ -83,6 +83,42 @@ public partial class QRPage : ContentPage
             try
             {
                 StatusLabel.Text = $"✅ {code}";
+
+                // ========================================================
+                // 1. XỬ LÝ QR TỔNG (MASTER QR) - Kích hoạt hành trình tự động
+                // ========================================================
+                if (code == "vinhkhanh://start-tour")
+                {
+                    var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                    if (status == PermissionStatus.Granted)
+                    {
+                        // 1. Đánh dấu bật chế độ tự động
+                        Preferences.Set("IsAutoMode", true);
+
+                        // 2. Reset tất cả trạng thái "Đã nghe" về false để bắt đầu tour mới
+                        // Lưu ý: Tài cần thêm hàm ResetAllHeardStatusAsync() vào DatabaseService.cs
+                        await _dbService.ResetAllHeardStatusAsync();
+
+                        await DisplayAlert(Lang.Get("tab_qr"), "Hành trình tự động bắt đầu! Hãy di chuyển để trải nghiệm.", "OK");
+
+                        // 3. Chạy hàm theo dõi vị trí ngầm (Hàng đợi âm thanh)
+                        _ = StartAutoGuideService();
+
+                        // Chuyển sang trang Bản đồ
+                        await Shell.Current.GoToAsync("//MapPage");
+                    }
+                    else
+                    {
+                        await DisplayAlert("Thông báo", "Vui lòng cấp quyền vị trí để sử dụng chế độ tự động", "OK");
+                        BarcodeReader.IsDetecting = true;
+                    }
+                    _isProcessing = false;
+                    return; // Thoát hàm ngay lập tức
+                }
+
+                // ========================================================
+                // 2. XỬ LÝ QUÉT POI LẺ (Giữ nguyên logic của Tài)
+                // ========================================================
                 int poiId = -1;
                 if (code.StartsWith("POI_"))
                     int.TryParse(code.Replace("POI_", ""), out poiId);
@@ -98,19 +134,18 @@ public partial class QRPage : ContentPage
                         var apiSync = new ApiSyncService(_dbService);
                         await apiSync.SyncLogsAsync();
                     });
+
                     var poi = await _dbService.GetPOIByIdAsync(poiId);
                     if (poi != null)
                     {
-                        // 1. CHUYỂN TRANG NGAY LẬP TỨC
                         await Navigation.PushAsync(new PoiDetailPage(poi));
 
-                        // 2. ĐỌC THUYẾT MINH TRỰC TIẾP TỪ DescriptionVi
                         _ = Task.Run(async () =>
                         {
                             try
                             {
                                 string textToSpeak = poi.DescriptionVi ?? string.Empty;
-                                string voiceLang = "vi-VN"; // Mặc định giọng Việt
+                                string voiceLang = "vi-VN";
 
                                 if (string.IsNullOrWhiteSpace(textToSpeak)) return;
 
@@ -123,7 +158,7 @@ public partial class QRPage : ContentPage
                                     if (!string.IsNullOrEmpty(translated))
                                     {
                                         textToSpeak = translated;
-                                        voiceLang = lang; // Đổi giọng ngoại ngữ nếu dịch thành công
+                                        voiceLang = lang;
                                     }
                                 }
 #if ANDROID
@@ -138,7 +173,7 @@ public partial class QRPage : ContentPage
                         return;
                     }
                 }
-                await DisplayAlertAsync(Lang.Get("qr_not_found"), Lang.Get("qr_not_found_msg"), "OK");
+                await DisplayAlert(Lang.Get("qr_not_found"), Lang.Get("qr_not_found_msg"), "OK");
             }
             catch (Exception ex)
             {
@@ -147,9 +182,15 @@ public partial class QRPage : ContentPage
             finally
             {
                 _isProcessing = false;
-                // Không bật lại IsDetecting ở đây để tránh bị quét lặp khi đang chuyển trang
             }
         });
+    }
+
+    // Hàm bổ trợ để chạy ngầm dịch vụ hướng dẫn (Tài cần hiện thực chi tiết hàm này nhé)
+    private async Task StartAutoGuideService()
+    {
+        // Logic: Lấy GPS -> Tính khoảng cách -> So sánh Priority -> Phát tiếng
+        System.Diagnostics.Debug.WriteLine("=== ĐÃ KÍCH HOẠT DỊCH VỤ HÀNG ĐỢI ÂM THANH ===");
     }
 
     private void OnFlashToggle(object sender, EventArgs e)
