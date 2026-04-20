@@ -39,14 +39,7 @@ CREATE TABLE POIs (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE MenuItems (
-    MenuId INT PRIMARY KEY IDENTITY(1,1),
-    PoiId INT FOREIGN KEY REFERENCES POIs(PoiId) ON DELETE CASCADE,
-    DishName NVARCHAR(255),
-    Price NVARCHAR(50),
-    ImageSource NVARCHAR(MAX),
-    IsRecommended BIT DEFAULT 1
-);
+
 
 CREATE TABLE Audios (
     AudioId INT PRIMARY KEY IDENTITY(1,1),
@@ -81,6 +74,18 @@ CREATE TABLE ActivityLogs (
     DeviceId NVARCHAR(255),     -- ✅ Định danh thiết bị unique
     AccessTime DATETIME DEFAULT GETDATE()
 );
+
+CREATE TABLE DeviceSessions (
+    SessionId INT PRIMARY KEY IDENTITY(1,1),
+    DeviceId NVARCHAR(255) NOT NULL,
+    DeviceName NVARCHAR(255),
+    LastSeen DATETIME DEFAULT GETDATE(),
+    IsActive BIT DEFAULT 1
+);
+
+-- Index để query nhanh
+CREATE INDEX IX_DeviceSessions_DeviceId ON DeviceSessions(DeviceId);
+CREATE INDEX IX_DeviceSessions_LastSeen ON DeviceSessions(LastSeen);
 GO
 
 -- ==========================================
@@ -113,18 +118,6 @@ INSERT INTO POIs (Name, Category, TriggerRadius, Latitude, Longitude, ImageSourc
 (N'Ốc Thảo 383', N'Hải sản', 30, 10.760770, 106.703400, 'octhao383.jpg', N'Ốc Thảo 383 sở hữu không gian vô cùng rộng rãi và thoáng đãng, cực kỳ phù hợp cho các buổi tiệc đoàn đông người.', 'octhao383'),
 (N'Ốc Oanh 534', N'Hải sản', 40, 10.760719, 106.703297, 'ocoanh.jpg', N'Ốc Oanh là niềm tự hào của phố ẩm thực khi được Michelin Bib Gourmand 2024 vinh danh. Những con ốc kích cỡ khủng, nước sốt đậm đà.', 'ochoanh');
 
--- 3.3 Nạp MenuItems
-INSERT INTO MenuItems(PoiId, DishName, Price, ImageSource, IsRecommended) VALUES
-(1, N'Bánh tráng nướng', '25.000đ', 'banh_trang.jpg', 1), (1, N'Trà dâu tằm', '20.000đ', 'tra_dau.jpg', 1),
-(2, N'Lẩu dê gia truyền', '250.000đ', 'lau_de.jpg', 1), (2, N'Dê nướng tảng', '180.000đ', 'de_nuong.jpg', 1), (2, N'Vú dê nướng chao', '150.000đ', 'vu_de.jpg', 0),
-(3, N'Ốc len xào dừa', '60.000đ', 'oc_len.jpg', 1), (3, N'Càng ghẹ rang muối tuyết', '120.000đ', 'cang_ghe.jpg', 1), (3, N'Sò lông nướng mỡ hành', '50.000đ', 'so_long.jpg', 0),
-(4, N'Bún cá Châu Đốc đặc biệt', '45.000đ', 'bun_ca.jpg', 1), (4, N'Bún mắm cốt miền Tây', '55.000đ', 'bun_mam.jpg', 1), (4, N'Đầu cá lóc hấp', '40.000đ', 'dau_ca.jpg', 0),
-(5, N'Ốc hương rang muối', '90.000đ', 'oc_huong.jpg', 1), (5, N'Hàu nướng phô mai Pháp', '35.000đ/con', 'hau_phomai.jpg', 1), (5, N'Cháo hải sản nồi đất', '80.000đ', 'chao_haisan.jpg', 0),
-(6, N'Sashimi cá hồi tươi', '120.000đ', 'sashimi.jpg', 1), (6, N'Cơm cuộn lươn Nhật', '95.000đ', 'sushi_luon.jpg', 1), (6, N'Mỳ Udon hải sản', '75.000đ', 'udon.jpg', 0),
-(7, N'Lẩu Thái chua cay', '199.000đ', 'lau_thai.jpg', 1), (7, N'Ba chỉ bò Mỹ sốt Chilli', '89.000đ', 'bo_nuong.jpg', 1), (7, N'Tôm càng nướng mọi', '150.000đ', 'tom_nuong.jpg', 0),
-(8, N'Ốc móng tay xào rau muống', '70.000đ', 'oc_mongtay.jpg', 1), (8, N'Ốc dừa xào bơ cay', '65.000đ', 'oc_dua.jpg', 1), (8, N'Răng mực xào bơ tỏi', '80.000đ', 'rang_muc.jpg', 0),
-(9, N'Nghêu hấp sả', '55.000đ', 'ngheu_hap.jpg', 1), (9, N'Mỳ xào ốc móng tay', '75.000đ', 'my_xao.jpg', 1), (9, N'Cơm chiên hải sản', '85.000đ', 'com_chien.jpg', 0),
-(10, N'Ốc hương sốt trứng muối', '150.000đ', 'oc_huong_tm.jpg', 1), (10, N'Càng cúm núm rang muối', '110.000đ', 'cang_cum.jpg', 1), (10, N'Ốc tỏi nướng mỡ hành', '55.000đ/con', 'oc_toi.jpg', 0);
 
 -- 3.4 Nạp Audios
 CREATE TABLE #TempAudio (AName NVARCHAR(200), ADesc NVARCHAR(200), AScript NVARCHAR(MAX), APath NVARCHAR(MAX), SearchName NVARCHAR(100));

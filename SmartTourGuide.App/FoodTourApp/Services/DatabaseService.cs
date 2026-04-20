@@ -9,6 +9,8 @@ namespace FoodTourApp.Services
     public class DatabaseService
     {
         private SQLiteAsyncConnection? _database;
+        private static readonly SemaphoreSlim _logLock = new SemaphoreSlim(1, 1); // ✅ THÊM
+
 
         // ==========================================
         // 1. KHỞI TẠO DATABASE (MIGRATION)
@@ -114,43 +116,68 @@ namespace FoodTourApp.Services
         {
             await Init();
 
-            if (actionType == "AutoTrigger" || actionType == "ManualListen")
+            // ✅ Chỉ cho 1 thread ghi log cùng lúc
+            await _logLock.WaitAsync();
+            try
             {
-                var minutes = actionType == "AutoTrigger" ? -1 : -0.5; // 30 giây cho ManualListen
-                var recentLog = await _database!.Table<ActivityLog>()
-                    .Where(l => l.PoiId == poiId
-                        && l.ActionType == actionType
-                        && l.AccessTime >= DateTime.Now.AddMinutes(minutes))
-                    .FirstOrDefaultAsync();
-
-                if (recentLog != null)
+                if (actionType == "AutoTrigger")
                 {
-                    Debug.WriteLine($"=== SPAM BLOCKED: {actionType} POI {poiId}");
-                    return;
+                    var recentLog = await _database!.Table<ActivityLog>()
+                        .Where(l => l.PoiId == poiId
+                            && l.ActionType == "AutoTrigger"
+                            && l.AccessTime >= DateTime.Now.AddMinutes(-1))
+                        .FirstOrDefaultAsync();
+
+                    if (recentLog != null)
+                    {
+                        Debug.WriteLine($"=== SPAM BLOCKED: AutoTrigger POI {poiId}");
+                        return;
+                    }
                 }
-            }
+                else if (actionType == "ManualListen")
+                {
+                    var cutoff = DateTime.Now.AddMinutes(-1);
+                    Debug.WriteLine($"=== CHECK SPAM: cutoff={cutoff}, now={DateTime.Now}");
 
-            // Lấy hoặc tạo DeviceId unique
-            var deviceId = Preferences.Get("DeviceUniqueId", "");
-            if (string.IsNullOrEmpty(deviceId))
-            {
-                deviceId = DeviceInfo.Current.Name + "_" + Guid.NewGuid().ToString("N")[..8];
-                Preferences.Set("DeviceUniqueId", deviceId);
-            }
+                    var recentLog = await _database!.Table<ActivityLog>()
+                        .Where(l => l.PoiId == poiId
+                            && l.ActionType == "ManualListen"
+                            && l.AccessTime >= cutoff)
+                        .FirstOrDefaultAsync();
 
-            var log = new ActivityLog
+                    Debug.WriteLine($"=== RECENT LOG: {recentLog?.AccessTime}");
+
+                    if (recentLog != null)
+                    {
+                        Debug.WriteLine($"=== SPAM BLOCKED");
+                        return;
+                    }
+                }
+
+                var deviceId = Preferences.Get("DeviceUniqueId", "");
+                if (string.IsNullOrEmpty(deviceId))
+                {
+                    deviceId = DeviceInfo.Current.Name + "_" + Guid.NewGuid().ToString("N")[..8];
+                    Preferences.Set("DeviceUniqueId", deviceId);
+                }
+
+                var log = new ActivityLog
+                {
+                    PoiId = poiId,
+                    ActionType = actionType,
+                    LanguageUsed = language,
+                    DeviceType = DeviceInfo.Platform.ToString(),
+                    DeviceId = deviceId,
+                    AccessTime = DateTime.Now,
+                    IsSynced = 0
+                };
+                await _database!.InsertAsync(log);
+            }
+            finally
             {
-                PoiId = poiId,
-                ActionType = actionType,
-                LanguageUsed = language,
-                DeviceType = DeviceInfo.Platform.ToString(),
-                DeviceId = deviceId,
-                AccessTime = DateTime.Now,
-                IsSynced = 0
-            };
-            await _database!.InsertAsync(log);
+                _logLock.Release(); // ✅ Luôn release dù thành công hay lỗi
+            }
         }
-
         public async Task MarkLogsAsSyncedAsync(List<int> logIds)
         {
             await Init();

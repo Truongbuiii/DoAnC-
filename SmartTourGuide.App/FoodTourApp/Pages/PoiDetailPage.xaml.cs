@@ -189,6 +189,9 @@ public partial class PoiDetailPage : ContentPage
         else FavoritesPage.AddFavorite(_poi.PoiId);
         UpdateFavoriteButton();
     }
+
+    private bool _isSpeaking = false;
+
     private async void OnSpeakClicked(object sender, EventArgs e)
     {
         var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
@@ -203,13 +206,13 @@ public partial class PoiDetailPage : ContentPage
 
                 if (!IsVietnamese(_currentLanguage))
                 {
-                    // Dùng cache — không gọi API lại
                     var translated = await GetDisplayDescriptionAsync(displayPoi);
                     if (!string.IsNullOrEmpty(translated))
                         textToSpeak = translated;
                 }
 
 #if ANDROID
+                // ✅ Nghe bình thường, không giới hạn
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     _androidTts?.SetLanguage(_currentLanguage);
@@ -217,6 +220,7 @@ public partial class PoiDetailPage : ContentPage
                 });
 #endif
 
+                // ✅ Log có chống spam (xử lý trong DatabaseService)
                 await _dbService.LogActivityAsync(_poi.PoiId, "ManualListen", _currentLanguage);
                 var apiSync = new ApiSyncService(_dbService);
                 await apiSync.SyncLogsAsync();
