@@ -97,18 +97,34 @@ namespace FoodTourApp.Services
         {
             await Init();
 
-            if (actionType == "AutoTrigger" || actionType == "ManualListen")
+            // ✅ Chống spam AutoTrigger: 1 phút
+            if (actionType == "AutoTrigger")
             {
-                var minutes = actionType == "AutoTrigger" ? -1 : -0.5; // 30 giây cho ManualListen
                 var recentLog = await _database!.Table<ActivityLog>()
                     .Where(l => l.PoiId == poiId
-                        && l.ActionType == actionType
-                        && l.AccessTime >= DateTime.Now.AddMinutes(minutes))
+                        && l.ActionType == "AutoTrigger"
+                        && l.AccessTime >= DateTime.Now.AddMinutes(-1))
                     .FirstOrDefaultAsync();
 
                 if (recentLog != null)
                 {
-                    Debug.WriteLine($"=== SPAM BLOCKED: {actionType} POI {poiId}");
+                    Debug.WriteLine($"=== SPAM BLOCKED: AutoTrigger POI {poiId}");
+                    return;
+                }
+            }
+
+            else if (actionType == "ManualListen")
+            {
+                var cutoff = DateTime.Now.AddMinutes(-1);
+                var recentLog = await _database!.Table<ActivityLog>()
+                    .Where(l => l.PoiId == poiId
+                        && l.ActionType == "ManualListen"
+                        && l.AccessTime >= cutoff)
+                    .FirstOrDefaultAsync();
+
+                if (recentLog != null)
+                {
+                    Debug.WriteLine($"=== SPAM BLOCKED: ManualListen POI {poiId}");
                     return;
                 }
             }
@@ -133,7 +149,6 @@ namespace FoodTourApp.Services
             };
             await _database!.InsertAsync(log);
         }
-
         public async Task MarkLogsAsSyncedAsync(List<int> logIds)
         {
             await Init();

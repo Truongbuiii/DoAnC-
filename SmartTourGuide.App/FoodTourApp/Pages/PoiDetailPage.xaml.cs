@@ -189,8 +189,15 @@ public partial class PoiDetailPage : ContentPage
         else FavoritesPage.AddFavorite(_poi.PoiId);
         UpdateFavoriteButton();
     }
+
+    private bool _isSpeaking = false;
+
     private async void OnSpeakClicked(object sender, EventArgs e)
     {
+        // ✅ Block nếu đang xử lý
+        if (_isSpeaking) return;
+        _isSpeaking = true;
+
         var freshPoi = await _dbService.GetPOIByIdAsync(_poi.PoiId);
         var displayPoi = freshPoi ?? _poi;
 
@@ -203,7 +210,6 @@ public partial class PoiDetailPage : ContentPage
 
                 if (!IsVietnamese(_currentLanguage))
                 {
-                    // Dùng cache — không gọi API lại
                     var translated = await GetDisplayDescriptionAsync(displayPoi);
                     if (!string.IsNullOrEmpty(translated))
                         textToSpeak = translated;
@@ -224,6 +230,12 @@ public partial class PoiDetailPage : ContentPage
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"OnSpeakClicked error: {ex.Message}");
+            }
+            finally
+            {
+                // ✅ Mở khóa sau 30 giây
+                await Task.Delay(30000);
+                _isSpeaking = false;
             }
         });
     }
