@@ -54,10 +54,23 @@
         </Grid>
         <!-- MAP + CONTROLS -->
         <Grid Grid.Row="2">
+            
             <WebView x:Name="MapWebView" HorizontalOptions="Fill" VerticalOptions="Fill"/>
             <ActivityIndicator x:Name="MapLoading" IsRunning="True"
                                VerticalOptions="Center" HorizontalOptions="Center" Color="Orange"/>
-
+            <Button x:Name="BtnShowAll" 
+Text="❌ Thoát Tour"
+IsVisible="False"
+Clicked="OnShowAllClicked"
+VerticalOptions="Start" 
+HorizontalOptions="End"
+Margin="10" 
+Padding="10,0"
+HeightRequest="35"
+BackgroundColor="White" 
+TextColor="Black" 
+CornerRadius="18"
+FontSize="11" />
             <!-- POI CARD -->
             <Border x:Name="PoiCard" VerticalOptions="End" HorizontalOptions="Center"
                     Margin="15,20" Padding="15" BackgroundColor="White"

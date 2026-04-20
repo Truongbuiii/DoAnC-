@@ -19,14 +19,20 @@ namespace AdminWeb.Controllers
         {
             string currentUserName = User.Identity!.Name!;
             bool isAdmin = User.IsInRole("Admin");
-
-            // 1. Truy vấn gốc kèm theo POI
             var query = _context.ActivityLogs.Include(l => l.Poi).AsQueryable();
+
+            // 1. Tính số người đang Online (Chỉ Admin mới cần biết tổng)
+            if (isAdmin)
+            {
+                ViewBag.ActiveUsers = await _context.ActivityLogs
+                    .Where(l => l.AccessTime >= DateTime.Now.AddMinutes(-5))
+                    .Select(l => l.DeviceId).Distinct().CountAsync();
+            }
 
             if (isAdmin)
             {
-                // --- DÀNH CHO ADMIN ---
                 ViewBag.AnalyticsTitle = "Báo cáo Tổng quan Phố Vĩnh Khánh";
+                ViewBag.ChartType = "bar"; // Admin dùng biểu đồ cột để so sánh
 
                 var topPois = await query
                     .GroupBy(l => l.Poi.Name)
@@ -40,24 +46,34 @@ namespace AdminWeb.Controllers
             }
             else
             {
-                // --- DÀNH CHO CHỦ QUÁN ---
                 ViewBag.AnalyticsTitle = "Phân tích Hoạt động Cửa hàng";
+                ViewBag.ChartType = "line"; // Chủ quán dùng biểu đồ đường cho xu hướng
 
                 var ownerQuery = query.Where(l => l.Poi.OwnerUsername == currentUserName);
+
+                // Lấy dữ liệu 7 ngày gần nhất (kể cả hôm nay)
+                DateTime startDate = DateTime.Today.AddDays(-6);
                 var rawStats = await ownerQuery
-                    .GroupBy(l => l.AccessTime.Value.Date) // Thêm .Value trước .Date
+                    .Where(l => l.AccessTime >= startDate)
+                    .GroupBy(l => l.AccessTime.Value.Date)
                     .Select(g => new { Day = g.Key, Count = g.Count() })
-                    .OrderBy(x => x.Day)
                     .ToListAsync();
 
-                var dailyStats = rawStats.Select(x => new {
-                    DateLabel = x.Day.ToString("dd/MM"),
-                    VisitCount = x.Count
-                }).ToList();
+                // LOGIC QUAN TRỌNG: Lấp đầy các ngày bị trống dữ liệu bằng 0
+                var labels = new List<string>();
+                var counts = new List<int>();
 
-                ViewBag.PoiNames = dailyStats.Select(x => x.DateLabel).ToArray();
-                ViewBag.PoiCounts = dailyStats.Select(x => x.VisitCount).ToArray();
-                ViewBag.ChartLabel = "Lượt khách ghé quán của bạn";
+                for (int i = 0; i < 7; i++)
+                {
+                    DateTime date = startDate.AddDays(i);
+                    labels.Add(date.ToString("dd/MM"));
+                    var stat = rawStats.FirstOrDefault(x => x.Day == date);
+                    counts.Add(stat?.Count ?? 0); // Nếu không có khách thì gán bằng 0
+                }
+
+                ViewBag.PoiNames = labels.ToArray();
+                ViewBag.PoiCounts = counts.ToArray();
+                ViewBag.ChartLabel = "Lượt khách ghé quán (7 ngày qua)";
             }
 
             // 2. THỐNG KÊ NGÔN NGỮ (BẢN TỐI ƯU CHỐNG LỖI DB TRỐNG)

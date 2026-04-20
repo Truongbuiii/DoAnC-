@@ -67,11 +67,12 @@ namespace FoodTourApp.Services
                     }
                 }
 
-var poisInRangeSorted = poisInRange
-    .OrderBy(x => x.distance)
-    .ThenBy(x => x.poi.PoiId)
-    .Select(x => x.poi)
-    .ToList();
+                //Điều kiện để xét đọc POI nào trước khi có cùng trong khu vực
+    var poisInRangeSorted = poisInRange
+        .OrderBy(x => x.distance)
+        .ThenBy(x => x.poi.PoiId)
+        .Select(x => x.poi)
+        .ToList();
                 result.NearestPoi = nearestPoi;
                 result.DistanceMeters = nearestDistance;
 

@@ -186,22 +186,35 @@ public partial class MapPage : ContentPage
     <div id='map'></div>
     <script>
         var map = L.map('map', { zoomControl: false }).setView([CENTER_LAT, CENTER_LON], 17);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap © CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
         var markerCluster = L.markerClusterGroup();
+        
+        // Tạo một đối tượng để quản lý tất cả marker
+        var allMarkers = {}; 
+
         MARKERS_HERE
+
         map.addLayer(markerCluster);
-        var userMarker = null, userCircle = null;
-        function setUserLocation(lat, lng, acc) {
-            if (userMarker) {
-                userMarker.setLatLng([lat, lng]);
-                userCircle.setLatLng([lat, lng]).setRadius(acc);
-            } else {
-                userMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: '#2196f3', color: 'white', weight: 2, fillOpacity: 1 }).addTo(map);
-                userCircle = L.circle([lat, lng], { radius: acc, color: '#2196f3', weight: 1, fillOpacity: 0.1 }).addTo(map);
+
+        // HÀM QUAN TRỌNG: Đổi màu marker được chọn
+        function selectMarker(id) {
+            for (var key in allMarkers) {
+                var isTarget = (key == id);
+                var color = isTarget ? '#ff9800' : '#4caf50'; // Cam nếu chọn, Xanh nếu không
+                var size = isTarget ? 36 : 28;
+                
+                var newIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style=""width:${size}px;height:${size}px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3)""></div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [size / 2, size]
+                });
+                
+                allMarkers[key].setIcon(newIcon);
+                if(isTarget) {
+                    allMarkers[key].openPopup();
+                    map.setView(allMarkers[key].getLatLng(), 17);
+                }
             }
         }
     </script>
@@ -407,18 +420,18 @@ public partial class MapPage : ContentPage
             BtnFavorite.Text = FavoritesPage.IsFavorite(poi.PoiId) ? Lang.Get("map_favorited") : Lang.Get("map_favorite");
             StatusLabel.Text = $"📍 {poi.DistanceDisplay}";
 
-            // Chỉ pan bản đồ, không reload HTML để tránh lag marker
-            string latStr = poi.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string lonStr = poi.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
             if (MapWebView.Source == null)
             {
+                // Lần đầu nạp bản đồ thì tạo HTML đầy đủ
                 MapWebView.Source = new HtmlWebViewSource { Html = GenerateMapHtml(lat, lon, _allPoisFromDb, poi.PoiId) };
             }
             else
             {
-                MapWebView.Eval($"map.setView([{latStr}, {lonStr}], 17);");
-                MapWebView.Eval($"if(typeof marker_{poi.PoiId} !== 'undefined') marker_{poi.PoiId}.openPopup();");
+                // SỬA TẠI ĐÂY: Gọi hàm JS "selectMarker" để đổi màu marker và pan camera.
+                // Việc này giúp marker được chọn luôn chuyển sang màu cam, các marker còn lại quay về màu xanh.
+                MainThread.BeginInvokeOnMainThread(() => {
+                    MapWebView.Eval($"selectMarker({poi.PoiId})");
+                });
             }
 
             if (_hasUserLocation)
@@ -433,7 +446,6 @@ public partial class MapPage : ContentPage
             }
         }
     }
-
     private bool _isDataLoaded = false;
     private List<POI> _basePoisFromDb = new();
 
@@ -444,37 +456,46 @@ public partial class MapPage : ContentPage
         _currentLanguage = Preferences.Get("AppLanguage", "vi-VN");
         ApplyLanguage();
 
+        // Bước 1: Đảm bảo nạp dữ liệu từ DB lên trước
         if (!_isDataLoaded)
         {
             _isDataLoaded = true;
             var apiSync = new ApiSyncService(_dbService);
-            _ = Task.Run(async () =>
+
+            // Hiện loading trong lúc chờ nạp dữ liệu
+            MapLoading.IsVisible = true;
+
+            await Task.Run(async () =>
             {
                 await apiSync.SyncPoisAsync();
                 await apiSync.SyncToursAsync();
                 await apiSync.SyncLogsAsync();
                 var rawPois = (await _dbService.GetPOIsAsync()).ToList();
 
-                MainThread.BeginInvokeOnMainThread(() =>
+                MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     _basePoisFromDb = rawPois;
                     _allPoisFromDb = new List<POI>(_basePoisFromDb);
                     EnsureDisplayNames(_allPoisFromDb);
                     RefreshListView();
-                    _ = TranslatePoisInBackground(_allPoisFromDb);
+
+                    // Bước 2: SAU KHI nạp xong, mới kiểm tra có Tour hay không
+                    if (!HandlePreferences())
+                    {
+                        // Nếu không có Tour thì mới load bản đồ mặc định/GPS
+                        await InitializeMapWithLocation();
+                    }
                 });
             });
         }
         else
         {
+            // Nếu đã nạp rồi, chỉ cần reset lại danh sách gốc và kiểm tra Tour
             _allPoisFromDb = new List<POI>(_basePoisFromDb);
-            if (_currentLanguage != _lastMapTranslatedLang)
-                _ = TranslatePoisInBackground(_allPoisFromDb);
-            else
+            if (!HandlePreferences())
             {
                 RefreshListView();
-                if (_hasUserLocation && _currentDisplayedPoi != null)
-                    UpdateInterface(_lastUserLat, _lastUserLon, _currentDisplayedPoi);
+                await InitializeMapWithLocation();
             }
         }
 
@@ -488,8 +509,11 @@ public partial class MapPage : ContentPage
 
         MapWebView.Navigating -= OnMapWebViewNavigating;
         MapWebView.Navigating += OnMapWebViewNavigating;
-        if (HandlePreferences()) return;
+    }
 
+    // Tách riêng hàm khởi tạo vị trí để code sạch hơn
+    private async Task InitializeMapWithLocation()
+    {
         var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
         if (status == PermissionStatus.Granted)
         {
@@ -517,6 +541,21 @@ public partial class MapPage : ContentPage
         }
     }
 
+    private void OnShowAllClicked(object sender, EventArgs e)
+    {
+        // 1. Khôi phục lại danh sách đầy đủ từ bộ nhớ gốc
+        _allPoisFromDb = new List<POI>(_basePoisFromDb);
+
+        // 2. Làm mới danh sách hiển thị và nạp lại bản đồ mặc định
+        RefreshListView();
+        LoadDefaultMap();
+
+        // 3. Ẩn nút thoát tour và card thông tin đang hiện
+        BtnShowAll.IsVisible = false;
+        PoiCard.IsVisible = false;
+    }
+
+    // Trong hàm HandlePreferences(), hãy thêm dòng này khi lọc Tour:
     private bool HandlePreferences()
     {
         string tourPoiIds = Preferences.Get("TourPoiIds", "");
@@ -524,17 +563,25 @@ public partial class MapPage : ContentPage
         {
             Preferences.Remove("TourPoiIds");
             var ids = tourPoiIds.Split(',').Select(int.Parse).ToList();
-            _allPoisFromDb = _allPoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
+
+            // Lọc danh sách
+            _allPoisFromDb = _basePoisFromDb.Where(p => ids.Contains(p.PoiId)).ToList();
             RefreshListView();
+            BtnShowAll.IsVisible = true;
+
             if (_allPoisFromDb.Any())
             {
                 var first = _allPoisFromDb.First();
+                // Ép nạp lại HTML bản đồ để chỉ hiện các Marker trong Tour
+                MapWebView.Source = new HtmlWebViewSource
+                {
+                    Html = GenerateMapHtml(first.Latitude, first.Longitude, _allPoisFromDb, first.PoiId)
+                };
                 UpdateInterface(first.Latitude, first.Longitude, first);
                 StartTrackingLocation();
                 return true;
             }
         }
-
         int highlightId = Preferences.Get("HighlightPoiId", -1);
         if (highlightId > 0)
         {

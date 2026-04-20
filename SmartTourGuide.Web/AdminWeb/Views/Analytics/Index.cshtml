@@ -48,6 +48,7 @@
         </div>
 
         @* CỘT 3: ĐANG ONLINE THẬT SỰ *@
+        @if (User.IsInRole("Admin")) {
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-danger text-white p-3 rounded-4 h-100">
                 <div class="small fw-bold text-uppercase opacity-75">Đang mở app</div>
@@ -57,7 +58,7 @@
                 </div>
             </div>
         </div>
-
+        }
        
     </div>
 
@@ -118,15 +119,26 @@
                     tension: 0.4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                    x: { grid: { display: false } }
-                }
-            }
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { color: '#f0f0f0' },
+        // --- THÊM PHẦN NÀY ĐỂ SỬA SỐ THẬP PHÂN ---
+        ticks: {
+        stepSize: 1,      // Khoảng cách mỗi vạch là 1 đơn vị
+        precision: 0,     // Không hiển thị số lẻ thập phân
+        callback: function(value) {
+        if (value % 1 === 0) { return value; } // Chỉ hiện số nguyên
+        }
+        }
+        },
+        x: { grid: { display: false } }
+        }
+        }
         });
 
         // 2. BIỂU ĐỒ TRÒN (Ngôn ngữ)
