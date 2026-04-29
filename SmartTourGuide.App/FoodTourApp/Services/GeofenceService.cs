@@ -69,8 +69,27 @@ namespace FoodTourApp.Services
 
                 //Điều kiện để xét đọc POI nào trước khi có cùng trong khu vực
     var poisInRangeSorted = poisInRange
-        .OrderBy(x => x.distance)
-        .ThenBy(x => x.poi.PoiId)
+        // 1. Khoảng cách: Gần nhất ăn ưu tiên tuyệt đối
+        .OrderBy(x => x.distance) 
+        
+        // 2. Chế độ Tour: Đang đi tour Michelin thì chỉ tập trung quán Michelin
+        .ThenByDescending(x => tourPoiIds != null && tourPoiIds.Contains(x.poi.PoiId))
+        
+        // 3. Sở thích cá nhân: Ngang k/c thì tiện thể đọc luôn quán đã thả tim
+        .ThenByDescending(x => FavoritesPage.IsFavorite(x.poi.PoiId))
+        
+        // 4. Quán có mô tả dài ưu tiên đọc trước quán có mô tả ngắn
+        .ThenByDescending(x => x.poi.DescriptionVi?.Length ?? 0) 
+        // Quán có mô tả 500 ký tự sẽ được ưu tiên đọc trước quán chỉ có 50 ký tự
+        
+        // 5. Chốt sổ khách quan: Nếu vẫn hòa mọi thứ, ưu tiên quán to hơn (bán kính rộng hơn)
+        .ThenByDescending(x => x.poi.TriggerRadius)
+        
+        // 6. Tên POI: Nếu vẫn chưa phân định được, xếp theo thứ tự ABC tên POI
+        .ThenBy(x => x.poi.Name)
+        
+        // (Dự phòng cho tương lai: Nếu thêm cột Rating thì ThenByDescending(x => x.poi.Rating))
+        
         .Select(x => x.poi)
         .ToList();
                 result.NearestPoi = nearestPoi;

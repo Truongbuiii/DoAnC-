@@ -46,6 +46,7 @@ public partial class SettingsPage : ContentPage
         LangPicker.SelectedIndex = Array.IndexOf(_languageCodes, lang);
         AutoNarrateSwitch.IsToggled = Preferences.Get("AutoNarrate", true);
         CooldownSlider.Value = Preferences.Get("CooldownMinutes", 5);
+        RadiusSlider.Value = Preferences.Get("TriggerRadius", 50); // Dòng bị thiếu đã được thêm vào
         RadiusLabel.Text = $"{(int)RadiusSlider.Value}m";
         CooldownLabel.Text = $"{(int)CooldownSlider.Value}";
     }

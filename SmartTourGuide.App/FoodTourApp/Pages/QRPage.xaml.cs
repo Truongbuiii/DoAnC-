@@ -201,14 +201,24 @@ public partial class QRPage : ContentPage
     }
 
     private async void OnManualEntry(object sender, EventArgs e)
-    {
-        string? code = await DisplayPromptAsync(Lang.Get("qr_manual"), "Nhập ID:", "OK", "Hủy", keyboard: Keyboard.Numeric);
-        if (string.IsNullOrEmpty(code)) return;
+{
+    string? input = await DisplayPromptAsync(
+        "Tìm địa điểm", 
+        "Nhập tên quán:", 
+        "Tìm kiếm", "Hủy",
+        keyboard: Keyboard.Text);
+        
+    if (string.IsNullOrEmpty(input)) return;
 
-        if (int.TryParse(code, out int poiId))
-        {
-            var poi = await _dbService.GetPOIByIdAsync(poiId);
-            if (poi != null) await Navigation.PushAsync(new PoiDetailPage(poi));
-        }
+    // Tìm POI theo tên (không phân biệt hoa thường)
+    var allPois = await _dbService.GetPOIsAsync();
+    var poi = allPois.FirstOrDefault(p => 
+        p.Name.ToLower().Contains(input.ToLower()));
+
+    if (poi != null)
+        await Navigation.PushAsync(new PoiDetailPage(poi));
+    else
+        await DisplayAlertAsync("Không tìm thấy", 
+            $"Không có địa điểm nào khớp với '{input}'", "OK");
     }
 }
